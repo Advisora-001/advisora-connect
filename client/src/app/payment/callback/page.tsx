@@ -87,7 +87,7 @@ function PaymentCallbackContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-accent mt-6">Payment Successful!
+            <h1 className="text-2xl font-bold text-accent mt-6">Payment Successful!</h1>
             <p className="text-gray-600 mt-3">{message}</p>
             <div className="mt-8 space-y-3">
               <Link
