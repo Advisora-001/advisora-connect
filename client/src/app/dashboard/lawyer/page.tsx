@@ -193,7 +193,7 @@ export default function LawyerDashboard() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-accent mb-2">
-                  Consultation Fee ($)
+                  Consultation Fee (₦)
                 </label>
                 <input
                   type="number"

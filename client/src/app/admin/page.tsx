@@ -332,7 +332,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Consultation Fee</p>
-                  <p className="font-semibold text-accent">${manageLawyer.consultationFee || 0}</p>
+                  <p className="font-semibold text-accent">₦{manageLawyer.consultationFee || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
