@@ -188,10 +188,6 @@ class ApiClient {
     return this.request<{ count: number; users: any[] }>("/admin/users");
   }
 
-  getLawyerProfile(id: string) {
-    return this.request<{ count: number; users: any[] }>('/admin/users');
-  }
-
   toggleUserStatus(id: string) {
     return this.request<any>(`/admin/users/${id}/toggle-status`, { method: 'PUT' });
   }
