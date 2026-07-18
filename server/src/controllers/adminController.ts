@@ -105,7 +105,7 @@ const getAnalytics = async (_req: AuthRequest, res: Response) => {
 // @route   GET /api/admin/lawyers/:id
 const getLawyerProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const profile = await LawyerProfile.findById(req.params.id)
+    const profile = await LawyerProfile.findOne({ userId: req.params.id })
       .populate("userId", "firstName lastName email phone createdAt isActive");
 
     if (!profile) {
