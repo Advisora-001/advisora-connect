@@ -41,6 +41,18 @@ const register = async (req: Request, res: Response) => {
   const { email, password, firstName, lastName, phone, role: requestedRole, termsAccepted, policiesAccepted } = req.body;
     const role = requestedRole === 'lawyer' ? 'lawyer' : 'client';
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
+    // Validate password strength
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!password || !passwordRegex.test(password)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' });
+    }
+
     // Require explicit acceptance of terms and policies
     if (!termsAccepted || !policiesAccepted) {
       return res.status(400).json({ message: 'You must accept the Terms & Conditions and all platform policies to register.' });

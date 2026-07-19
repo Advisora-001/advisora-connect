@@ -1,9 +1,59 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+
+// Validation helpers
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+
+interface PasswordRequirement {
+  label: string;
+  test: (password: string) => boolean;
+}
+
+const passwordRequirements: PasswordRequirement[] = [
+  { label: "At least 8 characters", test: (p) => p.length >= 8 },
+  { label: "At least 1 uppercase letter", test: (p) => /[A-Z]/.test(p) },
+  { label: "At least 1 lowercase letter", test: (p) => /[a-z]/.test(p) },
+  { label: "At least 1 number", test: (p) => /\d/.test(p) },
+  { label: "At least 1 special character (@$!%*#?&)", test: (p) => /[@$!%*#?&]/.test(p) },
+];
+
+function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+  if (!password) return { score: 0, label: "", color: "bg-gray-200" };
+  const passed = passwordRequirements.filter((req) => req.test(password)).length;
+  if (passed <= 2) return { score: 25, label: "Weak", color: "bg-red-500" };
+  if (passed <= 3) return { score: 50, label: "Fair", color: "bg-orange-500" };
+  if (passed <= 4) return { score: 75, label: "Good", color: "bg-yellow-500" };
+  return { score: 100, label: "Strong", color: "bg-green-500" };
+}
+
+function generateStrongPassword(): string {
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const special = "@$!%*#?&";
+  const all = uppercase + lowercase + numbers + special;
+
+  let password = "";
+  // Ensure at least one of each required character type
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += special[Math.floor(Math.random() * special.length)];
+
+  // Fill remaining with random characters to reach 12-16 length
+  const remainingLength = Math.floor(Math.random() * 5) + 8; // 8-12 extra chars
+  for (let i = 0; i < remainingLength; i++) {
+    password += all[Math.floor(Math.random() * all.length)];
+  }
+
+  // Shuffle the password characters
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+}
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();
@@ -22,25 +72,57 @@ function RegisterPageContent() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  const passwordStrength = getPasswordStrength(formData.password);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Validate email in real-time
+    if (name === "email") {
+      if (value && !EMAIL_REGEX.test(value)) {
+        setEmailError("Please enter a valid email address");
+      } else {
+        setEmailError("");
+      }
+    }
   };
+
+  const handleSuggestPassword = useCallback(() => {
+    const newPassword = generateStrongPassword();
+    setFormData((prev) => ({ ...prev, password: newPassword }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate email format
+    if (!EMAIL_REGEX.test(formData.email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Validate password strength
+    if (!PASSWORD_REGEX.test(formData.password)) {
+      setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
+      return;
+    }
+
+    if (!formData.termsAccepted || !formData.policiesAccepted) {
+      setError("You must accept the Terms & Conditions and all platform policies to register.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      if (!formData.termsAccepted || !formData.policiesAccepted) {
-        setError("You must accept the Terms & Conditions and all platform policies to register.");
-        return;
-      }
       await register(formData);
-      // Show verification notice instead of redirecting
       setError("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -63,7 +145,7 @@ function RegisterPageContent() {
           <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6">
             <p className="font-semibold">Registration successful! 🎉</p>
             <p className="text-sm mt-1">
-              Please check your email to verify your account.               You&apos;ll need to
+              Please check your email to verify your account.               You'll need to
               verify your email before logging in.
             </p>
           </div>
@@ -117,9 +199,18 @@ function RegisterPageContent() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary-dark text-accent placeholder-gray-400"
+              className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 text-accent placeholder-gray-400 ${
+                emailError
+                  ? "border-red-500 focus:ring-red-200 focus:border-red-500"
+                  : formData.email && !emailError
+                    ? "border-green-500 focus:ring-green-200 focus:border-green-500"
+                    : "border-primary focus:ring-primary/30 focus:border-primary-dark"
+              }`}
               placeholder="you@example.com"
             />
+            {emailError && (
+              <p className="text-red-500 text-xs mt-1">{emailError}</p>
+            )}
           </div>
 
           <div>
@@ -139,16 +230,65 @@ function RegisterPageContent() {
             <label className="block text-sm font-semibold text-accent mb-2">
               Password
             </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              minLength={6}
-              className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary-dark text-accent placeholder-gray-400"
-              placeholder="At least 6 characters"
-            />
+            <div className="relative">
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                required
+                className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 text-accent placeholder-gray-400 ${
+                  formData.password && PASSWORD_REGEX.test(formData.password)
+                    ? "border-green-500 focus:ring-green-200 focus:border-green-500"
+                    : formData.password
+                      ? "border-red-500 focus:ring-red-200 focus:border-red-500"
+                      : "border-primary focus:ring-primary/30 focus:border-primary-dark"
+                }`}
+                placeholder="Create a strong password"
+              />
+            </div>
+
+            {/* Password strength bar */}
+            {formData.password && (
+              <div className="mt-2">
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                    style={{ width: `${passwordStrength.score}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Strength: {passwordStrength.label}
+                </p>
+              </div>
+            )}
+
+            {/* Password requirements list */}
+            {(passwordFocused || formData.password.length > 0) && (
+              <div className="mt-2 space-y-1">
+                {passwordRequirements.map((req, index) => (
+                  <div key={index} className="flex items-center gap-2 text-xs">
+                    <span className={req.test(formData.password) ? "text-green-600" : "text-gray-400"}>
+                      {req.test(formData.password) ? "✓" : "○"}
+                    </span>
+                    <span className={req.test(formData.password) ? "text-green-700" : "text-gray-500"}>
+                      {req.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Suggest Password button */}
+            <button
+              type="button"
+              onClick={handleSuggestPassword}
+              className="mt-2 text-sm text-accent font-semibold hover:underline focus:outline-none"
+            >
+              Suggest a strong password
+            </button>
           </div>
 
           <div>
