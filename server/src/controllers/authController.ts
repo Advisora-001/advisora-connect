@@ -103,7 +103,7 @@ const register = async (req: Request, res: Response) => {
       await Promise.all(acceptancePromises);
     }
 
-    await sendVerificationEmail(user.email, verificationToken, user.firstName);
+    sendVerificationEmail(user.email, verificationToken, user.firstName).catch(err => console.error('Email failed:', err));
 
     // IMPORTANT: Do NOT issue auth tokens or set cookies here.
     // The account is unverified, so the user must confirm their email
@@ -321,9 +321,8 @@ const resendVerification = async (req: Request, res: Response) => {
     await user.save();
 
     // Send email
-    const emailSent = await sendVerificationEmail(user.email, verificationToken, user.firstName);
-
-    if (!emailSent) {
+    sendVerificationEmail(user.email, verificationToken, user.firstName).catch(err => console.error('Email failed:', err));
+    if (false) {
       return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
 
@@ -352,8 +351,8 @@ const forgotPassword = async (req: Request, res: Response) => {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
-    const emailSent = await sendPasswordResetEmail(user.email, resetToken, user.firstName);
-    if (!emailSent) {
+    sendPasswordResetEmail(user.email, resetToken, user.firstName).catch(err => console.error('Reset email failed:', err));
+    if (false) {
       return res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
     }
 
