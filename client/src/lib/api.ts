@@ -1,5 +1,17 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// Token management for cross-domain auth
+const TOKEN_KEY = 'advisora_access_token';
+
+export const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
+export const clearStoredTokens = () => localStorage.removeItem(TOKEN_KEY);
+
+export const storeAuthData = (data: any) => {
+  if (data.accessToken) {
+    localStorage.setItem(TOKEN_KEY, data.accessToken);
+  }
+};
+
 interface ApiOptions {
   method?: string;
   body?: any;
@@ -22,6 +34,10 @@ class ApiClient {
         ...config.headers,
         'Content-Type': 'application/json',
       };
+      const token = getStoredToken();
+      if (token) {
+        config.headers = { ...config.headers, 'Authorization': `Bearer ${token}` };
+      }
       config.body = JSON.stringify(body);
     } else if (body && isFormData) {
       config.body = body;
@@ -71,9 +87,12 @@ class ApiClient {
   }
 
   login(data: any) {
-    return this.request<{ _id: string; role: string }>('/auth/login', {
+    return this.request<any>('/auth/login', {
       method: 'POST',
       body: data,
+    }).then(res => {
+      if (res.accessToken) storeAuthData(res);
+      return res;
     });
   }
 
@@ -92,6 +111,7 @@ class ApiClient {
   }
 
   logout() {
+    clearStoredTokens();
     return this.request<{ message: string }>('/auth/logout', { method: 'POST' });
   }
 
@@ -153,6 +173,13 @@ class ApiClient {
 
   verifyPayment(data: any) {
     return this.request<any>('/payments/verify', { method: 'POST', body: data });
+  }
+
+  verifyEmailAndStore(token: string) {
+    return this.request<any>(`/auth/verify-email/${token}`).then(res => {
+      if (res.accessToken) storeAuthData(res);
+      return res;
+    });
   }
 
   acceptOnboardingAgreement() {
