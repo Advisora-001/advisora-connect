@@ -31,10 +31,22 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'https://advisora-connect.vercel.app',
+  'https://app.advisoraconnect.com',
+  'http://localhost:3000',
+];
+const corsOptions: cors.CorsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    callback(null, true);
+  },
   credentials: true,
-}));
+};
+app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
