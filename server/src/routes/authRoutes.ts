@@ -9,6 +9,7 @@ import {
   logout,
   forgotPassword,
   resetPassword,
+  testEmail,
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
 import {
@@ -30,5 +31,6 @@ router.post('/resend-verification', resendVerification);
 router.post('/forgot-password', forgotPasswordValidator, forgotPassword);
 router.post('/reset-password', resetPasswordValidator, resetPassword);
 router.post('/logout', protect, logout);
+router.post('/test-email', testEmail);
 
 export default router;

@@ -22,7 +22,7 @@ interface EmailOptions {
 export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: `"Advisora Connect" <${process.env.EMAIL_USER}>`,
       to: options.to,
       subject: options.subject,
       text: options.text,
@@ -31,8 +31,14 @@ export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
 
     console.log(`Email sent to ${options.to}: ${info.messageId}`);
     return true;
-  } catch (error) {
-    console.error('Email sending error:', error);
+  } catch (error: any) {
+    console.error('Email sending error:', error.message);
+    if (error.code === 'EAUTH') {
+      console.error('Authentication failed. Check EMAIL_USER and EMAIL_PASS env vars.');
+    }
+    if (error.code === 'ESOCKET') {
+      console.error('Connection error. Check network/port availability.');
+    }
     return false;
   }
 };
@@ -60,7 +66,7 @@ export const sendVerificationEmail = async (email: string, token: string, firstN
         <p style="color: #666; font-size: 14px; margin-top: 30px;">This link will expire in <strong>24 hours</strong>.</p>
         <p style="color: #666; font-size: 14px;">If you didn't create an account, please ignore this email.</p>
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-        <p style="color: #999; font-size: 12px; text-align: center;">© 2025 Advisora Connect. All rights reserved.</p>
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
       </div>
     </div>
   `;
@@ -112,14 +118,51 @@ export const sendPasswordResetEmail = async (email: string, token: string, first
   return sendEmail({ to: email, subject, text, html });
 };
 
-// Test the email connection
-export const testEmailConnection = async (): Promise<boolean> => {
+// Test email connection by sending a test email
+export const testEmailConnection = async (testEmail: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const verified = await transporter.verify();
-    console.log('✅ Gmail SMTP connection verified');
-    return verified;
-  } catch (error) {
-    console.error('❌ Gmail SMTP connection failed:', error);
-    return false;
+    // First verify the transporter can connect
+    await transporter.verify();
+    console.log('SMTP connection verified successfully');
+
+    // Send a test email
+    const subject = 'Test Email - Advisora Connect';
+    const text = 'This is a test email from Advisora Connect. Your email configuration is working correctly!';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #1e3a5f; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        </div>
+        <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #1e3a5f;">Email Test Successful! 🎉</h2>
+          <p>Your email configuration is working correctly.</p>
+          <p>You can now send verification emails, password resets, and notifications to your users.</p>
+        </div>
+      </div>
+    `;
+
+    const info = await transporter.sendMail({
+      from: `"Advisora Connect" <${process.env.EMAIL_USER}>`,
+      to: testEmail,
+      subject,
+      text,
+      html,
+    });
+
+    console.log(`Test email sent to ${testEmail}: ${info.messageId}`);
+    return { success: true, message: `Test email sent successfully to ${testEmail}` };
+  } catch (error: any) {
+    console.error('Email test failed:', error.message);
+    let message = 'Email configuration test failed';
+    if (error.code === 'EAUTH') {
+      message = 'Authentication failed. Your EMAIL_PASS (App Password) may be incorrect or expired. Generate a new one at https://myaccount.google.com/apppasswords';
+    } else if (error.code === 'ESOCKET') {
+      message = 'Could not connect to email server. Check network/firewall settings.';
+    } else if (error.code === 'EENVELOPE') {
+      message = 'Invalid email address format.';
+    } else {
+      message = `Email error: ${error.message}`;
+    }
+    return { success: false, message };
   }
 };

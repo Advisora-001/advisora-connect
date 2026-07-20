@@ -5,7 +5,7 @@ import LegalDocument from '../models/LegalDocument';
 import LegalAcceptance from '../models/LegalAcceptance';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email';
+import { sendVerificationEmail, sendPasswordResetEmail, testEmailConnection } from '../services/email';
 import crypto from 'crypto';
 
 // Cookie helper functions
@@ -32,6 +32,41 @@ const setTokenCookies = (res: Response, accessToken: string, refreshToken: strin
 const clearTokenCookies = (res: Response) => {
   res.clearCookie('accessToken', { path: '/' });
   res.clearCookie('refreshToken', { path: '/' });
+};
+
+// @desc    Test email configuration
+// @route   POST /api/auth/test-email
+const testEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email address is required' });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
+    console.log(`Testing email configuration with recipient: ${email}`);
+    console.log(`EMAIL_USER: ${process.env.EMAIL_USER ? 'Set' : 'NOT SET'}`);
+    console.log(`EMAIL_PASS: ${process.env.EMAIL_PASS ? 'Set (' + process.env.EMAIL_PASS.substring(0, 4) + '...)' : 'NOT SET'}`);
+
+    const result = await testEmailConnection(email);
+    
+    if (result.success) {
+      return res.json({ message: result.message, success: true });
+    } else {
+      return res.status(500).json({ 
+        message: result.message, 
+        success: false,
+        hint: 'Make sure EMAIL_USER and EMAIL_PASS are set in environment variables. For Gmail, use an App Password from https://myaccount.google.com/apppasswords'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error testing email', error: (error as Error).message });
+  }
 };
 
 // @desc    Register user (client or lawyer)
@@ -103,11 +138,11 @@ const register = async (req: Request, res: Response) => {
       await Promise.all(acceptancePromises);
     }
 
-    sendVerificationEmail(user.email, verificationToken, user.firstName).catch(err => console.error('Email failed:', err));
+    // Send verification email (non-blocking - won't block registration)
+    sendVerificationEmail(user.email, verificationToken, user.firstName).catch(err => {
+      console.error('Failed to send verification email (registration):', err.message);
+    });
 
-    // IMPORTANT: Do NOT issue auth tokens or set cookies here.
-    // The account is unverified, so the user must confirm their email
-    // before they can log in. The client shows a "check your inbox" notice.
     res.status(201).json({
       message:
         'Registration successful. Please check your email to verify your account before logging in.',
@@ -116,6 +151,7 @@ const register = async (req: Request, res: Response) => {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
+      emailNote: 'If you do not see the email, check your spam folder or use the Resend Verification option on the login page.',
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: (error as Error).message });
@@ -320,13 +356,12 @@ const resendVerification = async (req: Request, res: Response) => {
     user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
-    // Send email
-    sendVerificationEmail(user.email, verificationToken, user.firstName).catch(err => console.error('Email failed:', err));
-    if (false) {
-      return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
-    }
+    // Send email (non-blocking)
+    sendVerificationEmail(user.email, verificationToken, user.firstName).catch(err => {
+      console.error('Failed to send verification email (resend):', err.message);
+    });
 
-    res.json({ message: 'Verification email sent! Please check your inbox.' });
+    res.json({ message: 'Verification email sent! Please check your inbox and spam folder.' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -351,12 +386,12 @@ const forgotPassword = async (req: Request, res: Response) => {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
-    sendPasswordResetEmail(user.email, resetToken, user.firstName).catch(err => console.error('Reset email failed:', err));
-    if (false) {
-      return res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
-    }
+    // Send email (non-blocking)
+    sendPasswordResetEmail(user.email, resetToken, user.firstName).catch(err => {
+      console.error('Failed to send password reset email:', err.message);
+    });
 
-    res.json({ message: 'Password reset email sent! Check your inbox.' });
+    res.json({ message: 'Password reset email sent! Check your inbox and spam folder.' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: (error as Error).message });
   }
@@ -395,4 +430,4 @@ const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login, refresh, getMe, verifyEmail, resendVerification, forgotPassword, resetPassword, logout };
+export { register, login, refresh, getMe, verifyEmail, resendVerification, forgotPassword, resetPassword, logout, testEmail };
