@@ -85,6 +85,24 @@ export const sendVerificationEmail = async (email: string, token: string, firstN
   return sendEmail({ to: email, subject, html });
 };
 
+export const sendLeadNotificationEmail = async (recipientEmail: string, clientName: string, lawyerName: string, enquiryMessage: string): Promise<boolean> => {
+  const subject = 'New enquiry received - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #1e3a5f;">New enquiry received</h2>
+      <p>Hi ${lawyerName},</p>
+      <p>You received a new enquiry from <strong>${clientName}</strong>.</p>
+      <div style="background-color: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p style="margin: 0;"><strong>Message:</strong></p>
+        <p style="margin: 8px 0 0 0; white-space: pre-wrap;">${enquiryMessage}</p>
+      </div>
+      <p>Please log in to your dashboard to review the enquiry.</p>
+    </div>
+  `;
+
+  return sendEmail({ to: recipientEmail, subject, html });
+};
+
 export const sendPasswordResetEmail = async (email: string, token: string, firstName: string): Promise<boolean> => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
 
@@ -109,9 +127,6 @@ export const sendPasswordResetEmail = async (email: string, token: string, first
   return sendEmail({ to: email, subject, html });
 };
 
-/**
- * Send a test email to verify the Resend configuration is working.
- */
 export const testEmailConnection = async (testEmail: string): Promise<{ success: boolean; message: string }> => {
   if (!resendReady || !resend) {
     return {
@@ -121,7 +136,6 @@ export const testEmailConnection = async (testEmail: string): Promise<{ success:
   }
 
   try {
-    // Test by sending an actual email
     const { data, error } = await resend.emails.send({
       from: `Advisora Connect <noreply@${resendDomain}>`,
       to: testEmail,
