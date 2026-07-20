@@ -3,13 +3,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create Gmail transporter
+// Create Gmail transporter with timeout
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 5000, // 5 seconds
+  greetingTimeout: 5000,
+  socketTimeout: 8000,
 });
 
 interface EmailOptions {
@@ -34,10 +37,10 @@ export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
   } catch (error: any) {
     console.error('Email sending error:', error.message);
     if (error.code === 'EAUTH') {
-      console.error('Authentication failed. Check EMAIL_USER and EMAIL_PASS env vars.');
+      console.error('Authentication failed. Your EMAIL_PASS (App Password) is likely incorrect or expired.');
     }
-    if (error.code === 'ESOCKET') {
-      console.error('Connection error. Check network/port availability.');
+    if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT') {
+      console.error('Connection error or timeout.');
     }
     return false;
   }
@@ -125,7 +128,6 @@ export const testEmailConnection = async (testEmail: string): Promise<{ success:
     await transporter.verify();
     console.log('SMTP connection verified successfully');
 
-    // Send a test email
     const subject = 'Test Email - Advisora Connect';
     const text = 'This is a test email from Advisora Connect. Your email configuration is working correctly!';
     const html = `
@@ -155,11 +157,7 @@ export const testEmailConnection = async (testEmail: string): Promise<{ success:
     console.error('Email test failed:', error.message);
     let message = 'Email configuration test failed';
     if (error.code === 'EAUTH') {
-      message = 'Authentication failed. Your EMAIL_PASS (App Password) may be incorrect or expired. Generate a new one at https://myaccount.google.com/apppasswords';
-    } else if (error.code === 'ESOCKET') {
-      message = 'Could not connect to email server. Check network/firewall settings.';
-    } else if (error.code === 'EENVELOPE') {
-      message = 'Invalid email address format.';
+      message = 'Authentication failed. The EMAIL_PASS (App Password) is likely incorrect or expired.';
     } else {
       message = `Email error: ${error.message}`;
     }
