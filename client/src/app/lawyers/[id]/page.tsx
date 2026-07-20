@@ -74,9 +74,12 @@ export default function LawyerDetailPage() {
         <div className="md:col-span-2">
           <div className="bg-white rounded-xl shadow-sm border p-8">
             <div className="flex items-start space-x-6">
-              <div className="w-24 h-24 bg-[#1B2A4A] rounded-full flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
-                {lawyer.userId?.firstName?.[0]}
-                {lawyer.userId?.lastName?.[0]}
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
+                {lawyer.photo ? (
+                  <img src={lawyer.photo} alt={lawyer.userId?.firstName} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{lawyer.userId?.firstName?.[0]}{lawyer.userId?.lastName?.[0]}</span>
+                )}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3">

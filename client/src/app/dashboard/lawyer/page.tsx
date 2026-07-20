@@ -133,6 +133,46 @@ export default function LawyerDashboard() {
             Edit Profile
           </h2>
           <form onSubmit={handleProfileUpdate} className="space-y-5">
+            {/* Profile Photo */}
+            <div className="flex items-center gap-6 p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-accent flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+                {profileForm.photo ? (
+                  <img src={profileForm.photo} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user.firstName[0]}{user.lastName[0]}</span>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-accent mb-2">Profile Photo</p>
+                <label className="inline-block bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 cursor-pointer font-medium text-sm transition-all">
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert("File too large. Maximum size is 5MB.");
+                        return;
+                      }
+                      try {
+                        const formData = new FormData();
+                        formData.append("photo", file);
+                        const result = await api.uploadPhoto(formData);
+                        setProfileForm({ ...profileForm, photo: result.photo });
+                        await refreshUser();
+                        alert("Photo uploaded successfully!");
+                      } catch (err) {
+                        alert("Failed to upload photo");
+                      }
+                    }}
+                  />
+                </label>
+                <p className="text-xs text-gray-500 mt-1">JPG or PNG. Max 5MB.</p>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-semibold text-accent mb-2">

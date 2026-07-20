@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ILawyerProfile extends Document {
   userId: mongoose.Types.ObjectId;
+  photo?: string;
   barNumber?: string;
   stateOfCall?: string;
   yearOfCall?: number;
@@ -53,6 +54,7 @@ const lawyerProfileSchema = new Schema<ILawyerProfile>(
       required: true,
       unique: true,
     },
+    photo: { type: String, default: '' },
     barNumber: { type: String, default: '' },
     stateOfCall: { type: String, default: '' },
     yearOfCall: { type: Number, default: 0 },

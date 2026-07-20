@@ -159,6 +159,14 @@ class ApiClient {
     return this.request<any>('/lawyers/onboarding/accept', { method: 'POST' });
   }
 
+  uploadPhoto(formData: FormData) {
+    return this.request<any>('/lawyers/upload-photo', {
+      method: 'POST',
+      body: formData,
+      isFormData: true,
+    });
+  }
+
   submitDeclaration(data: any) {
     return this.request<any>('/lawyers/declaration', { method: 'POST', body: data });
   }

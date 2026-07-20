@@ -223,4 +223,29 @@ const submitDeclaration = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration };
+// @desc    Upload profile photo
+// @route   POST /api/lawyers/upload-photo
+const uploadPhoto = async (req: AuthRequest, res: Response) => {
+  try {
+    const file = req.file as any;
+    if (!file) {
+      return res.status(400).json({ message: "No photo uploaded" });
+    }
+
+    const photoUrl = file.path;
+
+    const profile = await LawyerProfile.findOne({ userId: req.user?._id });
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    profile.photo = photoUrl;
+    await profile.save();
+
+    res.json({ message: "Photo uploaded successfully", photo: photoUrl });
+  } catch (error) {
+    res.status(500).json({ message: "Upload failed", error: (error as Error).message });
+  }
+};
+
+export { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto };

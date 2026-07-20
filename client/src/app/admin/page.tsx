@@ -318,13 +318,26 @@ export default function AdminDashboard() {
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-semibold text-accent">{manageLawyer.userId?.firstName} {manageLawyer.userId?.lastName}</p>
+                <div className="flex items-center gap-4 mb-4 col-span-2">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-accent flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                    {manageLawyer.photo ? (
+                      <img src={manageLawyer.photo} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{manageLawyer.userId?.firstName?.[0]}{manageLawyer.userId?.lastName?.[0]}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-accent">{manageLawyer.userId?.firstName} {manageLawyer.userId?.lastName}</p>
+                    <p className="text-sm text-gray-500">{manageLawyer.userId?.email}</p>
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-semibold text-accent">{manageLawyer.userId?.email}</p>
+                  <p className="text-sm text-gray-500">Bar Number</p>
+                  <p className="font-semibold text-accent">{manageLawyer.barNumber || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Fee</p>
+                  <p className="font-semibold text-accent">￦{manageLawyer.consultationFee || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Bar Number</p>

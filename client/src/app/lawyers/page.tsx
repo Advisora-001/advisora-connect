@@ -134,8 +134,12 @@ function LawyersContent() {
                 className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer"
               >
                 <div className="flex items-start space-x-4">
-                  <div className="w-16 h-16 bg-[#1B2A4A] rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-                    {lawyer.userId?.firstName?.[0]}{lawyer.userId?.lastName?.[0]}
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                    {lawyer.photo ? (
+                      <img src={lawyer.photo} alt={lawyer.userId?.firstName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{lawyer.userId?.firstName?.[0]}{lawyer.userId?.lastName?.[0]}</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
