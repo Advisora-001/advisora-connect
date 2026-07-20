@@ -1,47 +1,56 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create Gmail transporter with timeout
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 5000, // 5 seconds
-  greetingTimeout: 5000,
-  socketTimeout: 8000,
-});
+// Initialize Resend with API key from environment
+const resendApiKey = process.env.RESEND_API_KEY;
+const resendDomain = process.env.RESEND_DOMAIN || 'advisora-connect.vercel.app';
+
+let resend: Resend | null = null;
+let resendReady = false;
+
+if (resendApiKey) {
+  try {
+    resend = new Resend(resendApiKey);
+    resendReady = true;
+    console.log('Resend initialized successfully');
+  } catch (error: any) {
+    console.error('Failed to initialize Resend:', error.message);
+  }
+} else {
+  console.warn('RESEND_API_KEY not set. Email sending disabled.');
+}
 
 interface EmailOptions {
   to: string;
   subject: string;
-  text: string;
   html: string;
 }
 
 export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
+  if (!resendReady || !resend) {
+    console.error('Resend not initialized. Check RESEND_API_KEY environment variable.');
+    return false;
+  }
+
   try {
-    const info = await transporter.sendMail({
-      from: `"Advisora Connect" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: `Advisora Connect <noreply@${resendDomain}>`,
       to: options.to,
       subject: options.subject,
-      text: options.text,
       html: options.html,
     });
 
-    console.log(`Email sent to ${options.to}: ${info.messageId}`);
+    if (error) {
+      console.error('Resend API error:', error);
+      return false;
+    }
+
+    console.log(`Email sent to ${options.to}: ${data?.id}`);
     return true;
   } catch (error: any) {
     console.error('Email sending error:', error.message);
-    if (error.code === 'EAUTH') {
-      console.error('Authentication failed. Your EMAIL_PASS (App Password) is likely incorrect or expired.');
-    }
-    if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT') {
-      console.error('Connection error or timeout.');
-    }
     return false;
   }
 };
@@ -50,7 +59,6 @@ export const sendVerificationEmail = async (email: string, token: string, firstN
   const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
 
   const subject = 'Verify Your Email - Advisora Connect';
-  const text = `Hi ${firstName},\n\nPlease verify your email by clicking this link:\n${verificationUrl}\n\nThis link expires in 24 hours.`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background-color: #1e3a5f; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -74,33 +82,13 @@ export const sendVerificationEmail = async (email: string, token: string, firstN
     </div>
   `;
 
-  return sendEmail({ to: email, subject, text, html });
-};
-
-export const sendLeadNotificationEmail = async (recipientEmail: string, clientName: string, lawyerName: string, enquiryMessage: string): Promise<boolean> => {
-  const subject = 'New enquiry received - Advisora Connect';
-  const text = `Hi ${lawyerName},\n\nYou received a new enquiry from ${clientName}.\n\nMessage:\n${enquiryMessage}\n\nPlease log in to your dashboard to review it.`;
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #1e3a5f;">New enquiry received</h2>
-      <p>Hi ${lawyerName},</p>
-      <p>You received a new enquiry from <strong>${clientName}</strong>.</p>
-      <div style="background-color: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0;">
-        <p style="margin: 0;"><strong>Message:</strong></p>
-        <p style="margin: 8px 0 0 0; white-space: pre-wrap;">${enquiryMessage}</p>
-      </div>
-      <p>Please log in to your dashboard to review the enquiry.</p>
-    </div>
-  `;
-
-  return sendEmail({ to: recipientEmail, subject, text, html });
+  return sendEmail({ to: email, subject, html });
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string, firstName: string): Promise<boolean> => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
 
   const subject = 'Reset Your Password - Advisora Connect';
-  const text = `Hi ${firstName},\n\nReset your password:\n${resetUrl}\n\nExpires in 1 hour.`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background-color: #1e3a5f; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -118,49 +106,49 @@ export const sendPasswordResetEmail = async (email: string, token: string, first
     </div>
   `;
 
-  return sendEmail({ to: email, subject, text, html });
+  return sendEmail({ to: email, subject, html });
 };
 
-// Test email connection by sending a test email
+/**
+ * Send a test email to verify the Resend configuration is working.
+ */
 export const testEmailConnection = async (testEmail: string): Promise<{ success: boolean; message: string }> => {
+  if (!resendReady || !resend) {
+    return {
+      success: false,
+      message: 'Resend is not configured. Set RESEND_API_KEY in environment variables.',
+    };
+  }
+
   try {
-    // First verify the transporter can connect
-    await transporter.verify();
-    console.log('SMTP connection verified successfully');
-
-    const subject = 'Test Email - Advisora Connect';
-    const text = 'This is a test email from Advisora Connect. Your email configuration is working correctly!';
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #1e3a5f; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
-        </div>
-        <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px;">
-          <h2 style="color: #1e3a5f;">Email Test Successful! 🎉</h2>
-          <p>Your email configuration is working correctly.</p>
-          <p>You can now send verification emails, password resets, and notifications to your users.</p>
-        </div>
-      </div>
-    `;
-
-    const info = await transporter.sendMail({
-      from: `"Advisora Connect" <${process.env.EMAIL_USER}>`,
+    // Test by sending an actual email
+    const { data, error } = await resend.emails.send({
+      from: `Advisora Connect <noreply@${resendDomain}>`,
       to: testEmail,
-      subject,
-      text,
-      html,
+      subject: 'Test Email - Advisora Connect',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background-color: #1e3a5f; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+          </div>
+          <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #1e3a5f;">Email Test Successful! 🎉</h2>
+            <p>Your Resend configuration is working correctly.</p>
+            <p>You can now send verification emails, password resets, and notifications to your users.</p>
+          </div>
+        </div>
+      `,
     });
 
-    console.log(`Test email sent to ${testEmail}: ${info.messageId}`);
+    if (error) {
+      console.error('Resend test email error:', error);
+      return { success: false, message: `Resend error: ${error.message}` };
+    }
+
+    console.log(`Test email sent successfully to ${testEmail}: ${data?.id}`);
     return { success: true, message: `Test email sent successfully to ${testEmail}` };
   } catch (error: any) {
     console.error('Email test failed:', error.message);
-    let message = 'Email configuration test failed';
-    if (error.code === 'EAUTH') {
-      message = 'Authentication failed. The EMAIL_PASS (App Password) is likely incorrect or expired.';
-    } else {
-      message = `Email error: ${error.message}`;
-    }
-    return { success: false, message };
+    return { success: false, message: `Email test failed: ${error.message}` };
   }
 };
