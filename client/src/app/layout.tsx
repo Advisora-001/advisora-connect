@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Image from "next/image";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import CookieConsent from "@/components/CookieConsent";
 import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
@@ -61,6 +62,7 @@ export default function RootLayout({
               </div>
             </div>
           </footer>
+          <CookieConsent />
         </AuthProvider>
       </body>
     </html>
