@@ -25,7 +25,7 @@ class ApiClient {
 
     const config: RequestInit = {
       method,
-      credentials: 'omit' as RequestCredentials,
+      credentials: 'include' as RequestCredentials,
       headers: { ...headers },
     };
 
