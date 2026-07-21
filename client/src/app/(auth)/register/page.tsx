@@ -325,6 +325,9 @@ function RegisterPageContent() {
                 </a>, and{' '}
                 <a href="/data-protection" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
                   Data Protection Policy
+                </a>, and{" "}
+                <a href="/professional-onboarding-agreement" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
+                  Professional Onboarding Agreement
                 </a>.
               </label>
             </div>
