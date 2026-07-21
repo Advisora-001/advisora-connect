@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { PLATFORM_FEE_AMOUNT } from "@/lib/api";
-import ReviewSection from "@/components/ReviewSection";
 import { useAuth } from "@/context/AuthContext";
+import ReviewSection from "@/components/ReviewSection";
 
 export default function LawyerDetailPage() {
   const { id } = useParams();
@@ -27,7 +27,13 @@ export default function LawyerDetailPage() {
         setLawyer(data);
         setLoading(false);
       })
-      .catch(() =;\n\n    // Fetch reviews\n    api.getLawyerReviews(id as string).then(data =      setReviews(data.reviews);\n      setReviewsLoading(false);\n    }).catch(() =;
+      .catch(() => setLoading(false));
+
+    // Fetch reviews
+    api.getLawyerReviews(id as string).then(data => {
+      setReviews(data.reviews);
+      setReviewsLoading(false);
+    }).catch(() => setReviewsLoading(false));
   }, [id]);
 
   const handleSubmitEnquiry = async () => {
