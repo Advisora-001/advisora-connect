@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { PLATFORM_FEE_AMOUNT } from "@/lib/api";
+import ReviewSection from "@/components/ReviewSection";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LawyerDetailPage() {
@@ -15,6 +16,8 @@ export default function LawyerDetailPage() {
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState("");
   const [enquiryStatus, setEnquiryStatus] = useState("");
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const MAX_ENQUIRY_LENGTH = 500;
 
   useEffect(() => {
@@ -24,7 +27,7 @@ export default function LawyerDetailPage() {
         setLawyer(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() =;\n\n    // Fetch reviews\n    api.getLawyerReviews(id as string).then(data =      setReviews(data.reviews);\n      setReviewsLoading(false);\n    }).catch(() =;
   }, [id]);
 
   const handleSubmitEnquiry = async () => {
@@ -127,6 +130,17 @@ export default function LawyerDetailPage() {
               <p className="text-gray-700 leading-relaxed">
                 {lawyer.bio || "No biography provided."}
               </p>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="mt-8">
+              <hr className="mb-6" />
+              <ReviewSection 
+                lawyerId={id as string} 
+                reviews={reviews} 
+                setReviews={setReviews}
+                loading={reviewsLoading}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-6 mt-8">
