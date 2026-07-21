@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   title: "Advisora Connect — Find Trusted Legal Professionals",
   description: "Advisora Connect connects you with verified lawyers across Africa. Search, discover, and book consultations with trusted legal professionals.",
   icons: {
-    icon: "/advisora.png",
-    apple: "/advisora.png",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
