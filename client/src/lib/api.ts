@@ -231,6 +231,19 @@ class ApiClient {
     return this.request<any>('/admin/analytics');
   }
 
+  // Reviews
+  getLawyerReviews(lawyerId: string) {
+    return this.request<{ reviews: any[]; total: number; averageRating: number }>("/reviews/lawyer/" + lawyerId);
+  }
+
+  createReview(data: { lawyerId: string; rating: number; comment?: string }) {
+    return this.request<any>("/reviews", { method: "POST", body: data });
+  }
+
+  getMyReviews() {
+    return this.request<{ reviews: any[] }>("/reviews/mine");
+  }
+
   // Documents
   uploadDocument(formData: FormData) {
     return this.request<any>('/documents', { method: 'POST', body: formData, isFormData: true });
