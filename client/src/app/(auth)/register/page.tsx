@@ -64,7 +64,7 @@ function RegisterPageContent() {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
+
     password: "",
     role: defaultRole,
     termsAccepted: false,
@@ -74,6 +74,9 @@ function RegisterPageContent() {
   const [loading, setLoading] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   const passwordStrength = getPasswordStrength(formData.password);
 
@@ -111,6 +114,12 @@ function RegisterPageContent() {
     // Validate password strength
     if (!PASSWORD_REGEX.test(formData.password)) {
       setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
+      return;
+    }
+
+    // Validate passwords match
+    if (formData.password !== confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -213,18 +222,7 @@ function RegisterPageContent() {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-accent mb-2">
-              Phone (Optional)
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary-dark text-accent placeholder-gray-400"
-            />
-          </div>
+
 
           <div>
             <label className="block text-sm font-semibold text-accent mb-2">
@@ -232,14 +230,14 @@ function RegisterPageContent() {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 required
-                className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 text-accent placeholder-gray-400 ${
+                className={`w-full px-4 py-3 pr-12 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 text-accent placeholder-gray-400 ${
                   formData.password && PASSWORD_REGEX.test(formData.password)
                     ? "border-green-500 focus:ring-green-200 focus:border-green-500"
                     : formData.password
@@ -248,6 +246,18 @@ function RegisterPageContent() {
                 }`}
                 placeholder="Create a strong password"
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-accent"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                )}
+              </button>
             </div>
 
             {/* Password strength bar */}
@@ -289,6 +299,51 @@ function RegisterPageContent() {
             >
               Suggest a strong password
             </button>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-accent mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (e.target.value && e.target.value !== formData.password) {
+                    setConfirmPasswordError("Passwords do not match");
+                  } else {
+                    setConfirmPasswordError("");
+                  }
+                }}
+                required
+                className={`w-full px-4 py-3 pr-12 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 text-accent placeholder-gray-400 ${
+                  confirmPassword && confirmPassword === formData.password
+                    ? "border-green-500 focus:ring-green-200 focus:border-green-500"
+                    : confirmPassword
+                      ? "border-red-500 focus:ring-red-200 focus:border-red-500"
+                      : "border-primary focus:ring-primary/30 focus:border-primary-dark"
+                }`}
+                placeholder="Re-enter your password"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-accent"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                )}
+              </button>
+            </div>
+            {confirmPasswordError && (
+              <p className="text-red-500 text-xs mt-1">{confirmPasswordError}</p>
+            )}
           </div>
 
           <div>
