@@ -101,20 +101,28 @@ const getAnalytics = async (_req: AuthRequest, res: Response) => {
   }
 };
 
-// @desc    Get lawyer profile by ID (admin)
+// @desc    Get lawyer profile by ID — works with both LawyerProfile._id and User._id
 // @route   GET /api/admin/lawyers/:id
 const getLawyerProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const profile = await LawyerProfile.findOne({ userId: req.params.id })
-      .populate("userId", "firstName lastName email phone createdAt isActive");
+    const { id } = req.params;
+
+    // Try to find the lawyer profile by either its own _id or the associated userId
+    // This supports both the Verifications tab (which sends profile._id) and the Users tab (which sends user._id)
+    const profile = await LawyerProfile.findOne({
+      $or: [
+        { _id: id },
+        { userId: id },
+      ],
+    }).populate('userId', 'firstName lastName email phone createdAt isActive');
 
     if (!profile) {
-      return res.status(404).json({ message: "Lawyer profile not found" });
+      return res.status(404).json({ message: 'Lawyer profile not found' });
     }
 
     res.json(profile);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
