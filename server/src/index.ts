@@ -36,6 +36,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
   'https://advisora-connect.vercel.app',
   'https://app.advisoraconnect.com',
+  'https://advisoraconnect.com',
+  'https://www.advisoraconnect.com',
   'http://localhost:3000',
 ];
 const corsOptions: cors.CorsOptions = {
