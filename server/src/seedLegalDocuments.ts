@@ -687,7 +687,7 @@ const seedLegalDocuments = async () => {
 
     const documents = [
       { slug: 'professional-onboarding-agreement', title: 'Professional Onboarding Agreement', content: 'PROFESSIONAL ONBOARDING AGREEMENT — Full document available on the platform.' },
-      { slug: 'professional-onboarding-agreement', title: 'Professional Onboarding Agreement', content: await import('./data/legal/professional-onboarding-agreement.md') },
+      { slug: 'professional-onboarding-agreement', title: 'Professional Onboarding Agreement', content: 'Professional Onboarding Agreement - Full document available on the Advisora Connect platform.' },
       { slug: 'terms-of-use', title: 'Terms of Use', content: TERMS_OF_USE },
       { slug: 'privacy-policy', title: 'Privacy Policy', content: PRIVACY_POLICY },
       { slug: 'data-protection', title: 'Data Protection and Privacy Policy', content: DATA_PROTECTION },
