@@ -5,7 +5,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&h=600&fit=crop&crop=faces';
+const HERO_IMAGE = '/Hero-section-image.png';
 
 const benefits = [
   {
