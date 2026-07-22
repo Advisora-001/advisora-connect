@@ -29,15 +29,17 @@ class ApiClient {
       headers: { ...headers },
     };
 
+    // Always attach auth token for all request types (GET, POST, etc.)
+    const token = getStoredToken();
+    if (token) {
+      config.headers = { ...config.headers, 'Authorization': `Bearer ${token}` };
+    }
+
     if (body && !isFormData) {
       config.headers = {
         ...config.headers,
         'Content-Type': 'application/json',
       };
-      const token = getStoredToken();
-      if (token) {
-        config.headers = { ...config.headers, 'Authorization': `Bearer ${token}` };
-      }
       config.body = JSON.stringify(body);
     } else if (body && isFormData) {
       config.body = body;
