@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Advisora Connect — Find Trusted Legal Professionals",
-  description: "Advisora Connect connects you with verified lawyers across Africa. Search, discover, and book consultations with trusted legal professionals.",
+  title: "Advisora Connect — Find Trusted Lawyers Across Africa",
+  description: "Advisora connects individuals and businesses with trusted and verified lawyers, making it easier to access quality legal expertise when you need it. Connecting You to Trusted Legal Expertise.",
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",
@@ -68,6 +68,7 @@ export default function RootLayout({
                 </a>
               </div>
               <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-4">
+                <a href="/about" className="text-primary/70 hover:text-white text-sm transition-colors">About Us</a>
                 <a href="/terms-of-use" className="text-primary/70 hover:text-white text-sm transition-colors">Terms of Use</a>
                 <a href="/privacy-policy" className="text-primary/70 hover:text-white text-sm transition-colors">Privacy Policy</a>
                 <a href="/data-protection" className="text-primary/70 hover:text-white text-sm transition-colors">Data Protection</a>
@@ -75,7 +76,7 @@ export default function RootLayout({
               </div>
               <div className="text-center border-t border-primary/20 pt-4">
                 <p className="text-primary/80">&copy; 2026 Advisora Connect. All rights reserved.</p>
-                <p className="text-primary/60 text-sm mt-1">Connecting you with trusted legal professionals.</p>
+                <p className="text-primary/60 text-sm mt-1">Connecting You to Trusted Legal Expertise.</p>
               </div>
             </div>
           </footer>
