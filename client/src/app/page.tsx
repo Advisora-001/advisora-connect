@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+
+// Unsplash images for hero section
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=faces';
 
 const benefits = [
   {
@@ -51,6 +56,7 @@ const steps = [
 ];
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [featuredLawyers, setFeaturedLawyers] = useState<any[]>([]);
 
   useEffect(() => {
@@ -62,39 +68,68 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-accent via-accent to-accent/90 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-20 md:py-32">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Find Trusted Lawyers Across Africa
-            </h1>
-            <p className="mt-6 text-lg md:text-xl text-primary/80 max-w-2xl mx-auto">
-              Need legal guidance? Advisora connects individuals and
-              businesses with trusted and verified lawyers, making it easier
-              to access quality legal expertise when you need it.
-            </p>
-            <p className="mt-4 text-primary/70 max-w-2xl mx-auto">
-              Whether you need support with business matters, contracts,
-              property transactions, employment issues, family matters,
-              compliance, or legal advisory services, Advisora helps you find
-              the right legal professional.
-            </p>
+      <section className="bg-gradient-to-br from-accent via-accent to-accent/90 text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 py-20 md:py-24">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            {/* Left Column - Text */}
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                Find Trusted Lawyers Across Africa
+              </h1>
+              <p className="mt-6 text-lg md:text-xl text-primary/80">
+                Need legal guidance? Advisora connects individuals and
+                businesses with trusted and verified lawyers, making it
+                easier to access quality legal expertise when you need it.
+              </p>
+              <p className="mt-4 text-primary/70 text-base">
+                Whether you need support with business matters, contracts,
+                property transactions, employment issues, family matters,
+                compliance, or legal advisory services, Advisora helps you
+                find the right legal professional.
+              </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/lawyers"
-                className="inline-block bg-[#C5A55A] text-[#1B2A4A] px-10 py-4 rounded-lg hover:bg-[#d4b36a] transition-colors font-bold text-lg shadow-lg"
-              >
-                Find a Lawyer
-              </Link>
-              <Link
-                href="/register"
-                className="inline-block bg-white text-accent px-10 py-4 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg border-2 border-white/30"
-              >
-                Register Now
-              </Link>
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Link
+                  href="/lawyers"
+                  className="inline-block bg-[#C5A55A] text-[#1B2A4A] px-10 py-4 rounded-lg hover:bg-[#d4b36a] transition-colors font-bold text-lg shadow-lg text-center"
+                >
+                  Find a Lawyer
+                </Link>
+                {!user && (
+                  <Link
+                    href="/register"
+                    className="inline-block bg-white text-accent px-10 py-4 rounded-lg hover:bg-gray-100 transition-colors font-bold text-lg shadow-lg border-2 border-white/30 text-center"
+                  >
+                    Register Now
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column - Image */}
+            <div className="hidden md:flex justify-center">
+              <div className="relative">
+                <div className="w-72 h-72 lg:w-96 lg:h-96 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20">
+                  <img
+                    src={HERO_IMAGE}
+                    alt="Trusted Legal Professionals"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Decorative floating elements */}
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-[#C5A55A]/30 rounded-full blur-xl"></div>
+                <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                <div className="absolute top-1/2 -left-8 w-16 h-16 bg-[#C5A55A]/20 rounded-full blur-lg"></div>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Wave divider */}
+        <div className="relative h-16">
+          <svg className="absolute bottom-0 w-full h-16 text-white" viewBox="0 0 1440 48" fill="currentColor" preserveAspectRatio="none">
+            <path d="M0,48 C240,0 480,48 720,48 C960,48 1200,0 1440,48 L1440,48 L0,48 Z" />
+          </svg>
         </div>
       </section>
 
@@ -252,8 +287,14 @@ export default function HomePage() {
       )}
 
       {/* Lawyer CTA Section */}
-      <section className="py-16 md:py-24 bg-accent text-white">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+      <section className="py-16 md:py-24 bg-accent text-white relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white"></div>
+          <div className="absolute bottom-10 right-20 w-60 h-60 rounded-full bg-white"></div>
+          <div className="absolute top-1/3 right-0 w-20 h-20 rounded-full bg-[#C5A55A]"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold">
             Are You a Lawyer?
           </h2>
@@ -261,18 +302,12 @@ export default function HomePage() {
             Join Advisora and connect with clients seeking legal expertise
             across Africa. Expand your reach and grow your practice.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-8">
             <Link
               href="/register?role=lawyer"
               className="inline-block bg-[#C5A55A] text-[#1B2A4A] px-10 py-4 rounded-lg hover:bg-[#d4b36a] transition-colors font-bold text-lg shadow-lg"
             >
               Register as a Lawyer
-            </Link>
-            <Link
-              href="/about"
-              className="inline-block text-white px-10 py-4 rounded-lg hover:bg-white/10 transition-colors font-bold text-lg border-2 border-white/30"
-            >
-              Learn More About Us
             </Link>
           </div>
         </div>
