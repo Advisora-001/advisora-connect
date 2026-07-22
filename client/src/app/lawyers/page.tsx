@@ -1,20 +1,65 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import api from '@/lib/api';
-import { useProfileGate } from '@/hooks/useProfileGate';
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import api from "@/lib/api";
+import { useProfileGate } from "@/hooks/useProfileGate";
 
 const practiceAreas = [
-  'Family Law', 'Corporate Law', 'Property Law', 'Criminal Law',
-  'Civil Litigation', 'Tax Law', 'Employment Law', 'Immigration Law',
-  'Intellectual Property', 'Human Rights',
+  "Corporate & Commercial Law",
+  "Mergers & Acquisitions",
+  "Banking & Finance",
+  "Capital Markets",
+  "Private Equity & Venture Capital",
+  "Technology Law",
+  "Data Protection & Privacy",
+  "Artificial Intelligence (AI) Law",
+  "FinTech Law",
+  "Intellectual Property",
+  "Trademarks",
+  "Copyright",
+  "Patent Law",
+  "Telecommunications",
+  "Media & Entertainment",
+  "Employment & Labour Law",
+  "Immigration Law",
+  "Tax Law",
+  "Competition & Antitrust",
+  "Regulatory & Compliance",
+  "Energy & Power",
+  "Oil & Gas",
+  "Mining Law",
+  "Infrastructure & PPP",
+  "Construction Law",
+  "Real Estate & Property",
+  "Environmental Law",
+  "Maritime & Shipping",
+  "Aviation Law",
+  "Insurance Law",
+  "Litigation",
+  "Arbitration",
+  "Mediation",
+  "Debt Recovery",
+  "Insolvency & Restructuring",
+  "Criminal Defence",
+  "Family Law",
+  "Divorce & Matrimonial",
+  "Child & Adoption Law",
+  "Wills, Probate & Estate Planning",
+  "Trusts & Wealth Management",
+  "Human Rights Law",
+  "NGO & Non-Profit Law",
+  "Public Procurement",
+  "Government Relations & Public Sector",
 ];
 
 const statesList = [
-  'Lagos', 'Abuja', 'Rivers', 'Oyo', 'Kano', 'Kaduna', 'Edo', 'Enugu',
-  'Anambra', 'Delta', 'Ogun', 'Plateau', 'Niger', 'Kwara', 'Borno',
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
+  "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu",
+  "FCT", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi",
+  "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
+  "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
 
 function LawyersContent() {
@@ -23,11 +68,11 @@ function LawyersContent() {
   const [lawyers, setLawyers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    name: searchParams.get('name') || '',
-    practiceArea: searchParams.get('practiceArea') || '',
-    location: searchParams.get('location') || '',
-    state: searchParams.get('state') || '',
-    isAvailable: searchParams.get('isAvailable') || '',
+    name: searchParams.get("name") || "",
+    practiceArea: searchParams.get("practiceArea") || "",
+    location: searchParams.get("location") || "",
+    state: searchParams.get("state") || "",
+    isAvailable: searchParams.get("isAvailable") || "",
   });
 
   async function fetchLawyers() {
@@ -77,7 +122,9 @@ function LawyersContent() {
           >
             <option value="">All Practice Areas</option>
             {practiceAreas.map((area) => (
-              <option key={area} value={area}>{area}</option>
+              <option key={area} value={area}>
+                {area}
+              </option>
             ))}
           </select>
           <input
@@ -94,7 +141,9 @@ function LawyersContent() {
           >
             <option value="">All States</option>
             {statesList.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
           <select
@@ -121,7 +170,9 @@ function LawyersContent() {
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-500 mb-4">{lawyers.length} lawyer{lawyers.length !== 1 ? 's' : ''} found</p>
+          <p className="text-sm text-gray-500 mb-4">
+            {lawyers.length} lawyer{lawyers.length !== 1 ? "s" : ""} found
+          </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {lawyers.map((lawyer: any) => (
               <Link
@@ -136,9 +187,16 @@ function LawyersContent() {
                 <div className="flex items-start space-x-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
                     {lawyer.photo ? (
-                      <img src={lawyer.photo} alt={lawyer.userId?.firstName} className="w-full h-full object-cover" />
+                      <img
+                        src={lawyer.photo}
+                        alt={lawyer.userId?.firstName}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <span>{lawyer.userId?.firstName?.[0]}{lawyer.userId?.lastName?.[0]}</span>
+                      <span>
+                        {lawyer.userId?.firstName?.[0]}
+                        {lawyer.userId?.lastName?.[0]}
+                      </span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -147,27 +205,46 @@ function LawyersContent() {
                         {lawyer.userId?.firstName} {lawyer.userId?.lastName}
                       </h3>
                       {lawyer.verificationBadge && (
-                        <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full flex-shrink-0">✓ Verified</span>
+                        <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full flex-shrink-0">
+                          ✓ Verified
+                        </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">{lawyer.city}, {lawyer.state}</p>
+                    <p className="text-sm text-gray-500">
+                      {lawyer.city}, {lawyer.state}
+                    </p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {lawyer.practiceAreas?.slice(0, 3).map((area: string) => (
-                        <span key={area} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{area}</span>
+                        <span
+                          key={area}
+                          className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full"
+                        >
+                          {area}
+                        </span>
                       ))}
                     </div>
                     <div className="flex items-center mt-2 text-sm">
                       <span className="text-yellow-500">★</span>
-                      <span className="ml-1 text-gray-700">{lawyer.rating?.toFixed(1)}</span>
-                      <span className="ml-1 text-gray-400">({lawyer.reviewCount})</span>
-                      {lawyer.subscription?.status === 'active' && (
-                        <span className="ml-auto text-xs text-[#C5A55A] font-medium">{lawyer.subscription.plan}</span>
+                      <span className="ml-1 text-gray-700">
+                        {lawyer.rating?.toFixed(1)}
+                      </span>
+                      <span className="ml-1 text-gray-400">
+                        ({lawyer.reviewCount})
+                      </span>
+                      {lawyer.subscription?.status === "active" && (
+                        <span className="ml-auto text-xs text-[#C5A55A] font-medium">
+                          {lawyer.subscription.plan}
+                        </span>
                       )}
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <span className="text-sm bg-[#1B2A4A]/10 text-[#1B2A4A] px-3 py-1 rounded-lg font-medium">Contact</span>
+                      <span className="text-sm bg-[#1B2A4A]/10 text-[#1B2A4A] px-3 py-1 rounded-lg font-medium">
+                        Contact
+                      </span>
                       {lawyer.consultationFee > 0 && (
-                        <span className="text-sm text-gray-500">₦{lawyer.consultationFee.toLocaleString()}/hr</span>
+                        <span className="text-sm text-gray-500">
+                          ₦{lawyer.consultationFee.toLocaleString()}/hr
+                        </span>
                       )}
                     </div>
                   </div>
