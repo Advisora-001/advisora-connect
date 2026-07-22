@@ -7,19 +7,20 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 
 export default function ClientDashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'history'>('overview');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
 
   useEffect(() => {
+    if (loading) return;
     if (!user || user.role !== 'client') {
       router.push('/login');
       return;
     }
     fetchEnquiries();
-  }, [user]);
+  }, [user, loading]);
 
   async function fetchEnquiries() {
     try {

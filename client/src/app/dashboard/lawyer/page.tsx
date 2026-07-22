@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 
 export default function LawyerDashboard() {
-  const { user, profile, refreshUser } = useAuth();
+  const { user, profile, loading, refreshUser } = useAuth();
   const router = useRouter();
   const [leads, setLeads] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"overview" | "profile" | "leads" | "payout">(
@@ -15,13 +15,14 @@ export default function LawyerDashboard() {
   const [profileForm, setProfileForm] = useState<any>({});
 
   useEffect(() => {
+    if (loading) return;
     if (!user || user.role !== "lawyer") {
       router.push("/login");
       return;
     }
     fetchLeads();
     if (profile) setProfileForm(profile);
-  }, [user, profile]);
+  }, [user, profile, loading]);
 
   async function fetchLeads() {
     try {
