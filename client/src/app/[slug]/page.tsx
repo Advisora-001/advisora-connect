@@ -12,6 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     'privacy-policy': 'Privacy Policy - Advisora Connect',
     'data-protection': 'Data Protection Policy - Advisora Connect',
     'code-of-conduct': 'Code of Conduct - Advisora Connect',
+    'professional-onboarding-agreement': 'Professional Onboarding Agreement - Advisora Connect',
   };
 
   return {
