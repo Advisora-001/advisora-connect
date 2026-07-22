@@ -173,10 +173,25 @@ export default function LawyerDashboard() {
                 <p className="text-xs text-gray-500 mt-1">JPG or PNG. Max 5MB.</p>
               </div>
             </div>
+<div>
+              <label className="block text-sm font-semibold text-accent mb-2">
+                Other Names
+              </label>
+              <input
+                type="text"
+                value={profileForm.otherNames || ""}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, otherNames: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400"
+                placeholder="e.g., Maiden name, alias"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-semibold text-accent mb-2">
-                  Bar Number *
+                  SCN Number *
                 </label>
                 <input
                   type="text"
@@ -189,7 +204,7 @@ export default function LawyerDashboard() {
                   }
                   required
                   className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400"
-                  placeholder="Enter bar number"
+                  placeholder="Enter SCN number"
                 />
               </div>
               <div>
@@ -384,25 +399,33 @@ export default function LawyerDashboard() {
 
             <div>
               <label className="block text-sm font-semibold text-accent mb-2">
-                Available Days{" "}
-                <span className="text-gray-500 font-normal">
-                  (comma separated)
-                </span>
+                Available Days
               </label>
-              <input
-                type="text"
-                value={profileForm.availableDays?.join(", ") || ""}
-                onChange={(e) =>
-                  setProfileForm({
-                    ...profileForm,
-                    availableDays: e.target.value
-                      .split(",")
-                      .map((s: string) => s.trim()),
-                  })
-                }
-                className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400"
-                placeholder="e.g., Monday, Tuesday, Wednesday"
-              />
+              <div className="flex flex-wrap gap-2">
+                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
+                  const isSelected = profileForm.availableDays?.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        isSelected
+                          ? "bg-accent text-white shadow-md"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                      onClick={() => {
+                        const days = profileForm.availableDays || [];
+                        const updated = isSelected
+                          ? days.filter((d: string) => d !== day)
+                          : [...days, day];
+                        setProfileForm({ ...profileForm, availableDays: updated });
+                      }}
+                    >
+                      {day.substring(0, 3)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>

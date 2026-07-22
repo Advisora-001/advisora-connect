@@ -155,7 +155,7 @@ export default function LawyerDetailPage() {
                   Bar Information
                 </h3>
                 <p className="text-gray-700">
-                  Bar Number: {lawyer.barNumber || "N/A"}
+                  SCN Number: {lawyer.barNumber || "N/A"}
                 </p>
                 <p className="text-gray-700">
                   Call: {lawyer.stateOfCall} ({lawyer.yearOfCall})
