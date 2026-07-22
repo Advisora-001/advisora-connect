@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 
 export default function AdminDashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'verifications' | 'users'>('overview');
   const [analytics, setAnalytics] = useState<any>(null);
@@ -17,13 +17,13 @@ export default function AdminDashboard() {
   const [manageLawyer, setManageLawyer] = useState<any>(null);
 
   useEffect(() => {
-    if (loading) return;
+    if (authLoading) return;
     if (!user || user.role !== 'admin') {
       router.push('/login');
       return;
     }
     fetchData();
-  }, [user, loading]);
+  }, [user, authLoading]);
 
   async function fetchData() {
     setLoading(true);
