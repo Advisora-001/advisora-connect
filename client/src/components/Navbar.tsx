@@ -29,9 +29,6 @@ export default function Navbar() {
             <Link href="/lawyers" className="text-gray-700 hover:text-[#1B2A4A] font-medium transition-colors">
               Find Lawyers
             </Link>
-            <Link href="/how-it-works" className="text-gray-700 hover:text-[#1B2A4A] font-medium transition-colors">
-              How It Works
-            </Link>
             <Link href="/about" className="text-gray-700 hover:text-[#1B2A4A] font-medium transition-colors">
               About Us
             </Link>
@@ -94,9 +91,6 @@ export default function Navbar() {
           <div className="md:hidden pb-4 space-y-3">
             <Link href="/lawyers" className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
               Find Lawyers
-            </Link>
-            <Link href="/how-it-works" className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
-              How It Works
             </Link>
             <Link href="/about" className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
               About Us
