@@ -10,8 +10,9 @@ export default function ClientDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [enquiries, setEnquiries] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'history'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments'>('overview');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
+  const [appointments, setAppointments] = useState<any[]>([]);
 
   useEffect(() => {
     if (loading) return;
@@ -20,6 +21,7 @@ export default function ClientDashboard() {
       return;
     }
     fetchEnquiries();
+    fetchAppointments();
   }, [user, loading]);
 
   async function fetchEnquiries() {
@@ -28,6 +30,28 @@ export default function ClientDashboard() {
       setEnquiries(data.leads);
     } catch {}
   }
+
+  async function fetchAppointments() {
+    try {
+      const data = await api.getMyAppointments();
+      setAppointments(data.appointments || []);
+    } catch {}
+  }
+
+  const handleCancelAppointment = async (id: string) => {
+    if (!confirm('Are you sure you want to cancel this appointment?')) return;
+    try {
+      await api.cancelAppointment(id);
+      fetchAppointments();
+      fetchEnquiries();
+    } catch (err: any) {
+      alert(err.message || 'Failed to cancel appointment');
+    }
+  };
+
+  const handleRetryPayment = (appointment: any) => {
+    router.push('/payment/checkout?appointmentId=' + appointment._id + '&amount=' + appointment.totalAmount);
+  };
 
   const handleBookConsultation = async (leadId: string) => {
     try {

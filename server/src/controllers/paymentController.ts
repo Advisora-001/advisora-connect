@@ -7,6 +7,7 @@ import Subscription from '../models/Subscription';
 import Lead from '../models/Lead';
 import Appointment from '../models/Appointment';
 import PaymentRecord from '../models/PaymentRecord';
+import { sendEmail } from '../services/email';
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
 const PLATFORM_FEE_AMOUNT = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
@@ -122,6 +123,28 @@ const verifyPayment = async (req: Request, res: Response) => {
         if (appointment.leadId) {
           await Lead.findByIdAndUpdate(appointment.leadId, { status: 'booked', paymentStatus: 'paid', paymentRef: reference });
         }
+
+        // Send payment confirmation email to lawyer
+        try {
+          const lawyer = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
+          const client = await User.findById(appointment.clientId).select('firstName lastName email');
+          if (lawyer?.userId?.email) {
+            await sendEmail({
+              to: lawyer.userId.email,
+              subject: 'New Consultation Payment Received - Advisora Connect',
+              html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #1B2A4A;">Payment Confirmed!</h2>
+                <p>A consultation payment has been received:</p>
+                <p><strong>Client:</strong> ${client?.firstName} ${client?.lastName}</p>
+                <p><strong>Amount:</strong> ₦${(appointment.consultationFee || 0).toLocaleString()}</p>
+                <p><strong>Reference:</strong> ${reference}</p>
+                <p>The consultation has been confirmed. Please check your dashboard for details.</p>
+              </div>`
+            });
+          }
+        } catch (notifyErr) {
+          console.error('Failed to send payment notification:', notifyErr);
+        }
       }
     }
 
@@ -220,6 +243,28 @@ const handleWebhook = async (req: Request, res: Response) => {
             paystackRef: reference,
             status: 'completed',
           });
+
+          // Send payment confirmation email to lawyer
+          try {
+            const lawyer = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
+            const clientUser = await User.findById(appointment.clientId).select('firstName lastName email');
+            if (lawyer?.userId?.email) {
+              await sendEmail({
+                to: lawyer.userId.email,
+                subject: 'New Consultation Payment Received - Advisora Connect',
+                html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #1B2A4A;">Payment Confirmed!</h2>
+                  <p>A consultation payment has been received:</p>
+                  <p><strong>Client:</strong> ${clientUser?.firstName} ${clientUser?.lastName}</p>
+                  <p><strong>Amount:</strong> ₦${(appointment.consultationFee || 0).toLocaleString()}</p>
+                  <p><strong>Reference:</strong> ${reference}</p>
+                  <p>The consultation has been confirmed. Please check your dashboard for details.</p>
+                </div>`
+              });
+            }
+          } catch (notifyErr) {
+            console.error('Failed to send payment notification:', notifyErr);
+          }
         }
       }
     }

@@ -205,6 +205,14 @@ class ApiClient {
     return this.request<any>('/appointments/my-appointments');
   }
 
+  cancelAppointment(id: string) {
+    return this.request<any>('/appointments/' + id + '/cancel', { method: 'PUT' });
+  }
+
+  getLawyerAppointments() {
+    return this.request<any>('/appointments/lawyer');
+  }
+
   // Admin
   getPendingVerifications() {
     return this.request<{ count: number; lawyers: any[] }>(
