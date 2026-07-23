@@ -126,11 +126,11 @@ const verifyPayment = async (req: Request, res: Response) => {
 
         // Send payment confirmation email to lawyer
         try {
-          const lawyer = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
-          const client = await User.findById(appointment.clientId).select('firstName lastName email');
-          if (lawyer?.userId?.email) {
+          const lawyer: any = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
+          const client: any = await User.findById(appointment.clientId).select('firstName lastName email');
+          if ((lawyer as any)?.userId?.email) {
             await sendEmail({
-              to: lawyer.userId.email,
+              to: (lawyer as any).userId.email,
               subject: 'New Consultation Payment Received - Advisora Connect',
               html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h2 style="color: #1B2A4A;">Payment Confirmed!</h2>
@@ -246,11 +246,11 @@ const handleWebhook = async (req: Request, res: Response) => {
 
           // Send payment confirmation email to lawyer
           try {
-            const lawyer = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
+            const lawyer: any = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
             const clientUser = await User.findById(appointment.clientId).select('firstName lastName email');
-            if (lawyer?.userId?.email) {
+            if ((lawyer as any)?.userId?.email) {
               await sendEmail({
-                to: lawyer.userId.email,
+                to: (lawyer as any).userId.email,
                 subject: 'New Consultation Payment Received - Advisora Connect',
                 html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <h2 style="color: #1B2A4A;">Payment Confirmed!</h2>

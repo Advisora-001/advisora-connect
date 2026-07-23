@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Appointment from '../models/Appointment';
+import Lead from '../models/Lead';
 import { AuthRequest } from '../middleware/auth';
 
 // @desc    Get client's appointments
