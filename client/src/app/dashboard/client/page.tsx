@@ -13,7 +13,6 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments'>('overview');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
-  const [appointments, setAppointments] = useState<any[]>([]);
 
   useEffect(() => {
     if (loading) return;
@@ -54,343 +53,166 @@ export default function ClientDashboard() {
     router.push('/payment/checkout?appointmentId=' + appointment._id + '&amount=' + appointment.totalAmount);
   };
 
-  async function fetchAppointments() {
+  const handleBook = async (enquiryId: string) => {
+    const date = prompt('Enter preferred date (YYYY-MM-DD):');
+    if (!date) return;
+    const timeSlot = prompt('Enter preferred time (e.g., 10:00 AM):');
+    if (!timeSlot) return;
+    
     try {
-      const data = await api.getMyAppointments();
-      setAppointments(data.appointments || []);
-    } catch {}
+      const response = await api.bookConsultation(enquiryId, {
+        date,
+        timeSlot,
+        duration: 30,
+        consultationType: 'video',
+      });
+      router.push(`/payment/checkout?appointmentId=${response.appointment._id}&amount=${response.paymentBreakdown.total}`);
+    } catch (err: any) {
+      alert(err.message || 'Booking failed');
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-20">Loading...</div>;
   }
 
-  const handleCancelAppointment = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this appointment?')) return;
-    try {
-      await api.cancelAppointment(id);
-      fetchAppointments();
-      fetchEnquiries();
-    } catch (err: any) {
-      alert(err.message || 'Failed to cancel appointment');
-    }
-  };
-
-  const handleRetryPayment = (appointment: any) => {
-    router.push('/payment/checkout?appointmentId=' + appointment._id + '&amount=' + appointment.totalAmount);
-  };
-
-  const handleBookConsultation = async (leadId: string) => {
-    try {
-      const response = await api.bookConsultation(leadId, {
-        date: new Date(),
-        timeSlot: "Morning",
-        duration: 30,
-        consultationType: "video"
-      });
-      if (response.appointment) {
-        // Navigate to payment checkout page
-        const appointment = response.appointment;
-        router.push(`/payment/checkout?appointmentId=${appointment._id}&amount=${response.paymentBreakdown?.total}`);
-      }
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to book consultation');
-    }
-  };
-
-  if (!user) return null;
-
-  const acceptedEnquiries = enquiries.filter(e => e.status === 'accepted');
-  const bookedEnquiries = enquiries.filter(e => e.status === 'booked');
-  const pendingEnquiries = enquiries.filter(e => e.status === 'pending');
-
-  const getStatusBadge = (enquiry: any) => {
-    const status = enquiry.status || enquiry.paymentStatus;
-    switch (status) {
-      case 'accepted':
-        return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Lawyer Accepted - Book Consultation</span>;
-      case 'booked':
-        return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Booked</span>;
-      case 'declined':
-        return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">Lawyer Declined</span>;
-      case 'paid':
-      case 'contacted':
-        return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Contact Revealed</span>;
-      case 'pending':
-      default:
-        return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Awaiting Response</span>;
-    }
-  };
+  const pendingEnquiries = enquiries.filter((e: any) => e.status === 'pending');
+  const acceptedEnquiries = enquiries.filter((e: any) => e.status === 'accepted');
+  const bookedEnquiries = enquiries.filter((e: any) => e.status === 'booked');
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-accent">Client Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back, {user.firstName} {user.lastName}</p>
+        <h1 className="text-3xl font-bold text-[#1B2A4A]">
+          Welcome, {user?.firstName}
+        </h1>
+        <p className="text-gray-600 mt-2">Manage your enquiries and appointments</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-8 border-b-2 border-primary/30 pb-2">
-        {(['overview', 'enquiries', 'history'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 font-medium capitalize transition-all rounded-t-lg ${
-              activeTab === tab 
-                ? 'text-accent border-b-4 border-primary bg-white shadow-sm' 
-                : 'text-gray-500 hover:text-accent hover:bg-white/50'
-            }`}
-          >
-            {tab === 'history' ? 'Payment History' : tab}
-          </button>
-        ))}
+      <div className="flex gap-2 mb-8">
+        <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === 'overview' ? 'bg-accent text-white' : 'bg-gray-200 text-gray-600'}`}>Overview</button>
+        <button onClick={() => setActiveTab('enquiries')} className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === 'enquiries' ? 'bg-accent text-white' : 'bg-gray-200 text-gray-600'}`}>My Enquiries</button>
+        <button onClick={() => setActiveTab('appointments')} className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === 'appointments' ? 'bg-accent text-white' : 'bg-gray-200 text-gray-600'}`}>Appointments</button>
       </div>
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <>
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-primary hover:shadow-lg transition-shadow">
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Enquiries</p>
-              <p className="text-4xl font-bold text-accent mt-3">{enquiries.length}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-yellow-500 hover:shadow-lg transition-shadow">
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Pending</p>
-              <p className="text-4xl font-bold text-yellow-600 mt-3">{pendingEnquiries.length}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Accepted</p>
-              <p className="text-4xl font-bold text-green-600 mt-3">{acceptedEnquiries.length}</p>
-            </div>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow p-6 text-center">
+            <p className="text-3xl font-bold text-[#1B2A4A]">{enquiries.length}</p>
+            <p className="text-gray-600 mt-2">Total Enquiries</p>
           </div>
-
-          <div className="bg-white rounded-xl shadow-lg border-2 border-primary/20 p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-accent">Need Legal Help?</h2>
-                <p className="text-gray-600 mt-1">Find the right lawyer for your needs</p>
-              </div>
-              <Link
-                href="/lawyers"
-                className="bg-accent text-white px-6 py-3 rounded-lg hover:bg-accent/90 font-bold shadow-md transition-all"
-              >
-                Browse Lawyers
-              </Link>
-            </div>
+          <div className="bg-white rounded-xl shadow p-6 text-center">
+            <p className="text-3xl font-bold text-green-600">{acceptedEnquiries.length + bookedEnquiries.length}</p>
+            <p className="text-gray-600 mt-2">Accepted</p>
           </div>
-
-          {/* Recent Enquiries Preview */}
-          {enquiries.length > 0 && (
-            <div className="mt-8 bg-white rounded-xl shadow-lg border-2 border-primary/20">
-              <div className="p-6 border-b-2 border-primary/20 bg-primary/5">
-                <h2 className="text-xl font-bold text-accent">Recent Enquiries</h2>
-              </div>
-              <div className="divide-y divide-primary/10">
-                {enquiries.slice(0, 3).map((enquiry: any) => (
-                  <div key={enquiry._id} className="p-6 hover:bg-primary/5 transition-colors">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                        {enquiry.lawyerId?.userId?.firstName?.[0]}{enquiry.lawyerId?.userId?.lastName?.[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-accent">
-                          {enquiry.lawyerId?.userId?.firstName} {enquiry.lawyerId?.userId?.lastName}
-                        </p>
-                        <p className="text-gray-600 mt-1 line-clamp-2">{enquiry.enquiryMessage}</p>
-                        <p className="text-sm text-gray-400 mt-2">
-                          {new Date(enquiry.createdAt).toLocaleDateString('en-US', { 
-                            year: 'numeric', month: 'long', day: 'numeric' 
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        {getStatusBadge(enquiry)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {enquiries.length > 3 && (
-                <div className="p-4 text-center border-t border-primary/10">
-                  <button
-                    onClick={() => setActiveTab('enquiries')}
-                    className="text-accent font-semibold hover:underline"
-                  >
-                    View All Enquiries →
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </>
+          <div className="bg-white rounded-xl shadow p-6 text-center">
+            <p className="text-3xl font-bold text-[#C5A55A]">{appointments.length}</p>
+            <p className="text-gray-600 mt-2">Appointments</p>
+          </div>
+        </div>
       )}
 
       {/* Enquiries Tab */}
       {activeTab === 'enquiries' && (
-        <div className="bg-white rounded-xl shadow-lg border-2 border-primary/20">
-          <div className="p-6 border-b-2 border-primary/20 bg-primary/5">
-            <h2 className="text-2xl font-bold text-accent">My Enquiries</h2>
-            <p className="text-gray-600 text-sm mt-1">
-              {enquiries.length} total {enquiries.length === 1 ? 'enquiry' : 'enquiries'}
-            </p>
-          </div>
+        <div className="space-y-6">
           {enquiries.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-primary-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <p className="text-xl text-gray-500 font-medium">No enquiries yet</p>
-              <p className="text-gray-400 mt-2">Start by browsing lawyers and sending an enquiry</p>
-              <Link
-                href="/lawyers"
-                className="inline-block mt-6 bg-accent text-white px-6 py-3 rounded-lg hover:bg-accent/90 font-bold shadow-md transition-all"
-              >
-                Browse Lawyers
-              </Link>
+            <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+              No enquiries yet. Browse lawyers and send your first enquiry!
             </div>
           ) : (
-            <div className="divide-y divide-primary/10">
-              {enquiries.map((enquiry: any) => (
-                <div key={enquiry._id} className="p-6 hover:bg-primary/5 transition-colors">
-                  <div 
-                    className="flex items-start space-x-4 cursor-pointer"
-                    onClick={() => setExpandedEnquiry(expandedEnquiry === enquiry._id ? null : enquiry._id)}
-                  >
-                    <div className="w-14 h-14 bg-accent rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+            enquiries.map((enquiry: any) => (
+              <div key={enquiry._id} className="bg-white rounded-xl shadow p-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#1B2A4A] rounded-full flex items-center justify-center text-white text-sm font-bold">
                       {enquiry.lawyerId?.userId?.firstName?.[0]}{enquiry.lawyerId?.userId?.lastName?.[0]}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-accent text-lg">
-                            {enquiry.lawyerId?.userId?.firstName} {enquiry.lawyerId?.userId?.lastName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {enquiry.lawyerId?.practiceAreas?.slice(0, 2).join(', ') || 'Legal Professional'}
-                          </p>
-                        </div>
-                        {getStatusBadge(enquiry)}
-                      </div>
-                      <p className="text-gray-600 mt-2 line-clamp-2">{enquiry.enquiryMessage}</p>
-                      <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
-                        <span>{new Date(enquiry.createdAt).toLocaleDateString('en-US', { 
-                          year: 'numeric', month: 'long', day: 'numeric' 
-                        })}</span>
-                        {enquiry.paymentRef && (
-                          <span>Ref: {enquiry.paymentRef}</span>
-                        )}
+                    <div>
+                      <p className="font-semibold text-[#1B2A4A]">{enquiry.lawyerId?.userId?.firstName} {enquiry.lawyerId?.userId?.lastName}</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          enquiry.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                          enquiry.status === 'booked' ? 'bg-blue-100 text-blue-700' :
+                          enquiry.status === 'declined' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {enquiry.status}
+                        </span>
+                        <span className="text-xs text-gray-400">{new Date(enquiry.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <svg className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${expandedEnquiry === enquiry._id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
                   </div>
-
-                  {/* Expanded Details */}
-                  {expandedEnquiry === enquiry._id && (
-                    <div className="mt-4 ml-18 pl-4 border-l-2 border-primary/30 p-4 bg-primary/5 rounded-lg">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-accent">Lawyer City</p>
-                          <p className="text-gray-600">{enquiry.lawyerId?.city || 'N/A'}, {enquiry.lawyerId?.state || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-accent">Status</p>
-                          <p className="text-gray-600 capitalize">{enquiry.status}</p>
-                        </div>
-                        {enquiry.status === 'accepted' && (
-                          <div className="col-span-2">
-                            <button
-                              onClick={() => handleBookConsultation(enquiry._id)}
-                              className="bg-accent text-white px-6 py-3 rounded-lg hover:bg-accent/90 font-bold shadow-md transition-all"
-                            >
-                              Book Consultation
-                            </button>
-                            <p className="text-sm text-gray-500 mt-2">Click to book and proceed to payment</p>
-                          </div>
-                        )}
-                        {enquiry.lawyerId?.userId?.email && (enquiry.status === 'paid' || enquiry.status === 'booked') && (
-                          <div className="col-span-2">
-                            <p className="text-sm font-semibold text-accent">Lawyer Contact</p>
-                            <p className="text-gray-600">📧 {enquiry.lawyerId.userId.email}</p>
-                            {enquiry.lawyerId.userId.phone && (
-                              <p className="text-gray-600">📞 {enquiry.lawyerId.userId.phone}</p>
-                            )}
-                          </div>
-                        )}
-                        {enquiry.lawyerId?.consultationFee && (
-                          <div>
-                            <p className="text-sm font-semibold text-accent">Consultation Fee</p>
-                            <p className="text-gray-600">₦{enquiry.lawyerId.consultationFee?.toLocaleString()}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  {enquiry.status === 'accepted' && (
+                    <button onClick={() => handleBook(enquiry._id)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
+                      Book Consultation
+                    </button>
                   )}
                 </div>
-              ))}
-            </div>
+                
+                {expandedEnquiry === enquiry._id && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">{enquiry.enquiryMessage}</p>
+                  </div>
+                )}
+                <button onClick={() => setExpandedEnquiry(expandedEnquiry === enquiry._id ? null : enquiry._id)} className="text-sm text-[#1B2A4A] mt-3 hover:underline">
+                  {expandedEnquiry === enquiry._id ? 'Hide' : 'View Message'}
+                </button>
+              </div>
+            ))
           )}
         </div>
       )}
 
-      {/* Payment History Tab */}
-      {activeTab === 'history' && (
-        <div className="bg-white rounded-xl shadow-lg border-2 border-primary/20">
-          <div className="p-6 border-b-2 border-primary/20 bg-primary/5">
-            <h2 className="text-2xl font-bold text-accent">Payment History</h2>
-            <p className="text-gray-600 text-sm mt-1">
-              {bookedEnquiries.length} completed {bookedEnquiries.length === 1 ? 'booking' : 'bookings'}
-            </p>
-          </div>
-          {bookedEnquiries.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-primary-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-xl text-gray-500 font-medium">No payments yet</p>
-              <p className="text-gray-400 mt-2">Payments will appear here after consultation bookings</p>
+      {/* Appointments Tab */}
+      {activeTab === 'appointments' && (
+        <div className="space-y-6">
+          {appointments.length === 0 ? (
+            <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+              No appointments yet. Book a consultation to get started!
             </div>
           ) : (
-            <div className="divide-y divide-primary/10">
-              {bookedEnquiries.map((enquiry: any) => (
-                <div key={enquiry._id} className="p-6 hover:bg-primary/5 transition-colors">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-accent">
-                            {enquiry.lawyerId?.userId?.firstName} {enquiry.lawyerId?.userId?.lastName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(enquiry.createdAt).toLocaleDateString('en-US', { 
-                              year: 'numeric', month: 'long', day: 'numeric' 
-                            })}
-                          </p>
-                        </div>
-                        <span className="text-green-600 font-bold">
-                          ₦{enquiry.lawyerId?.consultationFee ? (enquiry.lawyerId.consultationFee + 10000).toLocaleString() : '10,000'}
-                        </span>
-                      </div>
-                      {enquiry.paymentRef && (
-                        <p className="text-xs text-gray-400 mt-2">Reference: {enquiry.paymentRef}</p>
-                      )}
-                      {enquiry.lawyerId?.userId?.email && (
-                        <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                          <p className="text-sm font-semibold text-green-700">Contact Details Revealed</p>
-                          <p className="text-sm text-green-600 mt-1">📧 {enquiry.lawyerId.userId.email}</p>
-                        </div>
-                      )}
+            appointments.map((appt: any) => (
+              <div key={appt._id} className="bg-white rounded-xl shadow p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-[#1B2A4A] capitalize">{appt.consultationType} Consultation</p>
+                    <p className="text-sm text-gray-600">Date: {appt.date} at {appt.timeSlot}</p>
+                    <p className="text-sm text-gray-600">Duration: {appt.duration} minutes</p>
+                    <p className="text-sm text-gray-600">Fee: ₦{appt.consultationFee?.toLocaleString()} + ₦{appt.platformFee?.toLocaleString()} platform fee</p>
+                    <p className="text-sm font-semibold mt-1">Total: ₦{appt.totalAmount?.toLocaleString()}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        appt.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {appt.paymentStatus}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        appt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                        appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {appt.status}
+                      </span>
                     </div>
                   </div>
+                  <div className="flex gap-2">
+                    {appt.paymentStatus !== 'paid' && appt.status !== 'cancelled' && (
+                      <>
+                        <button onClick={() => handleRetryPayment(appt)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
+                          Pay Now
+                        </button>
+                        <button onClick={() => handleCancelAppointment(appt._id)} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-red-200">
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
       )}
