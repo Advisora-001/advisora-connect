@@ -8,6 +8,7 @@ import Lead from '../models/Lead';
 import Appointment from '../models/Appointment';
 import PaymentRecord from '../models/PaymentRecord';
 import { sendEmail } from '../services/email';
+import { createNotification } from './notificationController';
 
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
@@ -146,6 +147,17 @@ const verifyPayment = async (req: Request, res: Response) => {
         } catch (notifyErr) {
           console.error('Failed to send payment notification:', notifyErr);
         }
+
+        // Send in-app notification to lawyer
+        try {
+          await createNotification(
+            appointment.lawyerId.toString(),
+            'payment_received',
+            'Payment Received',
+            `Payment of ₦${(appointment.consultationFee || 0).toLocaleString()} received for a consultation`,
+            `/dashboard/lawyer`
+          );
+        } catch {}
       }
     }
 

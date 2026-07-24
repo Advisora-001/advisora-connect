@@ -20,6 +20,7 @@ import documentRoutes from './routes/documentRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import legalRoutes from './routes/legalRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -65,6 +66,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

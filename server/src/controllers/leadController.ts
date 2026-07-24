@@ -4,6 +4,7 @@ import LawyerProfile from '../models/LawyerProfile';
 import Appointment from '../models/Appointment';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
+import { createNotification } from './notificationController';
 import { sendLeadNotificationEmail } from '../services/email';
 
 // @desc    Submit enquiry (create lead) - FREE for first enquiry per matter
@@ -202,6 +203,13 @@ const bookConsultation = async (req: AuthRequest, res: Response) => {
 // @route   GET /api/leads/my-enquiries
 const getMyEnquiries = async (req: AuthRequest, res: Response) => {
   try {
+    // Auto-expire leads older than 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    await Lead.updateMany(
+      { status: 'pending', createdAt: { $lt: thirtyDaysAgo } },
+      { status: 'expired' }
+    );
+
     const leads = await Lead.find({ clientId: req.user?._id })
       .populate({
         path: 'lawyerId',

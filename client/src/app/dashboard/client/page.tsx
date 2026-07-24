@@ -13,6 +13,11 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments'>('overview');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [bookingEnquiry, setBookingEnquiry] = useState<any>(null);
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
+  const [bookingDuration, setBookingDuration] = useState(30);
+  const [bookingType, setBookingType] = useState("video");
 
   useEffect(() => {
     if (loading) return;
@@ -53,19 +58,24 @@ export default function ClientDashboard() {
     router.push('/payment/checkout?appointmentId=' + appointment._id + '&amount=' + appointment.totalAmount);
   };
 
-  const handleBook = async (enquiryId: string) => {
-    const date = prompt('Enter preferred date (YYYY-MM-DD):');
-    if (!date) return;
-    const timeSlot = prompt('Enter preferred time (e.g., 10:00 AM):');
-    if (!timeSlot) return;
-    
+  const openBookingModal = (enquiry: any) => {
+    setBookingEnquiry(enquiry);
+    setBookingDate(new Date().toISOString().split('T')[0]);
+    setBookingTime('10:00 AM');
+    setBookingDuration(30);
+    setBookingType('video');
+  };
+
+  const handleBook = async () => {
+    if (!bookingEnquiry || !bookingDate || !bookingTime) return;
     try {
-      const response = await api.bookConsultation(enquiryId, {
-        date,
-        timeSlot,
-        duration: 30,
-        consultationType: 'video',
+      const response = await api.bookConsultation(bookingEnquiry._id, {
+        date: bookingDate,
+        timeSlot: bookingTime,
+        duration: bookingDuration,
+        consultationType: bookingType,
       });
+      setBookingEnquiry(null);
       router.push(`/payment/checkout?appointmentId=${response.appointment._id}&amount=${response.paymentBreakdown.total}`);
     } catch (err: any) {
       alert(err.message || 'Booking failed');
@@ -145,7 +155,7 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                   {enquiry.status === 'accepted' && (
-                    <button onClick={() => handleBook(enquiry._id)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
+                    <button onClick={() => openBookingModal(enquiry)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
                       Book Consultation
                     </button>
                   )}

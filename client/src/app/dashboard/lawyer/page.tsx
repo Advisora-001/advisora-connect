@@ -431,7 +431,37 @@ export default function LawyerDashboard() {
 
             <div>
               <label className="block text-sm font-semibold text-accent mb-2">
-                Available Hours
+                Available From
+              </label>
+              <select
+                value={profileForm.availableFrom || ""}
+                onChange={(e) => setProfileForm({ ...profileForm, availableFrom: e.target.value })}
+                className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent">
+                <option value="">Select start time</option>
+                {["8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM"].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-accent mb-2">
+                Available To
+              </label>
+              <select
+                value={profileForm.availableTo || ""}
+                onChange={(e) => setProfileForm({ ...profileForm, availableTo: e.target.value })}
+                className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent">
+                <option value="">Select end time</option>
+                {["12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM"].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-accent mb-2">
+                Available Hours (manual)
               </label>
               <input
                 type="text"
@@ -443,7 +473,7 @@ export default function LawyerDashboard() {
                   })
                 }
                 className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400"
-                placeholder="e.g., 9:00 AM - 5:00 PM"
+                placeholder="e.g., 9:00 AM - 5:00 PM (or set specific start/end times below)"
               />
             </div>
 

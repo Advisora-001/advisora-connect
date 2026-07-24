@@ -267,6 +267,15 @@ class ApiClient {
     return this.request<any>(`/documents/${id}/share`, { method: 'POST', body: { userId } });
   }
 
+  // Notifications
+  getNotifications() {
+    return this.request<{ notifications: any[]; unreadCount: number }>('/notifications');
+  }
+
+  markNotificationsRead(ids?: string[]) {
+    return this.request<{ message: string }>('/notifications/mark-read', { method: 'PUT', body: { ids } });
+  }
+
   // Legal Documents
   getActiveLegalDocuments() {
     return this.request<{ count: number; documents: any[] }>('/legal');
