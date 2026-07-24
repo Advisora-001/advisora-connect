@@ -8,7 +8,7 @@ import Lead from '../models/Lead';
 import Appointment from '../models/Appointment';
 import PaymentRecord from '../models/PaymentRecord';
 import { sendEmail } from '../services/email';
-import { sendEmail } from '../services/email';
+
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
 const PLATFORM_FEE_AMOUNT = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
