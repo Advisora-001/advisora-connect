@@ -8,6 +8,7 @@ import Lead from '../models/Lead';
 import Appointment from '../models/Appointment';
 import PaymentRecord from '../models/PaymentRecord';
 import { sendEmail } from '../services/email';
+import { sendEmail } from '../services/email';
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
 const PLATFORM_FEE_AMOUNT = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
@@ -247,7 +248,7 @@ const handleWebhook = async (req: Request, res: Response) => {
           // Send payment confirmation email to lawyer
           try {
             const lawyer: any = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
-            const clientUser = await User.findById(appointment.clientId).select('firstName lastName email');
+            const clientUser: any = await User.findById(appointment.clientId).select('firstName lastName email');
             if ((lawyer as any)?.userId?.email) {
               await sendEmail({
                 to: (lawyer as any).userId.email,
