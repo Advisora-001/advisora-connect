@@ -182,12 +182,8 @@ export default function LawyerDetailPage() {
             <h3 className="font-semibold text-lg text-[#1B2A4A] mb-4">
               Contact
             </h3>
-            <p className="text-gray-600 mb-2">
-              📍 {lawyer.officeAddress || `${lawyer.city}, ${lawyer.state}`}
-            </p>
-            <p className="text-gray-600 mb-2">📧 {lawyer.userId?.email}</p>
             <p className="text-gray-600 mb-4">
-              📞 {lawyer.userId?.phone || "Not provided"}
+              📍 {lawyer.officeAddress || `${lawyer.city}, ${lawyer.state}`}
             </p>
 
             {lawyer.consultationFee > 0 && (

@@ -75,7 +75,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-10 items-center">
             <div className="text-center md:text-left">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Find Trusted Lawyers Across Africa
+                Connect with individuals and businesses seeking legal services
               </h1>
               <p className="mt-6 text-lg md:text-xl text-primary/80">
                 Need legal guidance? Advisora connects individuals and
