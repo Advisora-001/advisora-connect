@@ -155,12 +155,26 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                   {enquiry.status === 'accepted' && (
-                    <button onClick={() => openBookingModal(enquiry)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
+                    <button onClick={() => router.push(`/book/${enquiry.lawyerId?._id}`)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
                       Book Consultation
                     </button>
                   )}
                 </div>
                 
+                {/* Show booking context if available */}
+                {enquiry.bookingContext && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
+                      {enquiry.bookingContext.service?.name}
+                    </span>
+                    <span className="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">
+                      {enquiry.bookingContext.date}
+                    </span>
+                    <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
+                      {enquiry.bookingContext.timeSlot}
+                    </span>
+                  </div>
+                )}
                 {expandedEnquiry === enquiry._id && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">{enquiry.enquiryMessage}</p>

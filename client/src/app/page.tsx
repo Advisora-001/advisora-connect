@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useProfileGate } from '@/hooks/useProfileGate';
 
 const HERO_IMAGE = '/Hero-section.jpg';
 
@@ -55,6 +57,8 @@ const steps = [
 
 export default function HomePage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const { requireAccess, GateModal } = useProfileGate();
   const [featuredLawyers, setFeaturedLawyers] = useState<any[]>([]);
 
   useEffect(() => {
@@ -181,7 +185,14 @@ export default function HomePage() {
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {featuredLawyers.map((lawyer: any) => (
-                <Link key={lawyer._id} href={`/lawyers/${lawyer._id}`} className="bg-white border-2 border-primary/10 rounded-xl p-6 hover:shadow-xl hover:border-primary/30 transition-all group">
+                <div
+                  key={lawyer._id}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    requireAccess(lawyer._id);
+                  }}
+                  className="bg-white border-2 border-primary/10 rounded-xl p-6 hover:shadow-xl hover:border-primary/30 transition-all group cursor-pointer"
+                >
                   <div className="flex items-start space-x-4">
                     <div className="w-16 h-16 rounded-full overflow-hidden bg-accent flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
                       {lawyer.photo ? (
@@ -212,12 +223,13 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
         </section>
       )}
+      {GateModal}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto } from '../controllers/lawyerController';
+import { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto, getAvailability } from '../controllers/lawyerController';
 import { protect, authorize } from '../middleware/auth';
 import { upload } from '../config/cloudinary';
 
@@ -7,6 +7,7 @@ const router = Router();
 
 router.get('/', getLawyers);
 router.get('/list', getLawyersList);
+router.get('/:id/availability', protect, getAvailability);
 router.get('/:id', protect, getLawyerById);
 router.put('/profile', protect, authorize('lawyer'), updateProfile);
 router.post('/verify', protect, authorize('lawyer'), submitVerification);

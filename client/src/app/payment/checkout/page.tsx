@@ -36,8 +36,7 @@ function PaymentCheckoutContent() {
 
       console.log("Payment response:", response);
 
-      const authUrl =
-        response?.data?.authorization_url || response?.authorization_url;
+      const authUrl = response?.authorization_url;
       if (authUrl) {
         window.location.href = authUrl;
       } else {

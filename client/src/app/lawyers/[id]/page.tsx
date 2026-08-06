@@ -199,14 +199,14 @@ export default function LawyerDetailPage() {
             <button
               onClick={() => {
                 if (!user) {
-                  router.push("/login");
+                  router.push("/login?redirect=" + encodeURIComponent(`/book/${id}`));
                   return;
                 }
-                setShowEnquiry(true);
+                router.push(`/book/${id}`);
               }}
               className="w-full bg-[#1B2A4A] text-white py-3 rounded-lg hover:bg-[#2a3f6a] transition-colors font-semibold"
             >
-              Send Enquiry
+              Book a Consultation
             </button>
           </div>
 

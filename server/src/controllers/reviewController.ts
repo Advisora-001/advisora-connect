@@ -26,9 +26,10 @@ const createReview = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if client has a completed appointment with this lawyer
+    // Appointment.lawyerId references LawyerProfile._id, not User._id
     const completedAppointment = await Appointment.findOne({
       clientId,
-      lawyerId: lawyer.userId,
+      lawyerId: lawyer._id,
       status: 'confirmed',
       paymentStatus: 'paid',
     });

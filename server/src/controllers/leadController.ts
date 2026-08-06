@@ -7,6 +7,105 @@ import { AuthRequest } from '../middleware/auth';
 import { createNotification } from './notificationController';
 import { sendLeadNotificationEmail } from '../services/email';
 
+// @desc    Submit booking request (unified wizard) - creates lead with booking context
+// @route   POST /api/leads/book-request
+const createBookingRequest = async (req: AuthRequest, res: Response) => {
+  try {
+    const { lawyerId, service, date, timeSlot, duration, consultationType, caseSummary, clientName, clientEmail, clientPhone } = req.body;
+
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: 'Please verify your email before booking.',
+        code: 'VERIFICATION_REQUIRED',
+      });
+    }
+
+    if (!lawyerId || !service || !date || !timeSlot) {
+      return res.status(400).json({ message: 'Lawyer, service, date, and time slot are required' });
+    }
+
+    if (caseSummary && caseSummary.length > 500) {
+      return res.status(400).json({ message: 'Case summary cannot exceed 500 characters.' });
+    }
+
+    const lawyer = await LawyerProfile.findById(lawyerId);
+    if (!lawyer) {
+      return res.status(404).json({ message: 'Lawyer not found' });
+    }
+
+    // Check daily enquiry limit
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (user.lastEnquiryDate && user.lastEnquiryDate >= today) {
+      if (user.enquiryCount >= 10) {
+        return res.status(429).json({ message: 'Daily booking limit reached. Please try again tomorrow.' });
+      }
+    } else {
+      user.enquiryCount = 0;
+    }
+
+    // Check for duplicate booking request
+    const existingLead = await Lead.findOne({
+      clientId: user._id,
+      lawyerId,
+      status: { $in: ['pending', 'accepted', 'booked'] },
+    });
+
+    const PLATFORM_FEE = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
+    const isFirstEnquiry = !existingLead;
+
+    // Build enquiry message from booking context
+    const enquiryMessage = caseSummary || `Booking request: ${service.name} (${service.duration} min) on ${date} at ${timeSlot}`;
+
+    const lead = await Lead.create({
+      lawyerId,
+      clientId: user._id,
+      enquiryMessage,
+      leadFee: 0,
+      platformFee: isFirstEnquiry ? 0 : PLATFORM_FEE,
+      clientName: clientName || `${user.firstName} ${user.lastName}`,
+      clientEmail: clientEmail || user.email,
+      clientPhone: clientPhone || user.phone || '',
+      // Store booking context in the lead for later use
+      bookingContext: {
+        service,
+        date,
+        timeSlot,
+        duration: duration || service.duration || 30,
+        consultationType: consultationType || service.type || 'video',
+      },
+    });
+
+    // Update user enquiry tracking
+    user.enquiryCount += 1;
+    user.lastEnquiryDate = new Date();
+    await user.save();
+
+    // Notify lawyer
+    const lawyerProfile = await LawyerProfile.findById(lawyerId).populate('userId', 'firstName lastName email');
+    if (lawyerProfile?.userId && typeof lawyerProfile.userId === 'object' && 'email' in lawyerProfile.userId) {
+      const lawyerUser = lawyerProfile.userId as { firstName?: string; lastName?: string; email?: string };
+      const lawyerName = `${lawyerUser.firstName || ''} ${lawyerUser.lastName || ''}`.trim() || 'your lawyer';
+      if (lawyerUser.email) {
+        await sendLeadNotificationEmail(lawyerUser.email, lead.clientName, lawyerName, enquiryMessage);
+      }
+    }
+
+    res.status(201).json({
+      message: 'Booking request submitted. The lawyer will review and respond.',
+      lead,
+      platformFeeApplied: !isFirstEnquiry,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
 // @desc    Submit enquiry (create lead) - FREE for first enquiry per matter
 // @route   POST /api/leads
 const createLead = async (req: AuthRequest, res: Response) => {
@@ -223,4 +322,4 @@ const getMyEnquiries = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createLead, respondToLead, getLeads, bookConsultation, getMyEnquiries };
+export { createBookingRequest, createLead, respondToLead, getLeads, bookConsultation, getMyEnquiries };

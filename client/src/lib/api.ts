@@ -131,6 +131,10 @@ class ApiClient {
     return this.request<any>(`/lawyers/${id}`);
   }
 
+  getLawyerAvailability(id: string, date: string) {
+    return this.request<any>(`/lawyers/${id}/availability?date=${encodeURIComponent(date)}`);
+  }
+
   updateLawyerProfile(data: any) {
     return this.request<any>('/lawyers/profile', { method: 'PUT', body: data });
   }
@@ -150,6 +154,10 @@ class ApiClient {
   // Leads
   createLead(data: any) {
     return this.request<any>('/leads', { method: 'POST', body: data });
+  }
+
+  createBookingRequest(data: any) {
+    return this.request<any>('/leads/book-request', { method: 'POST', body: data });
   }
 
   respondToLead(id: string, status: string) {

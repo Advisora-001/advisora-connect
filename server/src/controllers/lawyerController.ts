@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import LawyerProfile from '../models/LawyerProfile';
 import User from '../models/User';
+import Appointment from '../models/Appointment';
 import { AuthRequest } from '../middleware/auth';
 
 // @desc    Get all lawyers (with search & filters)
@@ -87,7 +88,8 @@ const updateProfile = async (req: AuthRequest, res: Response) => {
     const allowedFields = [
       'barNumber', 'stateOfCall', 'yearOfCall', 'practiceAreas', 'bio',
       'officeAddress', 'city', 'state', 'languages', 'yearsOfExperience',
-      'consultationFee', 'isAvailable', 'availableDays', 'availableHours', 'accountName', 'accountNumber', 'bankName', 'otherNames'
+      'consultationFee', 'isAvailable', 'availableDays', 'availableHours', 'accountName', 'accountNumber', 'bankName', 'otherNames',
+      'services', 'requireApproval'
     ];
 
     allowedFields.forEach((field) => {
@@ -248,4 +250,89 @@ const uploadPhoto = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto };
+// @desc    Get lawyer availability for a given date
+// @route   GET /api/lawyers/:id/availability?date=YYYY-MM-DD
+const getAvailability = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.query;
+
+    if (!date || typeof date !== 'string') {
+      return res.status(400).json({ message: 'Date query parameter (YYYY-MM-DD) is required' });
+    }
+
+    const lawyer = await LawyerProfile.findById(id);
+    if (!lawyer) {
+      return res.status(404).json({ message: 'Lawyer not found' });
+    }
+
+    const requestedDate = new Date(date);
+    const dayOfWeek = requestedDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Check if lawyer is available on this day
+    if (!lawyer.availableDays?.includes(dayOfWeek)) {
+      return res.json({ available: false, slots: [], reason: 'Lawyer not available on this day' });
+    }
+
+    // Parse available hours
+    const availableFrom = lawyer.availableHours?.split('-')[0]?.trim() || '9:00 AM';
+    const availableTo = lawyer.availableHours?.split('-')[1]?.trim() || '5:00 PM';
+
+    // Generate time slots (30-min intervals)
+    const slots = generateTimeSlots(availableFrom, availableTo, 30);
+
+    // Get existing appointments for this lawyer on this date
+    const startOfDay = new Date(requestedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(requestedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingAppointments = await Appointment.find({
+      lawyerId: id,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $ne: 'cancelled' },
+    });
+
+    // Filter out booked slots
+    const bookedSlots = existingAppointments.map(a => a.timeSlot);
+    const availableSlots = slots.filter(slot => !bookedSlots.includes(slot));
+
+    res.json({
+      available: availableSlots.length > 0,
+      date,
+      dayOfWeek,
+      slots: availableSlots,
+      timezone: 'Africa/Lagos',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
+// Helper: generate time slots
+function generateTimeSlots(from: string, to: string, intervalMinutes: number): string[] {
+  const slots: string[] = [];
+  const parseTime = (t: string): number => {
+    const [time, period] = t.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period?.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+    if (period?.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + (minutes || 0);
+  };
+
+  const startMin = parseTime(from);
+  const endMin = parseTime(to);
+
+  for (let m = startMin; m + intervalMinutes <= endMin; m += intervalMinutes) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const displayM = min.toString().padStart(2, '0');
+    slots.push(`${displayH}:${displayM} ${period}`);
+  }
+
+  return slots;
+}
+
+export { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto, getAvailability };

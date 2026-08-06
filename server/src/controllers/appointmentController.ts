@@ -56,7 +56,15 @@ const cancelAppointment = async (req: AuthRequest, res: Response) => {
 
     // Only client who owns the appointment or the lawyer assigned can cancel
     const isClient = appointment.clientId.toString() === user._id.toString();
-    const isLawyer = appointment.lawyerId.toString() === user._id.toString();
+    
+    // For lawyer check: appointment.lawyerId is a LawyerProfile ID, not a User ID
+    let isLawyer = false;
+    if (user.role === 'lawyer') {
+      const lawyerProfile = await (await import('../models/LawyerProfile')).default.findOne({ userId: user._id });
+      if (lawyerProfile && appointment.lawyerId.toString() === lawyerProfile._id.toString()) {
+        isLawyer = true;
+      }
+    }
 
     if (!isClient && !isLawyer) {
       return res.status(403).json({ message: 'Not authorized to cancel this appointment' });

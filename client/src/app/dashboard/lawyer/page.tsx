@@ -567,7 +567,7 @@ export default function LawyerDashboard() {
           </form>
         </div>
       )}
-{activeTab === "leads" && (
+ {activeTab === "leads" && (
         <div className="bg-white rounded-xl shadow-lg border-2 border-primary/20">
           <div className="p-6 border-b-2 border-primary/20 bg-primary/5">
             <h2 className="text-2xl font-bold text-accent">Client Enquiries</h2>
@@ -582,11 +582,29 @@ export default function LawyerDashboard() {
                 <div key={lead._id} className="p-6 hover:bg-primary/5 transition-colors">
                   <div className="flex-1 mb-3">
                     <p className="font-semibold text-accent text-lg">
-                      {lead.enquiryMessage?.substring(0, 100)}...
+                      {lead.enquiryMessage?.substring(0, 100)}
+                      {lead.enquiryMessage?.length > 100 ? "..." : ""}
                     </p>
                     <p className="text-sm text-gray-600 mt-2">
                       {new Date(lead.createdAt).toLocaleDateString()} • {lead.clientName}
                     </p>
+                    {/* Show booking context if available */}
+                    {lead.bookingContext && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
+                          {lead.bookingContext.service?.name}
+                        </span>
+                        <span className="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">
+                          {lead.bookingContext.date}
+                        </span>
+                        <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
+                          {lead.bookingContext.timeSlot}
+                        </span>
+                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium capitalize">
+                          {lead.bookingContext.consultationType}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {lead.status === "pending" && (

@@ -39,6 +39,13 @@ export interface ILawyerProfile extends Document {
   accountName?: string;
   accountNumber?: string;
   bankName?: string;
+  services?: {
+    name: string;
+    duration: number;
+    price: number;
+    type: 'video' | 'audio' | 'in-person';
+  }[];
+  requireApproval?: boolean;
   declaration?: {
     informationAccurate: boolean;
     qualifiedToPractise: boolean;
@@ -104,6 +111,13 @@ const lawyerProfileSchema = new Schema<ILawyerProfile>(
     accountName: { type: String, default: "" },
     accountNumber: { type: String, default: "" },
     bankName: { type: String, default: "" },
+    services: [{
+      name: { type: String },
+      duration: { type: Number },
+      price: { type: Number },
+      type: { type: String, enum: ['video', 'audio', 'in-person'], default: 'video' },
+    }],
+    requireApproval: { type: Boolean, default: true },
     declaration: {
       informationAccurate: { type: Boolean, default: false },
       qualifiedToPractise: { type: Boolean, default: false },

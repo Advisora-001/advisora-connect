@@ -16,6 +16,18 @@ export interface ILead extends Document {
   respondedAt?: Date;
   expiresAt: Date;
   contactedAt?: Date;
+  bookingContext?: {
+    service: {
+      name: string;
+      duration: number;
+      price: number;
+      type: string;
+    };
+    date: string;
+    timeSlot: string;
+    duration: number;
+    consultationType: string;
+  };
 }
 
 const leadSchema = new Schema<ILead>(
@@ -49,6 +61,18 @@ const leadSchema = new Schema<ILead>(
       default: () => new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
     },
     contactedAt: { type: Date },
+    bookingContext: {
+      service: {
+        name: { type: String },
+        duration: { type: Number },
+        price: { type: Number },
+        type: { type: String },
+      },
+      date: { type: String },
+      timeSlot: { type: String },
+      duration: { type: Number },
+      consultationType: { type: String },
+    },
   },
   { timestamps: true }
 );
