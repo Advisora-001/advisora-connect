@@ -214,7 +214,8 @@ export default function ClientDashboard() {
                         {appt.paymentStatus}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        appt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                        appt.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                        appt.status === 'completed' ? 'bg-green-100 text-green-700' :
                         appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                         'bg-gray-100 text-gray-600'
                       }`}>
@@ -222,16 +223,28 @@ export default function ClientDashboard() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 items-end">
                     {appt.paymentStatus !== 'paid' && appt.status !== 'cancelled' && (
-                      <>
+                      <div className="flex gap-2">
                         <button onClick={() => handleRetryPayment(appt)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
                           Pay Now
                         </button>
                         <button onClick={() => handleCancelAppointment(appt._id)} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-red-200">
                           Cancel
                         </button>
-                      </>
+                      </div>
+                    )}
+                    {appt.paymentStatus === 'paid' && appt.status !== 'cancelled' && appt.status !== 'completed' && appt.meetingLink && (
+                      <a href={appt.meetingLink} target="_blank" rel="noopener noreferrer"
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold text-sm text-center">
+                        Join Consultation
+                      </a>
+                    )}
+                    {appt.status === 'completed' && (
+                      <button onClick={() => router.push(`/lawyers/${appt.lawyerId?._id || appt.lawyerId}`)}
+                        className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
+                        Leave a Review
+                      </button>
                     )}
                   </div>
                 </div>

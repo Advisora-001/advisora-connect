@@ -30,7 +30,7 @@ const createReview = async (req: AuthRequest, res: Response) => {
     const completedAppointment = await Appointment.findOne({
       clientId,
       lawyerId: lawyer._id,
-      status: 'confirmed',
+      status: { $in: ['confirmed', 'completed'] },
       paymentStatus: 'paid',
     });
 

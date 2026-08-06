@@ -9,6 +9,7 @@ import Appointment from '../models/Appointment';
 import PaymentRecord from '../models/PaymentRecord';
 import { sendEmail } from '../services/email';
 import { createNotification } from './notificationController';
+import { createGoogleMeetEvent } from '../services/googleCalendar';
 
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
@@ -158,6 +159,34 @@ const verifyPayment = async (req: Request, res: Response) => {
             `/dashboard/lawyer`
           );
         } catch {}
+
+        // Auto-generate Google Meet link after payment
+        try {
+          const lawyer: any = await LawyerProfile.findById(appointment.lawyerId).populate('userId', 'firstName lastName email');
+          const client: any = await User.findById(appointment.clientId).select('firstName lastName email');
+          const lawyerUser = (lawyer as any)?.userId;
+          const summary = `Consultation: ${lawyerUser?.firstName || 'Lawyer'} & ${client?.firstName || 'Client'}`;
+          const description = `Advisora Connect Consultation\nService: ${appointment.consultationType}\nDuration: ${appointment.duration} minutes`;
+          const attendees = [lawyerUser?.email, client?.email].filter(Boolean) as string[];
+
+          const meetLink = await createGoogleMeetEvent(
+            summary,
+            description,
+            appointment.date,
+            appointment.duration,
+            attendees,
+          );
+
+          if (meetLink) {
+            await Appointment.findByIdAndUpdate(appointment._id, {
+              meetingLink: meetLink,
+              completionSource: 'auto',
+            });
+            console.log(`Google Meet link auto-generated for appointment ${appointment._id}`);
+          }
+        } catch (meetErr) {
+          console.error('Failed to auto-generate Meet link:', meetErr);
+        }
       }
     }
 

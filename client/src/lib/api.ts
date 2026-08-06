@@ -218,7 +218,19 @@ class ApiClient {
   }
 
   getLawyerAppointments() {
-    return this.request<any>('/appointments/lawyer');
+    return this.request<any>('/appointments/lawyer-appointments');
+  }
+
+  generateMeetingLink(appointmentId: string) {
+    return this.request<any>(`/appointments/${appointmentId}/generate-meeting`, { method: 'POST' });
+  }
+
+  setMeetingLink(appointmentId: string, meetingLink: string) {
+    return this.request<any>(`/appointments/${appointmentId}/meeting-link`, { method: 'PUT', body: { meetingLink } });
+  }
+
+  completeAppointment(appointmentId: string) {
+    return this.request<any>(`/appointments/${appointmentId}/complete`, { method: 'PUT' });
   }
 
   // Admin

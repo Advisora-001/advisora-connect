@@ -10,6 +10,7 @@ export interface IAppointment extends Document {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   consultationType: 'video' | 'physical' | 'phone';
   meetingLink?: string;
+  completionSource?: 'auto' | 'manual' | 'time-elapsed';
   notes?: string;
   consultationFee: number;
   platformFee: number;
@@ -38,6 +39,7 @@ const appointmentSchema = new Schema<IAppointment>(
       default: 'video',
     },
     meetingLink: { type: String },
+    completionSource: { type: String, enum: ['auto', 'manual', 'time-elapsed'] },
     notes: { type: String },
     consultationFee: { type: Number, default: 0 },
     platformFee: { type: Number, default: 0 },
