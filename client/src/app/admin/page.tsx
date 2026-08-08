@@ -8,6 +8,7 @@ import Sidebar from "@/components/admin/Sidebar";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 import VerificationCard from "@/components/admin/VerificationCard";
 import UserCard from "@/components/admin/UserCard";
+import LawyerProfileModal from "@/components/admin/LawyerProfileModal";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -404,90 +405,14 @@ export default function AdminDashboard() {
 
       {/* Lawyer Profile Modal */}
       {manageLawyer && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-[#E5EAF0] flex justify-between items-center sticky top-0 bg-white">
-              <h3 className="text-xl font-bold text-[#1B2A4A]">
-                Lawyer Profile Details
-              </h3>
-              <button
-                onClick={() => setManageLawyer(null)}
-                className="text-[#94A3B8] hover:text-[#1B2A4A] text-2xl"
-              >
-                &times;
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-4 mb-4 col-span-2">
-                  <div className="w-14 h-14 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                    {manageLawyer.photo ? (
-                      <img
-                        src={manageLawyer.photo}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>
-                        {manageLawyer.userId?.firstName?.[0]}
-                        {manageLawyer.userId?.lastName?.[0]}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-[#1B2A4A]">
-                      {manageLawyer.userId?.firstName}{" "}
-                      {manageLawyer.userId?.lastName}
-                    </p>
-                    <p className="text-sm text-[#667085]">
-                      {manageLawyer.userId?.email}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-[#94A3B8]">SCN Number</p>
-                  <p className="font-semibold text-[#1B2A4A]">
-                    {manageLawyer.barNumber || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#94A3B8]">Phone</p>
-                  <p className="font-semibold text-[#1B2A4A]">
-                    {manageLawyer.phone || "Not provided"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#94A3B8]">Consultation Fee</p>
-                  <p className="font-semibold text-[#1B2A4A]">
-                    ₦{manageLawyer.consultationFee || 0}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#94A3B8]">Status</p>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold inline-block ${manageLawyer.verificationStatus === "verified" ? "bg-[#ECFDF5] text-[#166534]" : manageLawyer.verificationStatus === "pending" ? "bg-[#FFFBEB] text-[#92400E]" : "bg-[#FEF2F2] text-[#991B1B]"}`}
-                  >
-                    {manageLawyer.verificationStatus}
-                  </span>
-                </div>
-              </div>
-              <div className="pt-4 border-t border-[#E5EAF0]">
-                <p className="text-sm text-[#94A3B8] font-semibold mb-3">
-                  Payout Details
-                </p>
-                <p className="font-semibold text-[#1B2A4A] text-sm">
-                  Bank: {manageLawyer.bankName || "Not provided"}
-                </p>
-                <p className="font-semibold text-[#1B2A4A] text-sm">
-                  Account: {manageLawyer.accountNumber || "Not provided"}
-                </p>
-                <p className="font-semibold text-[#1B2A4A] text-sm">
-                  Name: {manageLawyer.accountName || "Not provided"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LawyerProfileModal
+          lawyer={manageLawyer}
+          onClose={() => setManageLawyer(null)}
+          onUpdate={async (data) => {
+            // Handle update logic if needed
+            console.log("Lawyer profile updated:", data);
+          }}
+        />
       )}
     </div>
   );
