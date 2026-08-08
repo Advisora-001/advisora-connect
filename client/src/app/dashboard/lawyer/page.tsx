@@ -215,6 +215,11 @@ export default function LawyerDashboard() {
               <input type="text" value={profileForm.otherNames || ""} onChange={(e) => setProfileForm({ ...profileForm, otherNames: e.target.value })}
                 className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400" placeholder="e.g., Maiden name, alias" />
             </div>
+            <div>
+              <label className="block text-sm font-semibold text-accent mb-2">Phone Number</label>
+              <input type="tel" value={profileForm.phone || ""} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400" placeholder="e.g., +234 800 000 0000" />
+            </div>
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-semibold text-accent mb-2">SCN Number *</label>

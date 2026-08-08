@@ -337,10 +337,10 @@ export default function AdminDashboard() {
                   <p className="font-semibold text-accent">{manageLawyer.barNumber || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Fee</p>
-                  <p className="font-semibold text-accent">￦{manageLawyer.consultationFee || 0}</p>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-semibold text-accent">{manageLawyer.phone || "Not provided"}</p>
                 </div>
-                                <div>
+                <div>
                   <p className="text-sm text-gray-500">Consultation Fee</p>
                   <p className="font-semibold text-accent">₦{manageLawyer.consultationFee || 0}</p>
                 </div>

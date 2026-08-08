@@ -89,7 +89,7 @@ const updateProfile = async (req: AuthRequest, res: Response) => {
       'barNumber', 'stateOfCall', 'yearOfCall', 'practiceAreas', 'bio',
       'officeAddress', 'city', 'state', 'languages', 'yearsOfExperience',
       'consultationFee', 'isAvailable', 'availableDays', 'availableHours', 'accountName', 'accountNumber', 'bankName', 'otherNames',
-      'services', 'requireApproval'
+      'services', 'requireApproval', 'phone'
     ];
 
     allowedFields.forEach((field) => {

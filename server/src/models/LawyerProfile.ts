@@ -39,6 +39,7 @@ export interface ILawyerProfile extends Document {
   accountName?: string;
   accountNumber?: string;
   bankName?: string;
+  phone?: string;
   services?: {
     name: string;
     duration: number;
@@ -111,6 +112,7 @@ const lawyerProfileSchema = new Schema<ILawyerProfile>(
     accountName: { type: String, default: "" },
     accountNumber: { type: String, default: "" },
     bankName: { type: String, default: "" },
+    phone: { type: String, default: "" },
     services: [{
       name: { type: String },
       duration: { type: Number },
