@@ -26,11 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.className} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-primary/10">
+      <body className="min-h-full flex flex-col bg-[#F5F7FA]">
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
-          <footer className="bg-accent text-white py-8 mt-auto">
+          <footer className="bg-[#1B2A4A] text-white py-10 mt-auto">
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex flex-col items-center mb-6">
                 <Image
@@ -47,7 +47,7 @@ export default function RootLayout({
                   href="https://www.linkedin.com/company/advisora-connect/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                   aria-label="LinkedIn"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@ export default function RootLayout({
                   href="https://www.instagram.com/advisoraconnect?utm_source=qr&igsh=am9zNDFkdnE3cTJx"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                   aria-label="Instagram"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@ export default function RootLayout({
                   href="https://www.facebook.com/share/1Cwfi3wcNv/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary/60 hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                   aria-label="Facebook"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -80,15 +80,15 @@ export default function RootLayout({
                 </a>
               </div>
               <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-4">
-                <a href="/about" className="text-primary/70 hover:text-white text-sm transition-colors">About Us</a>
-                <a href="/terms-of-use" className="text-primary/70 hover:text-white text-sm transition-colors">Terms of Use</a>
-                <a href="/privacy-policy" className="text-primary/70 hover:text-white text-sm transition-colors">Privacy Policy</a>
-                <a href="/data-protection" className="text-primary/70 hover:text-white text-sm transition-colors">Data Protection</a>
-                <a href="/code-of-conduct" className="text-primary/70 hover:text-white text-sm transition-colors">Code of Conduct</a>
+                <a href="/about" className="text-white/70 hover:text-white text-sm transition-colors">About Us</a>
+                <a href="/terms-of-use" className="text-white/70 hover:text-white text-sm transition-colors">Terms of Use</a>
+                <a href="/privacy-policy" className="text-white/70 hover:text-white text-sm transition-colors">Privacy Policy</a>
+                <a href="/data-protection" className="text-white/70 hover:text-white text-sm transition-colors">Data Protection</a>
+                <a href="/code-of-conduct" className="text-white/70 hover:text-white text-sm transition-colors">Code of Conduct</a>
               </div>
-              <div className="text-center border-t border-primary/20 pt-4">
-                <p className="text-primary/80">&copy; 2026 Advisora Connect. All rights reserved.</p>
-                <p className="text-primary/60 text-sm mt-1">Connecting You to Trusted Legal Expertise.</p>
+              <div className="text-center border-t border-white/10 pt-4">
+                <p className="text-white/80">&copy; 2026 Advisora Connect. All rights reserved.</p>
+                <p className="text-white/50 text-sm mt-1">Connecting You to Trusted Legal Expertise.</p>
               </div>
             </div>
           </footer>

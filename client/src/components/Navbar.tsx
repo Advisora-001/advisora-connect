@@ -15,7 +15,6 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch notifications
   useEffect(() => {
     if (!user) return;
     api.getNotifications().then(data => {
@@ -24,7 +23,6 @@ export default function Navbar() {
     }).catch(() => {});
   }, [user]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -46,11 +44,11 @@ export default function Navbar() {
   const userPhoto = profile?.photo || user?.avatar;
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4">
+    <nav className="bg-white border-b border-[#E5EAF0] sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center flex-shrink-0">
             <Image
               src="/advisora.png"
               alt="Advisora Connect"
@@ -61,49 +59,49 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/lawyers" className="text-gray-700 hover:text-[#1B2A4A] font-medium transition-colors">
+          <div className="hidden md:flex items-center space-x-1">
+            <Link href="/lawyers" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
               Find Lawyers
             </Link>
-            <Link href="/about" className="text-gray-700 hover:text-[#1B2A4A] font-medium transition-colors">
+            <Link href="/about" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
               About Us
             </Link>
 
             {user ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-1 ml-2">
                 {/* Notification Bell */}
                 <div className="relative">
                   <button
                     onClick={() => { setNotifOpen(!notifOpen); setDropdownOpen(false); }}
-                    className="relative p-1 text-gray-600 hover:text-accent transition-colors"
+                    className="relative p-2 text-[#667085] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg transition-colors"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                     </svg>
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                      <span className="absolute top-1 right-1 bg-[#EF4444] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
                   </button>
 
                   {notifOpen && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
-                      <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                        <p className="font-semibold text-accent text-sm">Notifications</p>
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-[#E5EAF0] z-50 max-h-96 overflow-y-auto animate-fadeIn">
+                      <div className="p-4 border-b border-[#E5EAF0] flex justify-between items-center">
+                        <p className="font-semibold text-[#1B2A4A] text-sm">Notifications</p>
                         {notifications.length > 0 && (
                           <button onClick={async () => { await api.markNotificationsRead(); setUnreadCount(0); }}
-                            className="text-xs text-[#C5A55A] hover:underline">Mark all read</button>
+                            className="text-xs text-[#00A6A6] hover:underline font-medium">Mark all read</button>
                         )}
                       </div>
                       {notifications.length === 0 ? (
-                        <div className="p-6 text-center text-gray-500 text-sm">No notifications yet</div>
+                        <div className="p-6 text-center text-[#667085] text-sm">No notifications yet</div>
                       ) : (
                         notifications.slice(0, 10).map((n: any) => (
-                          <div key={n._id} className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${!n.read ? 'bg-blue-50' : ''}`}>
-                            <p className="text-sm font-medium text-accent">{n.title}</p>
-                            <p className="text-xs text-gray-600 mt-0.5">{n.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+                          <div key={n._id} className={`px-4 py-3 border-b border-[#F0F2F5] hover:bg-[#F5F7FA] cursor-pointer ${!n.read ? 'bg-[#EFF6FF]' : ''}`}>
+                            <p className="text-sm font-medium text-[#1B2A4A]">{n.title}</p>
+                            <p className="text-xs text-[#667085] mt-0.5">{n.message}</p>
+                            <p className="text-xs text-[#94A3B8] mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
                           </div>
                         ))
                       )}
@@ -115,18 +113,23 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => { setDropdownOpen(!dropdownOpen); setNotifOpen(false); }}
-                    className="w-9 h-9 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-sm font-semibold border-2 border-transparent hover:border-[#C5A55A] transition-all focus:outline-none"
+                    className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#EEF2F7] transition-colors"
                   >
-                    {userPhoto ? (
-                      <img src={userPhoto} alt={`${user.firstName} ${user.lastName}`} className="w-full h-full object-cover" />
-                    ) : (
-                      <span>{user.firstName[0]}{user.lastName[0]}</span>
-                    )}
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-xs font-semibold">
+                      {userPhoto ? (
+                        <img src={userPhoto} alt={`${user.firstName} ${user.lastName}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{user.firstName[0]}{user.lastName[0]}</span>
+                      )}
+                    </div>
+                    <svg className="w-4 h-4 text-[#667085]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
 
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-[#E5EAF0] py-2 z-50 animate-fadeIn">
+                      <div className="px-4 py-3 border-b border-[#E5EAF0]">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                             {userPhoto ? (
@@ -136,23 +139,23 @@ export default function Navbar() {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-accent text-sm truncate">{user.firstName} {user.lastName}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                            <p className="text-xs text-[#C5A55A] capitalize mt-0.5 font-medium">{user.role}</p>
+                            <p className="font-semibold text-[#1B2A4A] text-sm truncate">{user.firstName} {user.lastName}</p>
+                            <p className="text-xs text-[#667085] truncate">{user.email}</p>
+                            <p className="text-xs text-[#00A6A6] capitalize mt-0.5 font-medium">{user.role}</p>
                           </div>
                         </div>
                       </div>
                       <Link href={dashboardPath} onClick={() => setDropdownOpen(false)}
-                        className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-accent transition-colors">
-                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        className="flex items-center px-4 py-2.5 text-[#475569] hover:bg-[#EEF2F7] hover:text-[#1B2A4A] transition-colors text-sm">
+                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                         </svg>
                         Dashboard
                       </Link>
                       <button onClick={() => { setDropdownOpen(false); logout(); }}
-                        className="flex items-center w-full px-4 py-2.5 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors">
-                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        className="flex items-center w-full px-4 py-2.5 text-[#475569] hover:bg-[#FEF2F2] hover:text-[#EF4444] transition-colors text-sm">
+                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                         </svg>
                         Logout
                       </button>
@@ -161,11 +164,11 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
-                <Link href="/login" className="text-gray-700 hover:text-[#1B2A4A] font-medium transition-colors">
+              <div className="flex items-center space-x-3 ml-2">
+                <Link href="/login" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
                   Login
                 </Link>
-                <Link href="/register" className="bg-[#1B2A4A] text-white px-5 py-2 rounded-lg hover:bg-[#2a3f6a] transition-colors font-medium">
+                <Link href="/register" className="bg-[#1B2A4A] text-white px-5 py-2.5 rounded-lg hover:bg-[#16213A] transition-colors font-semibold text-sm shadow-sm">
                   Sign Up
                 </Link>
               </div>
@@ -173,14 +176,14 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-gray-700">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 text-[#475569] hover:text-[#1B2A4A] rounded-lg hover:bg-[#EEF2F7]">
             {isMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
             )}
           </button>
@@ -188,31 +191,31 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden pb-4 space-y-3">
-            <Link href="/lawyers" className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
+          <div className="md:hidden pb-4 space-y-1 animate-fadeIn">
+            <Link href="/lawyers" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
               Find Lawyers
             </Link>
-            <Link href="/about" className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
+            <Link href="/about" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
               About Us
             </Link>
             {user ? (
               <>
-                <Link href={dashboardPath} className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
+                <Link href={dashboardPath} className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
                   Dashboard
                 </Link>
-                <button onClick={() => { logout(); setIsMenuOpen(false); }} className="text-gray-500 hover:text-red-600 py-2">
+                <button onClick={() => { logout(); setIsMenuOpen(false); }} className="block w-full text-left px-4 py-2.5 text-[#EF4444] hover:bg-[#FEF2F2] rounded-lg text-sm font-medium">
                   Logout
                 </button>
               </>
             ) : (
-              <>
-                <Link href="/login" className="block text-gray-700 hover:text-[#1B2A4A] py-2" onClick={() => setIsMenuOpen(false)}>
+              <div className="space-y-2 pt-2">
+                <Link href="/login" className="block px-4 py-2.5 text-center text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
                   Login
                 </Link>
-                <Link href="/register" className="block bg-[#1B2A4A] text-white text-center px-5 py-2 rounded-lg" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/register" className="block bg-[#1B2A4A] text-white text-center px-5 py-2.5 rounded-lg text-sm font-semibold" onClick={() => setIsMenuOpen(false)}>
                   Sign Up
                 </Link>
-              </>
+              </div>
             )}
           </div>
         )}
