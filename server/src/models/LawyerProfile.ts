@@ -34,6 +34,8 @@ export interface ILawyerProfile extends Document {
   isAvailable?: boolean;
   availableDays?: string[];
   availableHours?: string;
+  availableFrom?: string;
+  availableTo?: string;
   onboardingAgreementAccepted?: boolean;
   onboardingAgreementAcceptedAt?: Date;
   accountName?: string;
@@ -107,6 +109,8 @@ const lawyerProfileSchema = new Schema<ILawyerProfile>(
     isAvailable: { type: Boolean, default: true },
     availableDays: [{ type: String }],
     availableHours: { type: String, default: '9:00 AM - 5:00 PM' },
+    availableFrom: { type: String, default: '9:00 AM' },
+    availableTo: { type: String, default: '5:00 PM' },
     onboardingAgreementAccepted: { type: Boolean, default: false },
     onboardingAgreementAcceptedAt: { type: Date },
     accountName: { type: String, default: "" },

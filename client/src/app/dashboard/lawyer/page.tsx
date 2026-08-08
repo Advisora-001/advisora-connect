@@ -63,8 +63,13 @@ export default function LawyerDashboard() {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Auto-compose availableHours from availableFrom and availableTo
+    const dataToSave = { ...profileForm };
+    if (dataToSave.availableFrom && dataToSave.availableTo) {
+      dataToSave.availableHours = `${dataToSave.availableFrom} - ${dataToSave.availableTo}`;
+    }
     try {
-      await api.updateLawyerProfile(profileForm);
+      await api.updateLawyerProfile(dataToSave);
       await refreshUser();
       alert("Profile updated successfully!");
     } catch (error) {
@@ -315,11 +320,6 @@ export default function LawyerDashboard() {
                 <option value="">Select end time</option>
                 {["12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM"].map(t => (<option key={t} value={t}>{t}</option>))}
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-accent mb-2">Available Hours (manual)</label>
-              <input type="text" value={profileForm.availableHours || ""} onChange={(e) => setProfileForm({ ...profileForm, availableHours: e.target.value })}
-                className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:ring-4 focus:ring-primary/30 focus:border-primary-dark focus:outline-none text-accent placeholder-gray-400" placeholder="e.g., 9:00 AM - 5:00 PM" />
             </div>
             <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-lg border-2 border-primary/30">
               <input type="checkbox" id="isAvailable" checked={profileForm.isAvailable ?? true}
