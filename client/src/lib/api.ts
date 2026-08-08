@@ -20,6 +20,24 @@ interface ApiOptions {
 }
 
 class ApiClient {
+  // Track if user has explicitly logged out to prevent auto-refresh
+  private _skipRefresh = false;
+
+  /**
+   * Set whether to skip auto-refresh on 401 errors.
+   * Called by AuthContext when user logs out or logs in.
+   */
+  setSkipRefresh(skip: boolean): void {
+    this._skipRefresh = skip;
+  }
+
+  /**
+   * Check if auto-refresh should be skipped.
+   */
+  private shouldSkipRefresh(): boolean {
+    return this._skipRefresh;
+  }
+
   private async request<T>(endpoint: string, options: ApiOptions = {}, attempt = 1): Promise<T> {
     const { method = 'GET', body, headers = {}, isFormData = false } = options;
 
@@ -48,7 +66,7 @@ class ApiClient {
     const response = await fetch(`${API_URL}${endpoint}`, config);
 
     if (!response.ok) {
-      if (response.status === 401 && attempt === 1) {
+      if (response.status === 401 && attempt === 1 && !this.shouldSkipRefresh()) {
         try {
           await this.refresh();
           return this.request<T>(endpoint, options, 2);
@@ -114,6 +132,8 @@ class ApiClient {
 
   logout() {
     clearStoredTokens();
+    // After logout, ensure we skip auto-refresh
+    this.setSkipRefresh(true);
     return this.request<{ message: string }>('/auth/logout', { method: 'POST' });
   }
 
@@ -187,7 +207,11 @@ class ApiClient {
 
   verifyEmailAndStore(token: string) {
     return this.request<any>(`/auth/verify-email/${token}`).then(res => {
-      if (res.accessToken) storeAuthData(res);
+      if (res.accessToken) {
+        storeAuthData(res);
+        // Email verification logs the user in, so allow auto-refresh
+        this.setSkipRefresh(false);
+      }
       return res;
     });
   }

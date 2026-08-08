@@ -1,14 +1,20 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api from '@/lib/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import api from "@/lib/api";
 
 interface User {
   _id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'client' | 'lawyer' | 'admin';
+  role: "client" | "lawyer" | "admin";
   avatar?: string;
   isVerified?: boolean;
 }
@@ -38,21 +44,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       setUser(null);
       setProfile(null);
+      // If user is not authenticated, set skip refresh flag
+      api.setSkipRefresh(true);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // On initial mount, allow auto-refresh until we determine auth state
+    api.setSkipRefresh(false);
     refreshUser();
   }, []);
 
   const login = async (email: string, password: string) => {
+    // Allow auto-refresh again when user logs in
+    api.setSkipRefresh(false);
     await api.login({ email, password });
     await refreshUser();
   };
 
   const register = async (regData: any) => {
+    // Allow auto-refresh for new registrations
+    api.setSkipRefresh(false);
     // Registration does NOT log the user in. The server only creates the
     // account and sends a verification email; the user must verify their
     // email (which auto-logs them in) or log in manually afterwards.
@@ -60,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // Signal to API client to skip auto-refresh on 401 errors
+    api.setSkipRefresh(true);
     try {
       await api.logout();
     } catch {
@@ -70,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user, profile, loading, login, register, logout, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -79,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
