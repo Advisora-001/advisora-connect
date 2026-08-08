@@ -6,6 +6,16 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { createGoogleMeetEvent } from '../services/googleCalendar';
 
+/** Extract the LawyerProfile ObjectId from an appointment, handling both populated and non-populated states */
+function getAppointmentLawyerId(appointment: any): string {
+  // If lawyerId is populated (a document), use its _id
+  if (appointment.lawyerId && typeof appointment.lawyerId === 'object' && appointment.lawyerId._id) {
+    return appointment.lawyerId._id.toString();
+  }
+  // Fallback: raw ObjectId
+  return appointment.lawyerId?.toString?.() || '';
+}
+
 // @desc    Get client's appointments
 // @route   GET /api/appointments/my-appointments
 const getMyAppointments = async (req: AuthRequest, res: Response) => {
@@ -114,7 +124,7 @@ const generateMeetingLink = async (req: AuthRequest, res: Response) => {
 
     // Only the assigned lawyer can generate a meeting link
     const lawyerProfile = await LawyerProfile.findOne({ userId: user._id });
-    if (!lawyerProfile || appointment.lawyerId.toString() !== lawyerProfile._id.toString()) {
+    if (!lawyerProfile || getAppointmentLawyerId(appointment) !== lawyerProfile._id.toString()) {
       return res.status(403).json({ message: 'Only the assigned lawyer can generate a meeting link' });
     }
 
