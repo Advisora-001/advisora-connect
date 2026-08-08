@@ -13,11 +13,7 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments'>('overview');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
-  const [bookingEnquiry, setBookingEnquiry] = useState<any>(null);
-  const [bookingDate, setBookingDate] = useState("");
-  const [bookingTime, setBookingTime] = useState("");
-  const [bookingDuration, setBookingDuration] = useState(30);
-  const [bookingType, setBookingType] = useState("video");
+  const [bookingLoading, setBookingLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -58,27 +54,25 @@ export default function ClientDashboard() {
     router.push('/payment/checkout?appointmentId=' + appointment._id + '&amount=' + appointment.totalAmount);
   };
 
-  const openBookingModal = (enquiry: any) => {
-    setBookingEnquiry(enquiry);
-    setBookingDate(new Date().toISOString().split('T')[0]);
-    setBookingTime('10:00 AM');
-    setBookingDuration(30);
-    setBookingType('video');
-  };
-
-  const handleBook = async () => {
-    if (!bookingEnquiry || !bookingDate || !bookingTime) return;
+  const handleBookFromAcceptedLead = async (lead: any) => {
+    const ctx = lead.bookingContext;
+    if (!ctx) {
+      alert('This enquiry has no booking details. Please use the booking wizard instead.');
+      router.push(`/book/${lead.lawyerId?._id}`);
+      return;
+    }
+    setBookingLoading(lead._id);
     try {
-      const response = await api.bookConsultation(bookingEnquiry._id, {
-        date: bookingDate,
-        timeSlot: bookingTime,
-        duration: bookingDuration,
-        consultationType: bookingType,
+      const response = await api.bookConsultation(lead._id, {
+        date: ctx.date,
+        timeSlot: ctx.timeSlot,
+        duration: ctx.duration || 30,
+        consultationType: ctx.consultationType || 'video',
       });
-      setBookingEnquiry(null);
       router.push(`/payment/checkout?appointmentId=${response.appointment._id}&amount=${response.paymentBreakdown.total}`);
     } catch (err: any) {
       alert(err.message || 'Booking failed');
+      setBookingLoading(null);
     }
   };
 
@@ -155,8 +149,12 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                   {enquiry.status === 'accepted' && (
-                    <button onClick={() => router.push(`/book/${enquiry.lawyerId?._id}`)} className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a]">
-                      Book Consultation
+                    <button
+                      onClick={() => handleBookFromAcceptedLead(enquiry)}
+                      disabled={bookingLoading === enquiry._id}
+                      className="bg-[#C5A55A] text-[#1B2A4A] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#d4b36a] disabled:opacity-50"
+                    >
+                      {bookingLoading === enquiry._id ? 'Booking...' : 'Book Consultation'}
                     </button>
                   )}
                 </div>
