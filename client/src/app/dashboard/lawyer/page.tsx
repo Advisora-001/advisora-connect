@@ -20,6 +20,7 @@ export default function LawyerDashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [payoutAmount, setPayoutAmount] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -81,8 +82,12 @@ export default function LawyerDashboard() {
 
   return (
     <div className="flex min-h-[calc(100vh-64px)]">
-      <LawyerSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-      <main className="flex-1 p-6 lg:p-8 overflow-auto bg-[#F5F7FA]">
+      <LawyerSidebar activeSection={activeSection} onSectionChange={setActiveSection} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto bg-[#F5F7FA]">
+        {/* Mobile hamburger */}
+        <button className="md:hidden mb-4 p-2 text-[#667085] hover:text-[#1B2A4A] rounded-lg hover:bg-[#EEF2F7]" onClick={() => setSidebarOpen(true)}>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+        </button>
         {/* Dashboard */}
         {activeSection === "dashboard" && (
           <div>
