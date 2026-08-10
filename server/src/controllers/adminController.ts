@@ -126,4 +126,79 @@ const getLawyerProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { getPendingVerifications, verifyLawyer, getUsers, toggleUserStatus, getAnalytics, getLawyerProfile };
+// @desc    Get all payout requests
+// @route   GET /api/admin/payouts
+const getPayouts = async (_req: AuthRequest, res: Response) => {
+  try {
+    const PayoutRequest = await import('../models/PayoutRequest').then(m => m.default);
+    const payouts = await PayoutRequest.find()
+      .populate('lawyerId', 'barNumber city state')
+      .populate({ path: 'lawyerId', populate: { path: 'userId', select: 'firstName lastName email' } })
+      .sort({ createdAt: -1 });
+
+    res.json({ count: payouts.length, payouts });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Approve/reject/process a payout request
+// @route   PUT /api/admin/payouts/:id
+const processPayout = async (req: AuthRequest, res: Response) => {
+  try {
+    const { status, adminNote } = req.body;
+    if (!['approved', 'rejected', 'processed'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Use: approved, rejected, or processed' });
+    }
+
+    const PayoutRequest = await import('../models/PayoutRequest').then(m => m.default);
+    const Wallet = await import('../models/Wallet').then(m => m.default);
+
+    const payout = await PayoutRequest.findById(req.params.id);
+    if (!payout) {
+      return res.status(404).json({ message: 'Payout request not found' });
+    }
+
+    payout.status = status;
+    if (adminNote) payout.adminNote = adminNote;
+    if (status === 'processed') payout.processedAt = new Date();
+    await payout.save();
+
+    // If rejected, refund the amount back to the wallet
+    if (status === 'rejected') {
+      const wallet = await Wallet.findById(payout.walletId);
+      if (wallet) {
+        wallet.balance += payout.amount;
+        wallet.pendingBalance -= payout.amount;
+        wallet.transactions.push({
+          type: 'credit',
+          amount: payout.amount,
+          description: 'Payout rejected - refunded',
+          payoutRequestId: payout._id,
+        });
+        await wallet.save();
+      }
+    }
+
+    // If processed, update wallet pending balance
+    if (status === 'processed') {
+      const wallet = await Wallet.findById(payout.walletId);
+      if (wallet) {
+        wallet.pendingBalance -= payout.amount;
+        wallet.transactions.push({
+          type: 'debit',
+          amount: payout.amount,
+          description: 'Payout processed',
+          payoutRequestId: payout._id,
+        });
+        await wallet.save();
+      }
+    }
+
+    res.json({ message: `Payout ${status}`, payout });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
+export { getPendingVerifications, verifyLawyer, getUsers, toggleUserStatus, getAnalytics, getLawyerProfile, getPayouts, processPayout };

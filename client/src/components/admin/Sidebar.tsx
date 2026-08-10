@@ -9,14 +9,16 @@ interface SidebarProps {
     | "verifications"
     | "users"
     | "reports"
-    | "configuration";
+    | "configuration"
+    | "payouts";
   onSectionChange: (
     section:
       | "dashboard"
       | "verifications"
       | "users"
       | "reports"
-      | "configuration",
+      | "configuration"
+      | "payouts",
   ) => void;
 }
 
@@ -26,6 +28,7 @@ const menuItems = [
   { id: "users", label: "Users", icon: "👥" },
   { id: "reports", label: "Reports", icon: "📈" },
   { id: "configuration", label: "Configuration", icon: "⚙️" },
+  { id: "payouts", label: "Payouts", icon: "💰" },
 ];
 
 export default function Sidebar({

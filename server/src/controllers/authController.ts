@@ -440,8 +440,8 @@ const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     const { firstName, lastName, phone, avatar } = req.body;
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
     if (phone !== undefined) user.phone = phone;
     if (avatar !== undefined) user.avatar = avatar;
 

@@ -298,6 +298,14 @@ class ApiClient {
     return this.request<any>('/admin/analytics');
   }
 
+  getPayouts() {
+    return this.request<{ count: number; payouts: any[] }>('/admin/payouts');
+  }
+
+  processPayout(id: string, status: string, adminNote?: string) {
+    return this.request<any>(`/admin/payouts/${id}`, { method: 'PUT', body: { status, adminNote } });
+  }
+
   // Reviews
   getLawyerReviews(lawyerId: string) {
     return this.request<{ reviews: any[]; total: number; averageRating: number }>("/reviews/lawyer/" + lawyerId);
