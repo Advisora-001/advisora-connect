@@ -6,23 +6,31 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 
 export default function ClientDashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
   const [enquiries, setEnquiries] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments' | 'profile'>('overview');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [bookingLoading, setBookingLoading] = useState<string | null>(null);
+  const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', phone: '' });
 
   useEffect(() => {
     if (loading) return;
     if (!user || user.role !== 'client') { router.push('/login'); return; }
     fetchEnquiries();
     fetchAppointments();
+    if (user) setProfileForm({ firstName: user.firstName || '', lastName: user.lastName || '', phone: user.phone || '' });
   }, [user, loading]);
 
   async function fetchEnquiries() { try { const data = await api.getMyEnquiries(); setEnquiries(data.leads); } catch {} }
   async function fetchAppointments() { try { const data = await api.getMyAppointments(); setAppointments(data.appointments || []); } catch {} }
+  
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try { await api.updateUserProfile(profileForm); await refreshUser(); alert('Profile updated successfully!'); }
+    catch (err: any) { alert(err.message || 'Failed to update profile'); }
+  };
 
   const handleCancelAppointment = async (id: string) => {
     if (!confirm('Are you sure you want to cancel this appointment?')) return;
@@ -58,7 +66,7 @@ export default function ClientDashboard() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-8 bg-[#EEF2F7] p-1 rounded-lg w-fit">
-        {(['overview', 'enquiries', 'appointments'] as const).map((tab) => (
+        {(['overview', 'enquiries', 'appointments', 'profile'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-white text-[#1B2A4A] shadow-sm' : 'text-[#667085] hover:text-[#1B2A4A]'}`}>
             {tab === 'enquiries' ? 'My Enquiries' : tab}
@@ -179,6 +187,32 @@ export default function ClientDashboard() {
               </div>
             ))
           )}
+        </div>
+      )}
+      {/* Profile Tab */}
+      {activeTab === 'profile' && (
+        <div className="bg-white rounded-xl border border-[#E5EAF0] p-8 max-w-lg">
+          <h2 className="text-xl font-bold text-[#1B2A4A] mb-6 pb-3 border-b border-[#E5EAF0]">Edit Profile</h2>
+          <form onSubmit={handleProfileUpdate} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">First Name</label>
+                <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
+                  className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="First name" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Last Name</label>
+                <input type="text" value={profileForm.lastName} onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })}
+                  className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="Last name" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Phone Number</label>
+              <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="e.g., +234 800 000 0000" />
+            </div>
+            <button type="submit" className="bg-[#1B2A4A] text-white px-6 py-3 rounded-lg hover:bg-[#16213A] font-semibold text-sm transition-colors">Save Changes</button>
+          </form>
         </div>
       )}
     </div>

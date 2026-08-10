@@ -430,4 +430,26 @@ const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login, refresh, getMe, verifyEmail, resendVerification, forgotPassword, resetPassword, logout, testEmail };
+// @desc    Update user profile (name, phone, avatar)
+// @route   PUT /api/auth/profile
+const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { firstName, lastName, phone, avatar } = req.body;
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (phone !== undefined) user.phone = phone;
+    if (avatar !== undefined) user.avatar = avatar;
+
+    await user.save();
+    res.json({ message: 'Profile updated', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
+export { register, login, refresh, getMe, verifyEmail, resendVerification, forgotPassword, resetPassword, logout, testEmail, updateProfile };

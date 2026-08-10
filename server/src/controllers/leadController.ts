@@ -219,6 +219,18 @@ const respondToLead = async (req: AuthRequest, res: Response) => {
     lead.respondedAt = new Date();
     await lead.save();
 
+    // Notify the client about the response
+    try {
+      const clientResponse = status === 'accepted' ? 'accepted' : 'declined';
+      await createNotification(
+        lead.clientId.toString(),
+        'enquiry_response',
+        `Enquiry ${clientResponse}`,
+        `Your enquiry to ${profile.barNumber || 'the lawyer'} has been ${clientResponse}.`,
+        '/dashboard/client'
+      );
+    } catch {}
+
     res.json({ message: `Enquiry ${status}`, lead });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

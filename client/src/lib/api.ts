@@ -137,6 +137,10 @@ class ApiClient {
     return this.request<{ message: string }>('/auth/logout', { method: 'POST' });
   }
 
+  updateUserProfile(data: { firstName?: string; lastName?: string; phone?: string; avatar?: string }) {
+    return this.request<{ message: string; user: any }>('/auth/profile', { method: 'PUT', body: data });
+  }
+
   // Lawyers
   getLawyers(params?: Record<string, string>) {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
@@ -230,6 +234,15 @@ class ApiClient {
 
   submitDeclaration(data: any) {
     return this.request<any>('/lawyers/declaration', { method: 'POST', body: data });
+  }
+
+  // Wallet
+  getWallet() {
+    return this.request<{ wallet: any }>('/lawyers/wallet');
+  }
+
+  requestPayout(amount: number) {
+    return this.request<any>('/lawyers/wallet/payout-request', { method: 'POST', body: { amount } });
   }
 
   // Appointments

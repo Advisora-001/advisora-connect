@@ -10,6 +10,7 @@ import PaymentRecord from '../models/PaymentRecord';
 import { sendEmail } from '../services/email';
 import { createNotification } from './notificationController';
 import { createGoogleMeetEvent } from '../services/googleCalendar';
+import Wallet from '../models/Wallet';
 
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
@@ -159,6 +160,29 @@ const verifyPayment = async (req: Request, res: Response) => {
             `/dashboard/lawyer`
           );
         } catch {}
+
+        // Credit lawyer wallet
+        try {
+          const lawyerAmount = appointment.consultationFee || 0;
+          if (lawyerAmount > 0) {
+            let wallet = await Wallet.findOne({ lawyerId: appointment.lawyerId });
+            if (!wallet) {
+              wallet = new Wallet({ lawyerId: appointment.lawyerId, balance: 0, totalEarned: 0, pendingBalance: 0 });
+            }
+            wallet.balance += lawyerAmount;
+            wallet.totalEarned += lawyerAmount;
+            wallet.transactions.push({
+              type: 'credit',
+              amount: lawyerAmount,
+              description: `Consultation payment - ${appointment.consultationType}`,
+              appointmentId: appointment._id,
+            });
+            await wallet.save();
+            console.log(`Wallet credited for lawyer ${appointment.lawyerId}: ₦${lawyerAmount}`);
+          }
+        } catch (walletErr) {
+          console.error('Failed to credit lawyer wallet:', walletErr);
+        }
 
         // Auto-generate Google Meet link after payment
         try {

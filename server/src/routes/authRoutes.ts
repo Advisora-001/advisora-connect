@@ -10,6 +10,7 @@ import {
   forgotPassword,
   resetPassword,
   testEmail,
+  updateProfile,
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
 import {
@@ -25,6 +26,7 @@ router.post('/register', registerValidator, register);
 router.post('/login', loginValidator, login);
 router.post('/refresh', refresh);
 router.get('/me', protect, getMe);
+router.put('/profile', protect, updateProfile);
 router.get('/verify-email', verifyEmail);
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', resendVerification);

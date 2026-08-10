@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import LawyerProfile from '../models/LawyerProfile';
 import User from '../models/User';
 import Appointment from '../models/Appointment';
+import Wallet from '../models/Wallet';
 import { AuthRequest } from '../middleware/auth';
 
 // @desc    Get all lawyers (with search & filters)
@@ -335,4 +336,76 @@ function generateTimeSlots(from: string, to: string, intervalMinutes: number): s
   return slots;
 }
 
-export { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto, getAvailability };
+// @desc    Get lawyer wallet
+// @route   GET /api/lawyers/wallet
+const getWallet = async (req: AuthRequest, res: Response) => {
+  try {
+    const profile = await LawyerProfile.findOne({ userId: req.user?._id });
+    if (!profile) {
+      return res.status(404).json({ message: 'Lawyer profile not found' });
+    }
+
+    let wallet = await Wallet.findOne({ lawyerId: profile._id });
+    if (!wallet) {
+      wallet = new Wallet({ lawyerId: profile._id, balance: 0, totalEarned: 0, pendingBalance: 0 });
+      await wallet.save();
+    }
+
+    res.json({ wallet });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
+// @desc    Request a payout
+// @route   POST /api/lawyers/wallet/payout-request
+const requestPayout = async (req: AuthRequest, res: Response) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: 'Valid payout amount is required' });
+    }
+
+    const profile = await LawyerProfile.findOne({ userId: req.user?._id });
+    if (!profile) {
+      return res.status(404).json({ message: 'Lawyer profile not found' });
+    }
+
+    if (!profile.accountNumber || !profile.bankName || !profile.accountName) {
+      return res.status(400).json({ message: 'Please complete your payout details (bank info) before requesting a payout.' });
+    }
+
+    const wallet = await Wallet.findOne({ lawyerId: profile._id });
+    if (!wallet || wallet.balance < amount) {
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    // Create payout request
+    const PayoutRequest = await import('../models/PayoutRequest').then(m => m.default);
+    const request = await PayoutRequest.create({
+      lawyerId: profile._id,
+      walletId: wallet._id,
+      amount,
+      bankName: profile.bankName,
+      accountNumber: profile.accountNumber,
+      accountName: profile.accountName,
+      status: 'pending',
+    });
+
+    wallet.balance -= amount;
+    wallet.pendingBalance += amount;
+    wallet.transactions.push({
+      type: 'payout',
+      amount,
+      description: 'Payout requested',
+      payoutRequestId: request._id,
+    });
+    await wallet.save();
+
+    res.status(201).json({ message: 'Payout request submitted', request, wallet });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
+export { getLawyers, getLawyerById, updateProfile, submitVerification, getLawyersList, uploadVerificationDocs, acceptOnboardingAgreement, submitDeclaration, uploadPhoto, getAvailability, getWallet, requestPayout };

@@ -14,7 +14,8 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "client" | "lawyer" | "admin";
+  phone?: string;
+  role: 'client' | 'lawyer' | 'admin';
   avatar?: string;
   isVerified?: boolean;
 }

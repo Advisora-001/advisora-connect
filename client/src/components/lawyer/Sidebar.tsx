@@ -4,14 +4,15 @@ import React from "react";
 import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
-  activeSection: "dashboard" | "enquiries" | "appointments" | "profile" | "payout";
-  onSectionChange: (section: "dashboard" | "enquiries" | "appointments" | "profile" | "payout") => void;
+  activeSection: "dashboard" | "enquiries" | "appointments" | "profile" | "payout" | "wallet";
+  onSectionChange: (section: "dashboard" | "enquiries" | "appointments" | "profile" | "payout" | "wallet") => void;
 }
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "enquiries", label: "Enquiries", icon: "📨" },
   { id: "appointments", label: "Appointments", icon: "📅" },
+  { id: "wallet", label: "Wallet", icon: "💳" },
   { id: "profile", label: "Profile", icon: "👤" },
   { id: "payout", label: "Payout", icon: "💰" },
 ];
