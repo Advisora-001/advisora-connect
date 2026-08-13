@@ -3,13 +3,14 @@ import User from '../models/User';
 import LawyerProfile from '../models/LawyerProfile';
 import Lead from '../models/Lead';
 import Subscription from '../models/Subscription';
+import PaymentRecord from '../models/PaymentRecord';
 import { AuthRequest } from '../middleware/auth';
 
-// @desc    Get pending lawyer verifications
+// @desc    Get all lawyer verifications (pending, verified, rejected) for the board
 // @route   GET /api/admin/lawyers/pending
 const getPendingVerifications = async (_req: AuthRequest, res: Response) => {
   try {
-    const lawyers = await LawyerProfile.find({ verificationStatus: 'pending' })
+    const lawyers = await LawyerProfile.find()
       .populate('userId', 'firstName lastName email phone createdAt')
       .sort({ createdAt: -1 });
 
@@ -201,4 +202,47 @@ const processPayout = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { getPendingVerifications, verifyLawyer, getUsers, toggleUserStatus, getAnalytics, getLawyerProfile, getPayouts, processPayout };
+// @desc    Get revenue / payment transaction data
+// @route   GET /api/admin/revenue
+const getRevenue = async (_req: AuthRequest, res: Response) => {
+  try {
+    // Fetch all completed consultation payments populated with lawyer + client
+    const transactions = await PaymentRecord.find({ status: 'completed' })
+      .populate({ path: 'lawyerId', populate: { path: 'userId', select: 'firstName lastName email' } })
+      .populate('clientId', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .limit(200);
+
+    // Summary totals
+    const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalPlatformFees = transactions.reduce((sum, t) => sum + (t.platformFee || 0), 0);
+    const totalLawyerPayouts = transactions.reduce((sum, t) => sum + (t.lawyerAmount || 0), 0);
+
+    // Subscription revenue
+    const subscriptions = await Subscription.find().populate('userId', 'firstName lastName email').sort({ createdAt: -1 });
+    const totalSubscriptionRevenue = subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+    // Pending payout total
+    const PayoutRequest = await import('../models/PayoutRequest').then(m => m.default);
+    const pendingPayouts = await PayoutRequest.find({ status: 'pending' });
+    const totalPendingPayouts = pendingPayouts.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    res.json({
+      transactions,
+      subscriptions,
+      summary: {
+        totalRevenue: totalRevenue + totalSubscriptionRevenue,
+        totalConsultationRevenue: totalRevenue,
+        totalPlatformFees,
+        totalLawyerPayouts,
+        totalSubscriptionRevenue,
+        totalPendingPayouts,
+        transactionCount: transactions.length,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+};
+
+export { getPendingVerifications, verifyLawyer, getUsers, toggleUserStatus, getAnalytics, getLawyerProfile, getPayouts, processPayout, getRevenue };

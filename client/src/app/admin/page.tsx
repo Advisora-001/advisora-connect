@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<
-    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts"
+    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue"
   >("dashboard");
   const [analytics, setAnalytics] = useState<any>(null);
   const [pendingLawyers, setPendingLawyers] = useState<any[]>([]);
@@ -27,15 +27,19 @@ export default function AdminDashboard() {
   const [manageLawyer, setManageLawyer] = useState<any>(null);
   const [payouts, setPayouts] = useState<any[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [revenueData, setRevenueData] = useState<any>(null);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.role !== "admin") { router.push("/login"); return; }
     fetchData();
     fetchPayouts();
+    fetchRevenue();
   }, [user, authLoading]);
 
   async function fetchPayouts() { try { const data = await api.getPayouts(); setPayouts(data.payouts); } catch {} }
+
+  async function fetchRevenue() { try { const data = await api.getRevenue(); setRevenueData(data); } catch {} }
 
   async function fetchData() {
     setLoading(true);
@@ -100,6 +104,7 @@ export default function AdminDashboard() {
                   {activeSection === "reports" && "Reports"}
                   {activeSection === "configuration" && "Configuration"}
                   {activeSection === "payouts" && "Payouts"}
+                  {activeSection === "revenue" && "Revenue"}
                 </h1>
                 <p className="text-[#667085] text-xs md:text-sm mt-1">
                   {activeSection === "dashboard" && "Platform overview and analytics"}
@@ -108,6 +113,7 @@ export default function AdminDashboard() {
                   {activeSection === "reports" && "View platform reports and insights"}
                   {activeSection === "configuration" && "Configure platform settings"}
                   {activeSection === "payouts" && "Review and process lawyer payout requests"}
+                  {activeSection === "revenue" && "Platform revenue and transaction history"}
                 </p>
               </div>
             </div>
@@ -195,6 +201,80 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Revenue */}
+          {activeSection === "revenue" && (
+            <div>
+              <div className="mb-6"><p className="text-[#667085] text-sm">Track platform earnings, fees, and transaction history</p></div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-5 mb-6">
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Total Revenue</p><p className="text-xl md:text-2xl font-bold text-[#1B2A4A] mt-2">₦{revenueData?.summary?.totalRevenue?.toLocaleString() || 0}</p></div>
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Platform Fees</p><p className="text-xl md:text-2xl font-bold text-[#00A6A6] mt-2">₦{revenueData?.summary?.totalPlatformFees?.toLocaleString() || 0}</p></div>
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Lawyer Earnings</p><p className="text-xl md:text-2xl font-bold text-[#5DBB63] mt-2">₦{revenueData?.summary?.totalLawyerPayouts?.toLocaleString() || 0}</p></div>
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Subscription Revenue</p><p className="text-xl md:text-2xl font-bold text-[#2476B8] mt-2">₦{revenueData?.summary?.totalSubscriptionRevenue?.toLocaleString() || 0}</p></div>
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Pending Payouts</p><p className="text-xl md:text-2xl font-bold text-[#F59E0B] mt-2">₦{revenueData?.summary?.totalPendingPayouts?.toLocaleString() || 0}</p></div>
+              </div>
+
+              {/* Transactions Table */}
+              <div className="bg-white rounded-xl border border-[#E5EAF0]">
+                <div className="p-6 border-b border-[#E5EAF0]"><h2 className="text-lg font-bold text-[#1B2A4A]">Consultation Transactions</h2></div>
+                {revenueData?.transactions?.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-[#F5F7FA]">
+                        <tr>
+                          <th className="text-left px-4 py-3">Date</th>
+                          <th className="text-left px-4 py-3">Client</th>
+                          <th className="text-left px-4 py-3">Lawyer</th>
+                          <th className="text-left px-4 py-3">Amount</th>
+                          <th className="text-left px-4 py-3">Platform Fee</th>
+                          <th className="text-left px-4 py-3">Lawyer Share</th>
+                          <th className="text-left px-4 py-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E5EAF0]">
+                        {revenueData.transactions.map((t: any) => (
+                          <tr key={t._id} className="hover:bg-[#F5F7FA]">
+                            <td className="px-4 py-3 text-sm text-[#667085]">{new Date(t.createdAt).toLocaleDateString()}</td>
+                            <td className="px-4 py-3 text-sm text-[#1B2A4A]">{t.clientId?.firstName} {t.clientId?.lastName}</td>
+                            <td className="px-4 py-3 text-sm text-[#1B2A4A]">{t.lawyerId?.userId?.firstName} {t.lawyerId?.userId?.lastName}</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-[#1B2A4A]">₦{t.amount?.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-sm text-[#00A6A6]">₦{t.platformFee?.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-sm text-[#5DBB63]">₦{t.lawyerAmount?.toLocaleString()}</td>
+                            <td className="px-4 py-3"><span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium bg-[#ECFDF5] text-[#166534]">{t.status}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (<div className="p-12 text-center text-[#667085]">No transactions yet.</div>)}
+              </div>
+
+              {/* Subscriptions */}
+              {revenueData?.subscriptions?.length > 0 && (
+                <div className="bg-white rounded-xl border border-[#E5EAF0] mt-6">
+                  <div className="p-6 border-b border-[#E5EAF0]"><h2 className="text-lg font-bold text-[#1B2A4A]">Subscriptions</h2></div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-[#F5F7FA]"><tr><th className="text-left px-4 py-3">Subscriber</th><th className="text-left px-4 py-3">Plan</th><th className="text-left px-4 py-3">Amount</th><th className="text-left px-4 py-3">Status</th><th className="text-left px-4 py-3">Date</th></tr></thead>
+                      <tbody className="divide-y divide-[#E5EAF0]">
+                        {revenueData.subscriptions.map((s: any) => (
+                          <tr key={s._id} className="hover:bg-[#F5F7FA]">
+                            <td className="px-4 py-3 text-sm text-[#1B2A4A]">{s.userId?.firstName} {s.userId?.lastName}</td>
+                            <td className="px-4 py-3 text-sm capitalize text-[#1B2A4A]">{s.plan}</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-[#1B2A4A]">₦{s.amount?.toLocaleString()}</td>
+                            <td className="px-4 py-3"><span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${s.status === 'active' ? 'bg-[#ECFDF5] text-[#166534]' : 'bg-[#EEF2F7] text-[#667085]'}`}>{s.status}</span></td>
+                            <td className="px-4 py-3 text-sm text-[#667085]">{new Date(s.createdAt).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

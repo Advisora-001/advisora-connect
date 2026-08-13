@@ -8,8 +8,9 @@ interface SidebarProps {
     | "verifications"
     | "users"
     | "reports"
-    | "configuration"
-    | "payouts";
+      | "configuration"
+      | "payouts"
+      | "revenue";
   onSectionChange: (
     section:
       | "dashboard"
@@ -17,7 +18,8 @@ interface SidebarProps {
       | "users"
       | "reports"
       | "configuration"
-      | "payouts",
+      | "payouts"
+      | "revenue",
   ) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -30,6 +32,7 @@ const menuItems = [
   { id: "reports", label: "Reports", icon: "📈" },
   { id: "configuration", label: "Configuration", icon: "⚙️" },
   { id: "payouts", label: "Payouts", icon: "💰" },
+  { id: "revenue", label: "Revenue", icon: "📈" },
 ];
 
 export default function Sidebar({

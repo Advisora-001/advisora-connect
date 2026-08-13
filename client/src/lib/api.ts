@@ -298,6 +298,10 @@ class ApiClient {
     return this.request<any>('/admin/analytics');
   }
 
+  getRevenue() {
+    return this.request<{ transactions: any[]; subscriptions: any[]; summary: any }>('/admin/revenue');
+  }
+
   getPayouts() {
     return this.request<{ count: number; payouts: any[] }>('/admin/payouts');
   }
