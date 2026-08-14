@@ -86,7 +86,7 @@ export default function Navbar() {
                   </button>
 
                   {notifOpen && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-[#E5EAF0] z-50 max-h-96 overflow-y-auto animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-[#E5EAF0] z-50 max-h-96 overflow-y-auto animate-fadeIn">
                       <div className="p-4 border-b border-[#E5EAF0] flex justify-between items-center">
                         <p className="font-semibold text-[#1B2A4A] text-sm">Notifications</p>
                         {notifications.length > 0 && (
@@ -128,7 +128,7 @@ export default function Navbar() {
                   </button>
 
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-[#E5EAF0] py-2 z-50 animate-fadeIn">
+                    <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-lg border border-[#E5EAF0] py-2 z-50 animate-fadeIn">
                       <div className="px-4 py-3 border-b border-[#E5EAF0]">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-[#1B2A4A] flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
@@ -198,6 +198,35 @@ export default function Navbar() {
             <Link href="/about" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
               About Us
             </Link>
+            {user && (
+              <div className="pt-3 mt-3 border-t border-[#E5EAF0]">
+                <div className="flex items-center justify-between px-4 py-2">
+                  <p className="text-xs font-semibold text-[#667085] uppercase tracking-wide">Notifications</p>
+                  {unreadCount > 0 && (
+                    <span className="bg-[#EF4444] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  )}
+                </div>
+                {notifications.length === 0 ? (
+                  <p className="px-4 pb-2 text-xs text-[#94A3B8]">No notifications</p>
+                ) : (
+                  <>
+                    {notifications.slice(0, 5).map((n: any) => (
+                      <div key={n._id} className={`px-4 py-2.5 border-b border-[#F0F2F5] ${!n.read ? 'bg-[#EFF6FF]' : ''}`}>
+                        <p className="text-sm font-medium text-[#1B2A4A]">{n.title}</p>
+                        <p className="text-xs text-[#667085] mt-0.5">{n.message}</p>
+                        <p className="text-xs text-[#94A3B8] mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    ))}
+                    {notifications.length > 0 && (
+                      <button onClick={() => api.markNotificationsRead().then(() => setUnreadCount(0)).catch(() => {})}
+                        className="block w-full text-left px-4 py-2.5 text-xs text-[#00A6A6] font-medium hover:underline">
+                        Mark all as read
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
             {user ? (
               <>
                 <Link href={dashboardPath} className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>

@@ -391,7 +391,7 @@ function BookingWizardContent() {
                     </svg>
                   </button>
                 </div>
-                <div className="grid grid-cols-7 gap-1 text-center">
+                <div className="grid grid-cols-7 gap-0.5 text-center">
                   {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
                     <div
                       key={d}
@@ -416,7 +416,7 @@ function BookingWizardContent() {
                           key={day}
                           onClick={() => available && setSelectedDate(dateStr)}
                           disabled={!available}
-                          className={`py-2 rounded-lg text-sm font-medium transition-all ${isSelected ? "bg-[#1B2A4A] text-white" : available ? "hover:bg-[#EEF2F7] text-[#1B2A4A] cursor-pointer" : "text-[#E5EAF0] cursor-not-allowed"}`}
+                          className={`py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${isSelected ? "bg-[#1B2A4A] text-white" : available ? "hover:bg-[#EEF2F7] text-[#1B2A4A] cursor-pointer" : "text-[#E5EAF0] cursor-not-allowed"}`}
                         >
                           {day}
                         </button>
@@ -436,7 +436,7 @@ function BookingWizardContent() {
                     <div className="animate-spin w-6 h-6 border-2 border-[#1B2A4A] border-t-transparent rounded-full"></div>
                   </div>
                 ) : availability?.slots?.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {availability.slots.map((slot: string) => (
                       <button
                         key={slot}

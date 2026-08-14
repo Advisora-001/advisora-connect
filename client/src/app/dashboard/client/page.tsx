@@ -194,7 +194,7 @@ export default function ClientDashboard() {
         <div className="bg-white rounded-xl border border-[#E5EAF0] p-8 max-w-lg">
           <h2 className="text-xl font-bold text-[#1B2A4A] mb-6 pb-3 border-b border-[#E5EAF0]">Edit Profile</h2>
           <form onSubmit={handleProfileUpdate} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">First Name</label>
                 <input type="text" value={profileForm.firstName} onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
