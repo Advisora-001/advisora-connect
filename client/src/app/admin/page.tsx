@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<
-    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue"
+    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue" | "guide"
   >("dashboard");
   const [analytics, setAnalytics] = useState<any>(null);
   const [pendingLawyers, setPendingLawyers] = useState<any[]>([]);
@@ -105,6 +105,7 @@ export default function AdminDashboard() {
                   {activeSection === "configuration" && "Configuration"}
                   {activeSection === "payouts" && "Payouts"}
                   {activeSection === "revenue" && "Revenue"}
+                  {activeSection === "guide" && "Platform Guide"}
                 </h1>
                 <p className="text-[#667085] text-xs md:text-sm mt-1">
                   {activeSection === "dashboard" && "Platform overview and analytics"}
@@ -114,6 +115,7 @@ export default function AdminDashboard() {
                   {activeSection === "configuration" && "Configure platform settings"}
                   {activeSection === "payouts" && "Review and process lawyer payout requests"}
                   {activeSection === "revenue" && "Platform revenue and transaction history"}
+                  {activeSection === "guide" && "Step-by-step guide for using the platform"}
                 </p>
               </div>
             </div>
@@ -275,6 +277,97 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Platform Guide */}
+          {activeSection === "guide" && (
+            <div>
+              <div className="mb-6"><p className="text-[#667085] text-sm">Step-by-step guide for using the platform across all roles</p></div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Client Guide */}
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
+                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#E5EAF0]">
+                    <span className="text-2xl">👤</span>
+                    <h2 className="text-lg font-bold text-[#1B2A4A]">Client Flow</h2>
+                  </div>
+                  <ol className="space-y-3">
+                    {[
+                      { step: "1", title: "Register & Verify", desc: "Create an account and verify your email address." },
+                      { step: "2", title: "Browse Lawyers", desc: "Search the directory by practice area, location, or availability." },
+                      { step: "3", title: "View Profile", desc: "Review credentials, ratings, reviews, and consultation fees." },
+                      { step: "4", title: "Book Consultation", desc: "Select a service, pick a date & time, and submit your booking request." },
+                      { step: "5", title: "Wait for Acceptance", desc: "The lawyer reviews your request and accepts or declines." },
+                      { step: "6", title: "Complete Payment", desc: "Once accepted, pay via Paystack (consultation fee + platform fee)." },
+                      { step: "7", title: "Join Consultation", desc: "A Google Meet link is generated — click to join at the scheduled time." },
+                      { step: "8", title: "Leave a Review", desc: "After the consultation is marked complete, rate and review the lawyer." },
+                    ].map((item) => (
+                      <li key={item.step} className="flex gap-3">
+                        <span className="w-6 h-6 bg-[#1B2A4A] text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{item.step}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1B2A4A]">{item.title}</p>
+                          <p className="text-xs text-[#667085]">{item.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Lawyer Guide */}
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
+                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#E5EAF0]">
+                    <span className="text-2xl">⚖️</span>
+                    <h2 className="text-lg font-bold text-[#1B2A4A]">Lawyer Flow</h2>
+                  </div>
+                  <ol className="space-y-3">
+                    {[
+                      { step: "1", title: "Register as Lawyer", desc: "Create an account with the lawyer role and verify your email." },
+                      { step: "2", title: "Complete Profile", desc: "Fill in SCN number, bar info, practice areas, consultation fee, and availability." },
+                      { step: "3", title: "Submit Verification", desc: "Upload verification documents and await admin approval." },
+                      { step: "4", title: "Receive Enquiries", desc: "Clients send booking requests — review and accept or decline them." },
+                      { step: "5", title: "Manage Appointments", desc: "View upcoming consultations, generate Google Meet links, and join sessions." },
+                      { step: "6", title: "Mark Complete", desc: "After the consultation, mark it as completed so the client can leave a review." },
+                      { step: "7", title: "Track Earnings", desc: "Monitor your wallet balance, total earned, and transaction history." },
+                      { step: "8", title: "Request Payout", desc: "Set up bank details in Payout Settings, then request a withdrawal from your wallet." },
+                    ].map((item) => (
+                      <li key={item.step} className="flex gap-3">
+                        <span className="w-6 h-6 bg-[#00A6A6] text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{item.step}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1B2A4A]">{item.title}</p>
+                          <p className="text-xs text-[#667085]">{item.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Admin Guide */}
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
+                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#E5EAF0]">
+                    <span className="text-2xl">🛡️</span>
+                    <h2 className="text-lg font-bold text-[#1B2A4A]">Admin Flow</h2>
+                  </div>
+                  <ol className="space-y-3">
+                    {[
+                      { step: "1", title: "Dashboard Overview", desc: "Monitor platform stats: lawyers, clients, leads, subscriptions, and featured listings." },
+                      { step: "2", title: "Verify Lawyers", desc: "Review lawyer profiles and documents — approve or reject. Rejected lawyers can be re-approved." },
+                      { step: "3", title: "Manage Users", desc: "View all users, suspend or activate accounts as needed." },
+                      { step: "4", title: "Process Payouts", desc: "Review lawyer payout requests — approve, reject, or mark as processed." },
+                      { step: "5", title: "Track Revenue", desc: "Monitor consultation transactions, platform fees, lawyer earnings, and subscription revenue." },
+                      { step: "6", title: "Platform Guide", desc: "Reference this guide for platform usage across all roles." },
+                    ].map((item) => (
+                      <li key={item.step} className="flex gap-3">
+                        <span className="w-6 h-6 bg-[#5DBB63] text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{item.step}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1B2A4A]">{item.title}</p>
+                          <p className="text-xs text-[#667085]">{item.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
             </div>
           )}
         </div>
