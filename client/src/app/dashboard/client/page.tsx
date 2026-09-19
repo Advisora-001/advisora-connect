@@ -4,16 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import ClientSidebar from '@/components/client/Sidebar';
 
 export default function ClientDashboard() {
   const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
   const [enquiries, setEnquiries] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'appointments' | 'profile'>('overview');
+  const [activeSection, setActiveSection] = useState<
+    'dashboard' | 'enquiries' | 'appointments' | 'profile'
+  >('dashboard');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [bookingLoading, setBookingLoading] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', phone: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -53,48 +57,39 @@ export default function ClientDashboard() {
 
   if (loading) return <div className="text-center py-20"><div className="animate-spin w-8 h-8 border-2 border-[#1B2A4A] border-t-transparent rounded-full mx-auto"></div></div>;
 
+  if (!user) return null;
+
   const pendingEnquiries = enquiries.filter((e: any) => e.status === 'pending');
   const acceptedEnquiries = enquiries.filter((e: any) => e.status === 'accepted');
   const bookedEnquiries = enquiries.filter((e: any) => e.status === 'booked');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1B2A4A] tracking-tight">Welcome, {user?.firstName}</h1>
-        <p className="text-[#667085] mt-1">Manage your enquiries and appointments</p>
-      </div>
+    <div className="flex min-h-[calc(100vh-64px)]">
+      <ClientSidebar activeSection={activeSection} onSectionChange={setActiveSection} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto bg-[#F5F7FA]">
+        {/* Mobile hamburger */}
+        <button className="md:hidden mb-4 p-2 text-[#667085] hover:text-[#1B2A4A] rounded-lg hover:bg-[#EEF2F7]" onClick={() => setSidebarOpen(true)}>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+        </button>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-8 bg-[#EEF2F7] p-1 rounded-lg w-fit">
-        {(['overview', 'enquiries', 'appointments', 'profile'] as const).map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-white text-[#1B2A4A] shadow-sm' : 'text-[#667085] hover:text-[#1B2A4A]'}`}>
-            {tab === 'enquiries' ? 'My Enquiries' : tab}
-          </button>
-        ))}
-      </div>
+        {/* Dashboard */}
+        {activeSection === 'dashboard' && (
+          <div>
+            <div className="mb-8"><h1 className="text-2xl font-bold text-[#1B2A4A] tracking-tight">Dashboard</h1><p className="text-[#667085] mt-1">Welcome back, {user.firstName} {user.lastName}</p></div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Total Enquiries</p><p className="text-3xl font-bold text-[#1B2A4A] mt-2">{enquiries.length}</p></div>
+              <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Accepted</p><p className="text-3xl font-bold text-[#5DBB63] mt-2">{acceptedEnquiries.length + bookedEnquiries.length}</p></div>
+              <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Appointments</p><p className="text-3xl font-bold text-[#00A6A6] mt-2">{appointments.length}</p></div>
+              <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Pending</p><p className="text-3xl font-bold text-[#F59E0B] mt-2">{pendingEnquiries.length}</p></div>
+            </div>
+          </div>
+        )}
 
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <div className="grid md:grid-cols-3 gap-5 mb-8">
-          <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
-            <p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Total Enquiries</p>
-            <p className="text-3xl font-bold text-[#1B2A4A] mt-2">{enquiries.length}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
-            <p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Accepted</p>
-            <p className="text-3xl font-bold text-[#5DBB63] mt-2">{acceptedEnquiries.length + bookedEnquiries.length}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
-            <p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Appointments</p>
-            <p className="text-3xl font-bold text-[#00A6A6] mt-2">{appointments.length}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Enquiries Tab */}
-      {activeTab === 'enquiries' && (
-        <div className="space-y-4">
+        {/* Enquiries */}
+        {activeSection === 'enquiries' && (
+          <div>
+            <div className="mb-8"><h1 className="text-2xl font-bold text-[#1B2A4A] tracking-tight">My Enquiries</h1><p className="text-[#667085] mt-1">Track the enquiries you have sent and manage your bookings</p></div>
+            <div className="space-y-4">
           {enquiries.length === 0 ? (
             <div className="bg-white rounded-xl border border-[#E5EAF0] p-12 text-center text-[#667085]">No enquiries yet. Browse lawyers and send your first enquiry!</div>
           ) : (
@@ -141,12 +136,15 @@ export default function ClientDashboard() {
               </div>
             ))
           )}
-        </div>
-      )}
+            </div>
+          </div>
+        )}
 
-      {/* Appointments Tab */}
-      {activeTab === 'appointments' && (
-        <div className="space-y-4">
+        {/* Appointments */}
+        {activeSection === 'appointments' && (
+          <div>
+            <div className="mb-8"><h1 className="text-2xl font-bold text-[#1B2A4A] tracking-tight">Appointments</h1><p className="text-[#667085] mt-1">Manage your consultations and payments</p></div>
+            <div className="space-y-4">
           {appointments.length === 0 ? (
             <div className="bg-white rounded-xl border border-[#E5EAF0] p-12 text-center text-[#667085]">No appointments yet. Book a consultation to get started!</div>
           ) : (
@@ -187,12 +185,15 @@ export default function ClientDashboard() {
               </div>
             ))
           )}
-        </div>
-      )}
-      {/* Profile Tab */}
-      {activeTab === 'profile' && (
-        <div className="bg-white rounded-xl border border-[#E5EAF0] p-8 max-w-lg">
-          <h2 className="text-xl font-bold text-[#1B2A4A] mb-6 pb-3 border-b border-[#E5EAF0]">Edit Profile</h2>
+            </div>
+          </div>
+        )}
+
+        {/* Profile */}
+        {activeSection === 'profile' && (
+          <div>
+            <div className="mb-8"><h1 className="text-2xl font-bold text-[#1B2A4A] tracking-tight">Edit Profile</h1><p className="text-[#667085] mt-1">Manage your personal details</p></div>
+            <div className="bg-white rounded-xl border border-[#E5EAF0] p-8 max-w-lg">
           <form onSubmit={handleProfileUpdate} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -213,8 +214,10 @@ export default function ClientDashboard() {
             </div>
             <button type="submit" className="bg-[#1B2A4A] text-white px-6 py-3 rounded-lg hover:bg-[#16213A] font-semibold text-sm transition-colors">Save Changes</button>
           </form>
-        </div>
-      )}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

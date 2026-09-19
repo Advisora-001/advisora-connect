@@ -11,11 +11,11 @@ interface SidebarProps {
 }
 
 const menuItems = [
+  { id: "profile", label: "Profile", icon: "👤" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "enquiries", label: "Enquiries", icon: "📨" },
   { id: "appointments", label: "Appointments", icon: "📅" },
   { id: "wallet", label: "Wallet", icon: "💳" },
-  { id: "profile", label: "Profile", icon: "👤" },
   { id: "payout", label: "Payout", icon: "💰" },
 ];
 
