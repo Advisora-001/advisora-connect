@@ -10,19 +10,33 @@ const configureCloudinary = (): void => {
   });
 };
 
-const storage = new CloudinaryStorage({
+const blogImageStorage = new CloudinaryStorage({
   cloudinary,
   params: async (_req, file) => ({
-    folder: 'advisora',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+    folder: 'advisora/blog',
+    resource_type: 'image',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
   }),
 });
 
 const upload = multer({
-  storage,
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: async (_req, file) => ({
+      folder: 'advisora',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
+    }),
+  }),
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+const blogImageUpload = multer({
+  storage: blogImageStorage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+});
+
 export default configureCloudinary;
-export { upload, cloudinary };
+export { upload, blogImageUpload, cloudinary };
+

@@ -21,6 +21,7 @@ import appointmentRoutes from './routes/appointmentRoutes';
 import legalRoutes from './routes/legalRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import blogRoutes from './routes/blogRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -65,6 +66,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/legal', legalRoutes);
+app.use('/api/blog', blogRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 

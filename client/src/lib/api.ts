@@ -50,7 +50,7 @@ class ApiClient {
     // Always attach auth token for all request types (GET, POST, etc.)
     const token = getStoredToken();
     if (token) {
-      config.headers = { ...config.headers, 'Authorization': `Bearer ${token}` };
+      config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
     }
 
     if (body && !isFormData) {
@@ -381,6 +381,38 @@ class ApiClient {
 
   getLegalAcceptanceStats() {
     return this.request<{ stats: any[] }>('/legal/admin/acceptance-stats');
+  }
+
+  // Blog (public)
+  getBlogPosts(params?: { category?: string; page?: number; limit?: number }) {
+    let url = '/blog';
+    const query: string[] = [];
+    if (params?.category) query.push(`category=${encodeURIComponent(params.category)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ count: number; total: number; page: number; limit: number; pages: number; posts: any[] }>(url);
+  }
+
+  getBlogPost(slug: string) {
+    return this.request<any>(`/blog/${slug}`);
+  }
+
+  // Blog (admin)
+  getAllBlogPosts() {
+    return this.request<{ count: number; posts: any[] }>('/blog/admin/all');
+  }
+
+  createBlogPost(formData: FormData) {
+    return this.request<any>('/blog/admin', { method: 'POST', body: formData, isFormData: true });
+  }
+
+  updateBlogPost(id: string, formData: FormData) {
+    return this.request<any>(`/blog/admin/${id}`, { method: 'PUT', body: formData, isFormData: true });
+  }
+
+  deleteBlogPost(id: string) {
+    return this.request<any>(`/blog/admin/${id}`, { method: 'DELETE' });
   }
 }
 

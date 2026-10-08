@@ -52,6 +52,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
   --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
   --color-accent: var(--primary);
   --color-accent-green: var(--accent-green);
   --color-accent-blue: var(--accent-blue);
