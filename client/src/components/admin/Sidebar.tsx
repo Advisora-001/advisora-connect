@@ -2,32 +2,25 @@
 
 import React from "react";
 
+export type AdminSection =
+  | "dashboard"
+  | "verifications"
+  | "users"
+  | "reports"
+  | "configuration"
+  | "payouts"
+  | "revenue"
+  | "guide"
+  | "blog";
+
 interface SidebarProps {
-  activeSection:
-    | "dashboard"
-    | "verifications"
-    | "users"
-    | "reports"
-      | "configuration"
-      | "payouts"
-      | "revenue"
-      | "guide";
-  onSectionChange: (
-    section:
-      | "dashboard"
-      | "verifications"
-      | "users"
-      | "reports"
-      | "configuration"
-      | "payouts"
-      | "revenue"
-      | "guide",
-  ) => void;
+  activeSection: AdminSection;
+  onSectionChange: (section: AdminSection) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 }
 
-const menuItems = [
+const menuItems: { id: AdminSection; label: string; icon: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "verifications", label: "Verifications", icon: "✓" },
   { id: "users", label: "Users", icon: "👥" },
@@ -36,6 +29,7 @@ const menuItems = [
   { id: "payouts", label: "Payouts", icon: "💰" },
   { id: "revenue", label: "Revenue", icon: "📈" },
   { id: "guide", label: "Platform Guide", icon: "📖" },
+  { id: "blog", label: "Blog", icon: "📝" },
 ];
 
 export default function Sidebar({
@@ -44,8 +38,8 @@ export default function Sidebar({
   mobileOpen,
   onMobileClose,
 }: SidebarProps) {
-  const handleClick = (id: string) => {
-    onSectionChange(id as any);
+  const handleClick = (id: AdminSection) => {
+    onSectionChange(id);
     if (onMobileClose) onMobileClose();
   };
 

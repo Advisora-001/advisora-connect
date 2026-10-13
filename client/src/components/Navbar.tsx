@@ -63,6 +63,9 @@ export default function Navbar() {
             <Link href="/lawyers" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
               Find Lawyers
             </Link>
+            <Link href="/blog" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
+              Blog
+            </Link>
             <Link href="/about" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
               About Us
             </Link>
@@ -194,6 +197,9 @@ export default function Navbar() {
           <div className="md:hidden pb-4 space-y-1 animate-fadeIn">
             <Link href="/lawyers" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
               Find Lawyers
+            </Link>
+            <Link href="/blog" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
+              Blog
             </Link>
             <Link href="/about" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
               About Us

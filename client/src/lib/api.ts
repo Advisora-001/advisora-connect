@@ -3,12 +3,18 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 // Token management for cross-domain auth
 const TOKEN_KEY = 'advisora_access_token';
 
-export const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
-export const clearStoredTokens = () => localStorage.removeItem(TOKEN_KEY);
+export const getStoredToken = () =>
+  typeof window === 'undefined' ? null : window.localStorage.getItem(TOKEN_KEY);
+
+export const clearStoredTokens = () => {
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(TOKEN_KEY);
+  }
+};
 
 export const storeAuthData = (data: any) => {
-  if (data.accessToken) {
-    localStorage.setItem(TOKEN_KEY, data.accessToken);
+  if (typeof window !== 'undefined' && data.accessToken) {
+    window.localStorage.setItem(TOKEN_KEY, data.accessToken);
   }
 };
 

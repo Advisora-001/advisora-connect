@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import api from '@/lib/api';
 import BlogCard from '@/components/blog/BlogCard';
 
@@ -21,10 +20,6 @@ export default async function BlogPage({
 
   const { posts, pages, page: currentPage } = await api.getBlogPosts({ category, page, limit });
   const categories = Array.from(new Set(posts.map((p: any) => p.category))).sort();
-
-  if (!posts.length && !category) {
-    notFound();
-  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -157,4 +152,3 @@ export default async function BlogPage({
     </div>
   );
 }
-

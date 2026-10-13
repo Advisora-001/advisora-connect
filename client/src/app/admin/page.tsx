@@ -4,18 +4,17 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
-import Sidebar from "@/components/admin/Sidebar";
+import Sidebar, { type AdminSection } from "@/components/admin/Sidebar";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 import VerificationCard from "@/components/admin/VerificationCard";
 import UserCard from "@/components/admin/UserCard";
 import LawyerProfileModal from "@/components/admin/LawyerProfileModal";
+import BlogManager from "@/components/admin/BlogManager";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<
-    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue" | "guide"
-  >("dashboard");
+  const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const [analytics, setAnalytics] = useState<any>(null);
   const [pendingLawyers, setPendingLawyers] = useState<any[]>([]);
   const [verifiedLawyers, setVerifiedLawyers] = useState<any[]>([]);
@@ -106,6 +105,7 @@ export default function AdminDashboard() {
                   {activeSection === "payouts" && "Payouts"}
                   {activeSection === "revenue" && "Revenue"}
                   {activeSection === "guide" && "Platform Guide"}
+                  {activeSection === "blog" && "Blog"}
                 </h1>
                 <p className="text-[#667085] text-xs md:text-sm mt-1">
                   {activeSection === "dashboard" && "Platform overview and analytics"}
@@ -116,6 +116,7 @@ export default function AdminDashboard() {
                   {activeSection === "payouts" && "Review and process lawyer payout requests"}
                   {activeSection === "revenue" && "Platform revenue and transaction history"}
                   {activeSection === "guide" && "Step-by-step guide for using the platform"}
+                  {activeSection === "blog" && "Create and manage published blog posts"}
                 </p>
               </div>
             </div>
@@ -123,6 +124,8 @@ export default function AdminDashboard() {
         </div>
 
         <div className="flex-1 overflow-auto p-4 md:p-8">
+          {activeSection === "blog" && <BlogManager />}
+
           {/* Dashboard */}
           {activeSection === "dashboard" && (<>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mb-6 md:mb-8">
