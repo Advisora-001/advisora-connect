@@ -59,10 +59,7 @@ See [client/README.md](./client/README.md) for detailed setup instructions, test
 
 ## 👥 Test Accounts
 
-After seeding:
-- **Admin**: admin@advisora.com / Admin123!
-- **Lawyer**: lawyer@test.com / Lawyer123!
-- **Client**: client@test.com / Client123!
+
 
 ## 📁 Project Structure
 
