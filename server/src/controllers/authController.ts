@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import LawyerProfile from '../models/LawyerProfile';
+import ProfessionalProfile, {
+  IProfessionalProfile,
+  professionalCategories,
+  ProfessionalCategory,
+} from '../models/ProfessionalProfile';
 import LegalDocument from '../models/LegalDocument';
 import LegalAcceptance from '../models/LegalAcceptance';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
@@ -69,17 +74,32 @@ const testEmail = async (req: Request, res: Response) => {
   }
 };
 
-// @desc    Register user (client or lawyer)
+// @desc    Register a client, lawyer, or multi-category professional
 // @route   POST /api/auth/register
 const register = async (req: Request, res: Response) => {
   try {
   const { email, password, firstName, lastName, phone, role: requestedRole, termsAccepted, policiesAccepted } = req.body;
-    const role = requestedRole === 'lawyer' ? 'lawyer' : 'client';
+    const role = requestedRole === 'lawyer' || requestedRole === 'professional' ? requestedRole : 'client';
+    const categories = req.body.categories;
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
       return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
+    if (role === 'professional') {
+      if (!Array.isArray(categories) || categories.length === 0) {
+        return res.status(400).json({ message: 'Select at least one professional category' });
+      }
+      if (
+        categories.some((category: unknown) =>
+          typeof category !== 'string' ||
+          !professionalCategories.includes(category as ProfessionalCategory)
+        )
+      ) {
+        return res.status(400).json({ message: 'One or more professional categories are invalid' });
+      }
     }
 
     // Validate password strength
@@ -117,6 +137,14 @@ const register = async (req: Request, res: Response) => {
     // If registering as lawyer, create a profile placeholder so updates work later
     if (role === 'lawyer') {
       await LawyerProfile.create({ userId: user._id });
+    }
+    if (role === 'professional') {
+      await ProfessionalProfile.insertMany(
+        [...new Set(categories as ProfessionalCategory[])].map((category) => ({
+          userId: user._id,
+          category,
+        }))
+      );
     }
 
     // Record legal document acceptances
@@ -270,11 +298,14 @@ const getMe = async (req: AuthRequest, res: Response) => {
     }
 
     let profile = null;
+    let profiles: IProfessionalProfile[] = [];
     if (user.role === 'lawyer') {
       profile = await LawyerProfile.findOne({ userId: user._id });
+    } else if (user.role === 'professional') {
+      profiles = await ProfessionalProfile.find({ userId: user._id }).sort({ category: 1 });
     }
 
-    res.json({ user, profile });
+    res.json({ user, profile, profiles });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

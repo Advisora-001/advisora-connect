@@ -57,7 +57,10 @@ function generateStrongPassword(): string {
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();
-  const defaultRole = searchParams.get("role") || "client";
+  const requestedRole = searchParams.get("role") || "client";
+  const defaultRole = requestedRole === "lawyer" || requestedRole === "professional"
+    ? "professional"
+    : "client";
   const { register } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -70,6 +73,9 @@ function RegisterPageContent() {
     termsAccepted: false,
     policiesAccepted: false,
   });
+  const [categories, setCategories] = useState<string[]>(
+    defaultRole === "professional" ? ["legal"] : [],
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -85,6 +91,9 @@ function RegisterPageContent() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "role" && value === "professional" && categories.length === 0) {
+      setCategories(["legal"]);
+    }
 
     // Validate email in real-time
     if (name === "email") {
@@ -127,11 +136,18 @@ function RegisterPageContent() {
       setError("You must accept the Terms & Conditions and all platform policies to register.");
       return;
     }
+    if (formData.role === "professional" && categories.length === 0) {
+      setError("Select at least one professional category.");
+      return;
+    }
 
     setLoading(true);
 
     try {
-      await register(formData);
+      await register({
+        ...formData,
+        categories: formData.role === "professional" ? categories : undefined,
+      });
       setError("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -154,7 +170,7 @@ function RegisterPageContent() {
           <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6">
             <p className="font-semibold">Registration successful! 🎉</p>
             <p className="text-sm mt-1">
-              Please check your email to verify your account.               You'll need to
+              Please check your email to verify your account. You&apos;ll need to
               verify your email before logging in.
             </p>
           </div>
@@ -356,10 +372,42 @@ function RegisterPageContent() {
               onChange={handleChange}
               className="w-full px-4 py-3 bg-white border-2 border-primary rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/30 focus:border-primary-dark text-accent"
             >
-              <option value="client">Client looking for legal help</option>
-              <option value="lawyer">Lawyer / Legal Professional</option>
+              <option value="client">I’m looking for a professional</option>
+              <option value="professional">I’m a professional</option>
             </select>
           </div>
+
+          {formData.role === "professional" && (
+            <fieldset className="space-y-2">
+              <legend className="block text-sm font-semibold text-accent mb-2">
+                Professional categories
+              </legend>
+              {[
+                { value: "legal", label: "Legal professional" },
+                { value: "accounting", label: "Accountant" },
+                { value: "tax", label: "Tax consultant" },
+              ].map((category) => (
+                <label key={category.value} className="flex items-center gap-3 text-sm text-accent">
+                  <input
+                    type="checkbox"
+                    checked={categories.includes(category.value)}
+                    onChange={(event) => {
+                      setCategories((current) =>
+                        event.target.checked
+                          ? [...current, category.value]
+                          : current.filter((value) => value !== category.value),
+                      );
+                    }}
+                    className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
+                  />
+                  {category.label}
+                </label>
+              ))}
+              {categories.length === 0 && (
+                <p className="text-sm text-red-600">Select at least one professional category.</p>
+              )}
+            </fieldset>
+          )}
 
           <div className="space-y-3 p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
             <div className="flex items-start gap-3">

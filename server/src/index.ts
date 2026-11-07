@@ -13,6 +13,7 @@ dotenv.config();
 // Import routes
 import authRoutes from './routes/authRoutes';
 import lawyerRoutes from './routes/lawyerRoutes';
+import professionalRoutes from './routes/professionalRoutes';
 import leadRoutes from './routes/leadRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
@@ -60,6 +61,7 @@ app.use(cookieParser());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lawyers', lawyerRoutes);
+app.use('/api/professionals', professionalRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);

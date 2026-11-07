@@ -15,7 +15,7 @@ interface User {
   firstName: string;
   lastName: string;
   phone?: string;
-  role: 'client' | 'lawyer' | 'admin';
+  role: 'client' | 'lawyer' | 'professional' | 'admin';
   avatar?: string;
   isVerified?: boolean;
 }
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await api.getMe();
       setUser(data.user);
-      setProfile(data.profile);
+      setProfile(data.profile || data.profiles || null);
     } catch {
       setUser(null);
       setProfile(null);

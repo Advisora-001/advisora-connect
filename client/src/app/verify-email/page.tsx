@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 function getDashboardPath(role?: string): string {
   if (role === "lawyer") return "/dashboard/lawyer";
+  if (role === "professional") return "/dashboard/professional";
   if (role === "admin") return "/admin";
   return "/dashboard/client";
 }

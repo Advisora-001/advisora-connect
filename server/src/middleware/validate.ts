@@ -24,7 +24,8 @@ export const registerValidator = [
     .matches(/[@$!%*#?&]/).withMessage('Password must contain a special character (@$!%*#?&)'),
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
-  body('role').optional().isIn(['client', 'lawyer']).withMessage('Invalid role'),
+  body('role').optional().isIn(['client', 'lawyer', 'professional']).withMessage('Invalid role'),
+  body('categories').optional().isArray({ min: 1 }).withMessage('Select at least one professional category'),
   handleValidation,
 ];
 

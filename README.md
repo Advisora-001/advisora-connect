@@ -1,8 +1,8 @@
 # ⚖️ Advisora Connect
 
-**Building Africa's Trusted Legal Access & Practice Enablement Platform**
+**Connecting Africa with trusted professional services**
 
-A digital legal services marketplace connecting clients with verified lawyers while providing lawyers with digital tools to manage their online presence, consultations, and client relationships.
+A professional services marketplace connecting clients with reviewed legal, accounting, and tax professionals. Professional users can manage a separate profile for each category from one account.
 
 ## 🚀 Quick Start
 
@@ -83,6 +83,9 @@ AdvisoryConnect/
 
 - ✅ User registration & authentication
 - ✅ Lawyer profile creation & verification
+- ✅ Multi-category professional accounts for legal, accounting, and tax services
+- ✅ Separate professional profiles with review and publication status
+- ✅ Professional category directory and profile pages
 - ✅ Lawyer search & filtering
 - ✅ Client enquiries (leads)
 - ✅ Admin dashboard & analytics

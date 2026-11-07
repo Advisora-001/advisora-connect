@@ -1,6 +1,6 @@
-# Advisora Connect - Legal Marketplace Platform
+# Advisora Connect - Professional Services Marketplace
 
-A digital legal services marketplace that connects clients with verified lawyers while providing lawyers with digital tools to manage their online presence, consultations, and client relationships.
+A marketplace connecting clients with legal, accounting, and tax professionals. Professionals can manage separate category profiles from a single account, while existing lawyer profiles and workflows remain supported.
 
 ## 🏗️ Project Structure
 
@@ -121,11 +121,14 @@ Go to: **http://localhost:3000**
 
 ### 2. Test Registration/Login
 - **Client**: Register at `/register` or login with `client@test.com` / `Client123!`
-- **Lawyer**: Register at `/register?role=lawyer` or login with `lawyer@test.com` / `Lawyer123!`
+- **Professional**: Register at `/register?role=professional`, choose one or more categories, verify your email, and complete each profile at `/dashboard/professional`
+- **Existing Lawyer**: Login with `lawyer@test.com` / `Lawyer123!`
 - **Admin**: Login with `admin@advisora.com` / `Admin123!`
 
 ### 3. Test Key Features
 - ✅ **Search Lawyers**: Visit `/lawyers` page
+- ✅ **Browse Professional Categories**: Visit `/professionals` for legal, accounting, and tax profiles
+- ✅ **Manage Professional Profiles**: Visit `/dashboard/professional` after registering as a professional
 - ✅ **View Lawyer Profile**: Click on a lawyer card
 - ✅ **Send Enquiry**: Click "Send Enquiry" on a lawyer's profile (requires login)
 - ✅ **Admin Panel**: Visit `/admin` (login as admin first)
@@ -141,6 +144,14 @@ Go to: **http://localhost:3000**
 ### Lawyers
 - `GET /api/lawyers` - Search/filter lawyers
 - `GET /api/lawyers/:id` - Get lawyer by ID
+
+### Professionals
+- `GET /api/professionals?category=accounting` - Browse approved profiles by category (`legal`, `accounting`, or `tax`)
+- `GET /api/professionals/:id` - View an approved professional profile
+- `GET /api/professionals/mine` - Get the signed-in professional's profiles
+- `PUT /api/professionals/mine/:id` - Save a profile draft
+- `POST /api/professionals/mine/:id/submit` - Submit a profile for review
+- `POST /api/professionals/mine/:id/documents` - Upload supporting credentials
 
 ### Leads (Enquiries)
 - `POST /api/leads` - Create enquiry (authenticated)
@@ -174,6 +185,9 @@ Go to: **http://localhost:3000**
 |------|-------|-------------|
 | Landing | `/` | Homepage with hero, search, featured lawyers |
 | Search Lawyers | `/lawyers` | Browse and filter lawyers |
+| Professionals | `/professionals` | Browse legal, accounting, and tax profiles |
+| Professional Profile | `/professionals/profile/[id]` | View an approved professional profile |
+| Professional Dashboard | `/dashboard/professional` | Manage category profiles and submit for review |
 | Lawyer Profile | `/lawyers/[id]` | View lawyer details, send enquiry |
 | Login | `/(auth)/login` | User login |
 | Register | `/(auth)/register` | User registration |

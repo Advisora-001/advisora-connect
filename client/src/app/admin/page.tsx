@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [pendingLawyers, setPendingLawyers] = useState<any[]>([]);
   const [verifiedLawyers, setVerifiedLawyers] = useState<any[]>([]);
   const [rejectedLawyers, setRejectedLawyers] = useState<any[]>([]);
+  const [professionalProfiles, setProfessionalProfiles] = useState<any[]>([]);
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [suspendedUsers, setSuspendedUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,12 +44,18 @@ export default function AdminDashboard() {
   async function fetchData() {
     setLoading(true);
     try {
-      const [analyticsData, pendingData, usersData] = await Promise.all([api.getAnalytics(), api.getPendingVerifications(), api.getAdminUsers()]);
+      const [analyticsData, pendingData, usersData, professionalData] = await Promise.all([
+        api.getAnalytics(),
+        api.getPendingVerifications(),
+        api.getAdminUsers(),
+        api.getProfessionalProfilesForReview(),
+      ]);
       setAnalytics(analyticsData);
       const allLawyers = pendingData.lawyers || [];
       setPendingLawyers(allLawyers.filter((l: any) => l.verificationStatus === "pending" || !l.verificationStatus));
       setVerifiedLawyers(allLawyers.filter((l: any) => l.verificationStatus === "verified"));
       setRejectedLawyers(allLawyers.filter((l: any) => l.verificationStatus === "rejected"));
+      setProfessionalProfiles(professionalData.profiles || []);
       const allUsers = usersData.users || [];
       setActiveUsers(allUsers.filter((u: any) => u.isActive));
       setSuspendedUsers(allUsers.filter((u: any) => !u.isActive));
@@ -66,6 +73,18 @@ export default function AdminDashboard() {
     try { await api.verifyLawyer(id, status); await fetchData(); }
     catch (error) { alert(error instanceof Error ? error.message : "Failed to update verification status"); }
     finally { setActionLoading(null); }
+  };
+
+  const handleReviewProfessional = async (id: string, status: "verified" | "rejected") => {
+    setActionLoading(id);
+    try {
+      await api.reviewProfessionalProfile(id, status);
+      await fetchData();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to update professional profile");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleToggleUserStatus = async (id: string) => {
@@ -109,7 +128,7 @@ export default function AdminDashboard() {
                 </h1>
                 <p className="text-[#667085] text-xs md:text-sm mt-1">
                   {activeSection === "dashboard" && "Platform overview and analytics"}
-                  {activeSection === "verifications" && "Manage lawyer verifications and approvals"}
+                  {activeSection === "verifications" && "Manage professional verifications and approvals"}
                   {activeSection === "users" && "User management and account status"}
                   {activeSection === "reports" && "View platform reports and insights"}
                   {activeSection === "configuration" && "Configure platform settings"}
@@ -145,13 +164,42 @@ export default function AdminDashboard() {
           {/* Verifications */}
           {activeSection === "verifications" && (
             <div>
-              <div className="mb-6 flex items-center justify-between"><div><p className="text-[#667085] text-sm">Manage lawyer verification status by dragging cards between columns</p></div><div className="text-xs text-[#94A3B8]">Total: {pendingLawyers.length + verifiedLawyers.length + rejectedLawyers.length}</div></div>
+              <div className="mb-6 flex items-center justify-between"><div><p className="text-[#667085] text-sm">Manage lawyer verification status by dragging cards between columns</p></div><div className="text-xs text-[#94A3B8]">Lawyers: {pendingLawyers.length + verifiedLawyers.length + rejectedLawyers.length}</div></div>
               <KanbanBoard columns={[{ id: "pending", title: "Pending", color: "bg-[#F59E0B]", badge: pendingLawyers.length }, { id: "verified", title: "Verified", color: "bg-[#5DBB63]", badge: verifiedLawyers.length }, { id: "rejected", title: "Rejected", color: "bg-[#EF4444]", badge: rejectedLawyers.length }]}
                 columnContent={{
                   pending: pendingLawyers.map((lawyer) => (<div key={lawyer._id} className="mb-3"><VerificationCard columnId="pending" lawyer={lawyer} onViewDetails={fetchLawyerProfile} onApprove={() => handleVerify(lawyer._id, "verified")} onReject={() => handleVerify(lawyer._id, "rejected")} isLoading={actionLoading === lawyer._id} /></div>)),
                   verified: verifiedLawyers.map((lawyer) => (<div key={lawyer._id} className="mb-3"><VerificationCard columnId="verified" lawyer={lawyer} onViewDetails={fetchLawyerProfile} onApprove={() => handleVerify(lawyer._id, "verified")} onReject={() => handleVerify(lawyer._id, "rejected")} isLoading={actionLoading === lawyer._id} /></div>)),
                   rejected: rejectedLawyers.map((lawyer) => (<div key={lawyer._id} className="mb-3"><VerificationCard columnId="rejected" lawyer={lawyer} onViewDetails={fetchLawyerProfile} onApprove={() => handleVerify(lawyer._id, "verified")} onReject={() => handleVerify(lawyer._id, "rejected")} isLoading={actionLoading === lawyer._id} /></div>)),
                 }} />
+              <section className="mt-10">
+                <h2 className="mb-4 text-xl font-bold text-[#1B2A4A]">Additional professional profiles</h2>
+                {professionalProfiles.filter((profile) => profile.verificationStatus === "pending").length === 0 ? (
+                  <p className="rounded-xl border border-[#E5EAF0] bg-white p-6 text-sm text-[#667085]">No additional professional profiles are awaiting review.</p>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {professionalProfiles.filter((profile) => profile.verificationStatus === "pending").map((profile) => (
+                      <article key={profile._id} className="rounded-xl border border-[#E5EAF0] bg-white p-5">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[#00A6A6]">{profile.category === "accounting" ? "Accountant" : profile.category === "tax" ? "Tax consultant" : "Legal professional"}</p>
+                        <h3 className="mt-1 font-semibold text-[#1B2A4A]">{profile.userId?.firstName} {profile.userId?.lastName}</h3>
+                        <p className="text-sm text-[#667085]">{profile.userId?.email}</p>
+                        <p className="mt-3 text-sm font-medium text-[#1B2A4A]">{profile.professionalTitle || "Title not provided"}</p>
+                        <p className="mt-1 line-clamp-3 text-sm text-[#667085]">{profile.bio || "Profile summary not provided"}</p>
+                        <p className="mt-2 text-xs text-[#667085]">Qualifications: {profile.qualifications?.join(", ") || "Not provided"}</p>
+                        {profile.verificationDocs?.length > 0 && (
+                          <div className="mt-2 text-xs">
+                            {profile.verificationDocs.map((document: string, index: number) => <a key={`${document}-${index}`} href={document} target="_blank" rel="noreferrer" className="mr-3 text-[#00A6A6] hover:underline">Document {index + 1}</a>)}
+                          </div>
+                        )}
+                        <p className="mt-1 text-xs text-[#667085]">Location: {profile.city}, {profile.state}</p>
+                        <div className="mt-4 flex gap-2">
+                          <button type="button" onClick={() => handleReviewProfessional(profile._id, "verified")} disabled={actionLoading === profile._id} className="rounded-lg bg-[#ECFDF5] px-3 py-2 text-sm font-semibold text-[#166534] disabled:opacity-50">Approve</button>
+                          <button type="button" onClick={() => handleReviewProfessional(profile._id, "rejected")} disabled={actionLoading === profile._id} className="rounded-lg bg-[#FEF2F2] px-3 py-2 text-sm font-semibold text-[#B91C1C] disabled:opacity-50">Reject</button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           )}
 

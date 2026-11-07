@@ -41,6 +41,7 @@ function PaymentCallbackContent() {
   const getDashboardLink = () => {
     if (!user) return '/';
     if (user.role === 'lawyer') return '/dashboard/lawyer';
+    if (user.role === 'professional') return '/dashboard/professional';
     if (user.role === 'client') return '/dashboard/client';
     if (user.role === 'admin') return '/admin';
     return '/';

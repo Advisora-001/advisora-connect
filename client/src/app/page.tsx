@@ -9,17 +9,17 @@ import { useProfileGate } from '@/hooks/useProfileGate';
 const HERO_IMAGE = '/Hero-section.jpg';
 
 const benefits = [
-  { title: 'Verified Lawyers', desc: 'Every lawyer on our platform undergoes a thorough verification process including license confirmation and professional standing checks.', icon: '✅' },
-  { title: 'Easy Access to Legal Expertise', desc: 'Find the right lawyer for your needs quickly and easily, without relying on limited personal recommendations.', icon: '⚡' },
+  { title: 'Verified Professionals', desc: 'Professional profiles are reviewed so you can make more informed decisions when choosing support.', icon: '✅' },
+  { title: 'Expertise Across Key Fields', desc: 'Find legal, accounting, and tax professionals for your personal or business needs.', icon: '⚡' },
   { title: 'Transparent Professional Profiles', desc: 'View detailed profiles including practice areas, qualifications, ratings, and reviews before making a decision.', icon: '📋' },
   { title: 'Convenient Consultations', desc: 'Schedule consultations at your convenience and communicate securely through our platform.', icon: '📅' },
-  { title: 'Trusted Legal Solutions', desc: 'Access quality legal expertise across a wide range of practice areas, from business law to family matters.', icon: '🛡️' },
+  { title: 'Trusted Professional Support', desc: 'Explore services across legal, accounting, and tax specialties in one place.', icon: '🛡️' },
 ];
 
 const steps = [
-  { step: '01', title: 'Search for a Lawyer', desc: 'Browse our directory by practice area, location, or expertise to find legal professionals that match your needs.' },
-  { step: '02', title: 'Review Lawyer Profiles', desc: 'Read detailed profiles, verify credentials, check ratings, and compare lawyers before reaching out.' },
-  { step: '03', title: 'Connect and Get Legal Support', desc: 'Send an enquiry, schedule a consultation, and get the legal guidance you need from a trusted professional.' },
+  { step: '01', title: 'Choose a profession', desc: 'Browse legal, accounting, or tax professionals by expertise and location.' },
+  { step: '02', title: 'Review profiles', desc: 'Explore professional qualifications, services, and experience before reaching out.' },
+  { step: '03', title: 'Connect with an expert', desc: 'Contact a professional whose services match your needs.' },
 ];
 
 export default function HomePage() {
@@ -41,17 +41,17 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="text-center md:text-left">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                Connect with individuals and businesses seeking legal services
+                Find trusted professionals for your needs
               </h1>
               <p className="mt-6 text-lg md:text-xl text-white/70 leading-relaxed">
-                Need legal guidance? Advisora connects individuals and businesses with trusted and verified lawyers, making it easier to access quality legal expertise when you need it.
+                Advisora connects individuals and businesses with professionals across legal, accounting, and tax services.
               </p>
               <p className="mt-4 text-white/50 text-base leading-relaxed">
-                Whether you need support with business matters, contracts, property transactions, employment issues, family matters, compliance, or legal advisory services, Advisora helps you find the right legal professional.
+                Explore reviewed profiles, compare expertise, and connect with the right professional for your personal or business needs.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Link href="/lawyers" className="inline-block bg-[#00A6A6] text-white px-8 py-3.5 rounded-lg hover:bg-[#008F8F] transition-colors font-semibold text-base shadow-lg shadow-[#00A6A6]/20 text-center">
-                  Find a Lawyer
+                <Link href="/professionals" className="inline-block bg-[#00A6A6] text-white px-8 py-3.5 rounded-lg hover:bg-[#008F8F] transition-colors font-semibold text-base shadow-lg shadow-[#00A6A6]/20 text-center">
+                  Find a Professional
                 </Link>
                 {!user && (
                   <Link href="/register" className="inline-block bg-white text-[#1B2A4A] px-8 py-3.5 rounded-lg hover:bg-gray-100 transition-colors font-semibold text-base text-center">
@@ -63,7 +63,7 @@ export default function HomePage() {
             <div className="hidden md:flex justify-center">
               <div className="relative">
                 <div className="w-72 h-72 lg:w-96 lg:h-96 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10">
-                  <img src={HERO_IMAGE} alt="Trusted Legal Professionals" className="w-full h-full object-cover" />
+                  <img src={HERO_IMAGE} alt="Trusted professionals" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -top-4 -right-4 w-20 h-20 bg-[#00A6A6]/20 rounded-full blur-xl"></div>
                 <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
@@ -78,7 +78,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1B2A4A] tracking-tight">Why Advisora?</h2>
-            <p className="text-[#667085] mt-3 max-w-2xl mx-auto text-lg">We make it simple to find and connect with trusted legal professionals across Africa.</p>
+            <p className="text-[#667085] mt-3 max-w-2xl mx-auto text-lg">We make it simple to find and connect with trusted professionals across key service areas.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {benefits.map((item) => (
@@ -97,7 +97,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1B2A4A] tracking-tight">How It Works</h2>
-            <p className="text-[#667085] mt-3 max-w-2xl mx-auto text-lg">Getting legal help has never been easier. Follow these simple steps.</p>
+            <p className="text-[#667085] mt-3 max-w-2xl mx-auto text-lg">Find the professional expertise you need in a few simple steps.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((item) => (
@@ -113,14 +113,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Browse professional categories */}
+      <section className="py-16 bg-[#F5F7FA]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-[#1B2A4A] tracking-tight">Explore professional services</h2>
+            <p className="text-[#667085] mt-2">Choose a category to find the expertise you need.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              { title: 'Legal professionals', category: 'legal', description: 'Lawyers and legal advisers for personal and business matters.' },
+              { title: 'Accountants', category: 'accounting', description: 'Accounting professionals for reporting, bookkeeping, and business finance.' },
+              { title: 'Tax consultants', category: 'tax', description: 'Tax professionals for compliance, planning, and advisory support.' },
+            ].map((item) => (
+              <Link key={item.category} href={`/professionals?category=${item.category}`} className="rounded-xl border border-[#E5EAF0] bg-white p-6 hover:border-[#00A6A6]/50 hover:shadow-md transition-all">
+                <h3 className="text-lg font-semibold text-[#1B2A4A]">{item.title}</h3>
+                <p className="mt-2 text-sm text-[#667085]">{item.description}</p>
+                <span className="mt-4 inline-block text-sm font-semibold text-[#00A6A6]">Explore profiles →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Featured Lawyers */}
       {featuredLawyers.length > 0 && (
         <section className="py-20 md:py-28 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex justify-between items-center mb-12">
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-[#1B2A4A] tracking-tight">Featured Lawyers</h2>
-                <p className="text-[#667085] mt-2">Top-rated legal professionals on Advisora Connect</p>
+                <h2 className="text-3xl md:text-4xl font-bold text-[#1B2A4A] tracking-tight">Featured Legal Professionals</h2>
+                <p className="text-[#667085] mt-2">Lawyers featured on Advisora Connect</p>
               </div>
               <Link href="/lawyers" className="text-[#00A6A6] font-semibold hover:underline text-sm">View All →</Link>
             </div>

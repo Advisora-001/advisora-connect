@@ -101,7 +101,7 @@ class ApiClient {
   }
 
   getMe() {
-    return this.request<{ user: any; profile?: any }>('/auth/me');
+    return this.request<{ user: any; profile?: any; profiles?: any[] }>('/auth/me');
   }
 
   // Auth
@@ -159,6 +159,63 @@ class ApiClient {
 
   getLawyerById(id: string) {
     return this.request<any>(`/lawyers/${id}`);
+  }
+
+  getProfessionalProfiles(category: string) {
+    return this.request<{ count: number; profiles: any[] }>(
+      `/professionals?category=${encodeURIComponent(category)}`,
+    );
+  }
+
+  getProfessionalProfile(id: string) {
+    return this.request<{ profile: any }>(`/professionals/${encodeURIComponent(id)}`);
+  }
+
+  createProfessionalEnquiry(id: string, message: string) {
+    return this.request<any>(`/professionals/${encodeURIComponent(id)}/enquiries`, {
+      method: 'POST',
+      body: { message },
+    });
+  }
+
+  getProfessionalEnquiries() {
+    return this.request<{ enquiries: any[] }>('/professionals/enquiries/mine');
+  }
+
+  getMyProfessionalProfiles() {
+    return this.request<{ profiles: any[] }>('/professionals/mine');
+  }
+
+  updateProfessionalProfile(id: string, data: any) {
+    return this.request<{ profile: any }>(`/professionals/mine/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: data,
+    });
+  }
+
+  submitProfessionalProfile(id: string) {
+    return this.request<{ profile: any; message: string }>(
+      `/professionals/mine/${encodeURIComponent(id)}/submit`,
+      { method: 'POST' },
+    );
+  }
+
+  uploadProfessionalVerificationDocs(id: string, formData: FormData) {
+    return this.request<{ profile: any; message: string }>(
+      `/professionals/mine/${encodeURIComponent(id)}/documents`,
+      { method: 'POST', body: formData, isFormData: true },
+    );
+  }
+
+  getProfessionalProfilesForReview() {
+    return this.request<{ profiles: any[] }>('/professionals/admin/review');
+  }
+
+  reviewProfessionalProfile(id: string, status: 'verified' | 'rejected') {
+    return this.request<any>(`/professionals/admin/${encodeURIComponent(id)}/review`, {
+      method: 'PUT',
+      body: { status },
+    });
   }
 
   getLawyerAvailability(id: string, date: string) {
