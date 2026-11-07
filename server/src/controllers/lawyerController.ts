@@ -53,19 +53,17 @@ const getLawyers = async (req: Request, res: Response) => {
   }
 };
 
-// @desc    Get single lawyer profile
+// @desc    Get a verified lawyer's public profile
 // @route   GET /api/lawyers/:id
-const getLawyerById = async (req: AuthRequest, res: Response) => {
+const getLawyerById = async (req: Request, res: Response) => {
   try {
-    const requester = req.user;
-    if (!requester) {
-      return res.status(401).json({ message: 'Please log in to view lawyer profiles.', code: 'AUTH_REQUIRED' });
-    }
-
     const lawyer = await LawyerProfile.findById(req.params.id)
-      .populate('userId', 'firstName lastName email avatar phone');
+      .select(
+        'userId photo barNumber stateOfCall yearOfCall practiceAreas bio officeAddress city state languages yearsOfExperience verificationStatus verificationBadge rating reviewCount consultationFee isAvailable availableDays availableHours availableFrom availableTo services subscription.plan subscription.status'
+      )
+      .populate('userId', 'firstName lastName avatar');
 
-    if (!lawyer) {
+    if (!lawyer || lawyer.verificationStatus !== 'verified') {
       return res.status(404).json({ message: 'Lawyer not found' });
     }
 

@@ -8,7 +8,7 @@ const router = Router();
 router.get('/', getLawyers);
 router.get('/list', getLawyersList);
 router.get('/:id/availability', protect, getAvailability);
-router.get('/:id', protect, getLawyerById);
+router.get('/:id', getLawyerById);
 router.put('/profile', protect, authorize('lawyer'), updateProfile);
 router.post('/verify', protect, authorize('lawyer'), submitVerification);
 router.post('/verify-upload', protect, authorize('lawyer'), upload.array('documents', 5), uploadVerificationDocs);
