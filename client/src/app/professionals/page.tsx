@@ -24,29 +24,64 @@ function ProfessionalsDirectory() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    const profileRequest = category === "legal"
-      ? Promise.all([api.getProfessionalProfiles(category), api.getLawyers()])
-          .then(([professionals, lawyers]) => ({
-            profiles: [
-              ...professionals.profiles,
-              ...lawyers.lawyers.map((lawyer: any) => ({
-                ...lawyer,
-                category: "legal",
-                professionalTitle: "Lawyer",
-                specializations: lawyer.practiceAreas || [],
-                isLegacyLawyer: true,
-              })),
-            ],
-          }))
-      : api.getProfessionalProfiles(category);
+    let active = true;
 
-    profileRequest
-      .then(({ profiles: results }) => setProfiles(results))
+    const loadProfiles = async () => {
+      if (category !== "legal") {
+        const result = await api.getProfessionalProfiles(category);
+        if (active) setProfiles(result.profiles);
+        return;
+      }
+
+      const [professionalResult, lawyerResult] = await Promise.allSettled([
+        api.getProfessionalProfiles(category),
+        api.getLawyers(),
+      ]);
+
+      if (!active) return;
+
+      const professionalProfiles = professionalResult.status === "fulfilled"
+        ? professionalResult.value.profiles
+        : [];
+      const lawyerProfiles = lawyerResult.status === "fulfilled"
+        ? lawyerResult.value.lawyers.map((lawyer: any) => ({
+            ...lawyer,
+            category: "legal",
+            professionalTitle: lawyer.professionalTitle || "Lawyer",
+            photo: lawyer.photo || lawyer.userId?.avatar || "",
+            bio: lawyer.bio || "",
+            city: lawyer.city || "",
+            state: lawyer.state || "",
+            specializations: lawyer.practiceAreas || [],
+            qualifications: lawyer.barNumber ? [`SCN: ${lawyer.barNumber}`] : [],
+            isLegacyLawyer: true,
+          }))
+        : [];
+
+      setProfiles([...professionalProfiles, ...lawyerProfiles]);
+
+      const failedSources = [
+        professionalResult.status === "rejected" ? "new legal profiles" : "",
+        lawyerResult.status === "rejected" ? "existing lawyer profiles" : "",
+      ].filter(Boolean);
+      if (failedSources.length > 0) {
+        setError(`Could not load ${failedSources.join(" and ")}. Some profiles may be missing.`);
+      }
+    };
+
+    loadProfiles()
       .catch((requestError: Error) => {
+        if (!active) return;
         setProfiles([]);
         setError(requestError.message);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [category]);
 
   const selectedLabel = categories.find((item) => item.value === category)?.label ?? "Professionals";
@@ -68,21 +103,27 @@ function ProfessionalsDirectory() {
 
       {loading ? (
         <p className="py-12 text-center text-[#667085]">Loading {selectedLabel.toLowerCase()}...</p>
-      ) : error ? (
-        <p role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p>
       ) : profiles.length === 0 ? (
         <div className="rounded-xl border border-[#E5EAF0] bg-white p-10 text-center">
-          <h2 className="text-lg font-semibold text-[#1B2A4A]">No approved profiles yet</h2>
-          <p className="mt-2 text-sm text-[#667085]">Check back soon as more professionals join Advisora.</p>
+          {error ? (
+            <p role="alert" className="text-sm text-red-700">{error}</p>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold text-[#1B2A4A]">No approved profiles yet</h2>
+              <p className="mt-2 text-sm text-[#667085]">Check back soon as more professionals join Advisora.</p>
+            </>
+          )}
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {profiles.map((profile) => (
-            <article key={profile._id} className="rounded-xl border border-[#E5EAF0] bg-white p-6">
+        <>
+          {error && <p role="alert" className="mb-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">{error}</p>}
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {profiles.map((profile) => (
+            <article key={`${profile.isLegacyLawyer ? "lawyer" : "professional"}-${profile._id}`} className="rounded-xl border border-[#E5EAF0] bg-white p-6">
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1B2A4A] font-bold text-white">
-                  {profile.userId?.avatar
-                    ? <img src={profile.userId.avatar} alt="" className="h-full w-full object-cover" />
+                  {profile.photo || profile.userId?.avatar
+                    ? <img src={profile.photo || profile.userId?.avatar} alt={`${profile.userId?.firstName ?? ""} ${profile.userId?.lastName ?? ""}`} className="h-full w-full object-cover" />
                     : `${profile.userId?.firstName?.[0] ?? ""}${profile.userId?.lastName?.[0] ?? ""}`}
                 </div>
                 <div className="min-w-0">
@@ -91,14 +132,22 @@ function ProfessionalsDirectory() {
                   <p className="mt-1 text-xs text-[#667085]">{profile.city}, {profile.state}</p>
                 </div>
               </div>
-              <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-[#475569]">{profile.bio}</p>
+              {profile.bio && <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-[#475569]">{profile.bio}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
                 {profile.specializations?.slice(0, 3).map((specialty: string) => <span key={specialty} className="rounded-full bg-[#EEF2F7] px-2.5 py-1 text-xs text-[#1B2A4A]">{specialty}</span>)}
               </div>
+              {profile.isLegacyLawyer && (
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#667085]">
+                  {profile.yearsOfExperience > 0 && <span>{profile.yearsOfExperience} years’ experience</span>}
+                  {profile.rating > 0 && <span>★ {profile.rating.toFixed(1)} ({profile.reviewCount || 0} reviews)</span>}
+                  {profile.verificationBadge && <span className="font-semibold text-green-700">Verified lawyer</span>}
+                </div>
+              )}
               <Link href={profile.isLegacyLawyer ? `/lawyers/${profile._id}` : `/professionals/profile/${profile._id}`} className="mt-5 inline-block text-sm font-semibold text-[#00A6A6] hover:underline">View profile →</Link>
             </article>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </main>
   );
