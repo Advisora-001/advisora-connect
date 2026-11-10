@@ -229,10 +229,10 @@ export default function AboutPage() {
               Create an Account
             </Link>
             <Link
-              href="/lawyers"
-              className="text-white px-10 py-4 rounded-lg hover:bg-white/10 transition-colors font-bold text-lg border-2 border-white/30"
+              href="/professionals"
+              className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
             >
-              Find a Lawyer
+              Find Professionals
             </Link>
           </div>
         </div>
