@@ -5,6 +5,7 @@ import ProfessionalProfile, {
   ProfessionalCategory,
 } from '../models/ProfessionalProfile';
 import ProfessionalEnquiry from '../models/ProfessionalEnquiry';
+import User from '../models/User';
 
 const getMyProfiles = async (req: AuthRequest, res: Response) => {
   try {
@@ -136,12 +137,31 @@ const getPublicProfiles = async (req: Request, res: Response) => {
       category,
       verificationStatus: 'verified',
     };
+    const searchTerm = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    if (searchTerm) {
+      const escapedSearch = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i');
+      const matchingUsers = await User.find({
+        $or: [{ firstName: searchRegex }, { lastName: searchRegex }],
+      }).select('_id').limit(200);
+      filter.$or = [
+        { professionalTitle: searchRegex },
+        { bio: searchRegex },
+        { specializations: searchRegex },
+        { services: searchRegex },
+        { userId: { $in: matchingUsers.map((user) => user._id) } },
+      ];
+    }
     if (typeof req.query.state === 'string' && req.query.state.trim()) {
       filter.state = new RegExp(`^${req.query.state.trim()}$`, 'i');
     }
     if (typeof req.query.city === 'string' && req.query.city.trim()) {
       const escapedCity = req.query.city.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.city = new RegExp(escapedCity, 'i');
+    }
+    if (typeof req.query.specialization === 'string' && req.query.specialization.trim()) {
+      const escapedSpecialization = req.query.specialization.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.specializations = new RegExp(escapedSpecialization, 'i');
     }
 
     const profiles = await ProfessionalProfile.find(filter)

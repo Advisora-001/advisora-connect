@@ -9,7 +9,7 @@ import { AuthRequest } from '../middleware/auth';
 // @route   GET /api/lawyers
 const getLawyers = async (req: Request, res: Response) => {
   try {
-    const { practiceArea, location, state, experience, name, isAvailable, fractionalOnly } = req.query;
+    const { practiceArea, location, state, experience, name, search, isAvailable, fractionalOnly } = req.query;
 
     const query: any = { verificationStatus: 'verified' };
 
@@ -18,13 +18,28 @@ const getLawyers = async (req: Request, res: Response) => {
     }
 
     if (practiceArea) {
-      query.practiceAreas = { $in: [practiceArea as string] };
+      const escapedPracticeArea = (practiceArea as string).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.practiceAreas = new RegExp(escapedPracticeArea, 'i');
     }
     if (location) {
-      query.city = { $regex: location as string, $options: 'i' };
+      const escapedLocation = (location as string).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.city = { $regex: escapedLocation, $options: 'i' };
     }
     if (state) {
-      query.state = state as string;
+      const escapedState = (state as string).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.state = new RegExp(`^${escapedState}$`, 'i');
+    }
+    if (typeof search === 'string' && search.trim()) {
+      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i');
+      const matchingUsers = await User.find({
+        $or: [{ firstName: searchRegex }, { lastName: searchRegex }],
+      }).select('_id').limit(200);
+      query.$or = [
+        { practiceAreas: searchRegex },
+        { bio: searchRegex },
+        { userId: { $in: matchingUsers.map((user) => user._id) } },
+      ];
     }
     if (isAvailable === 'true') {
       query.isAvailable = true;

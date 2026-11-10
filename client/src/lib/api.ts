@@ -161,9 +161,14 @@ class ApiClient {
     return this.request<any>(`/lawyers/${id}`);
   }
 
-  getProfessionalProfiles(category: string) {
+  getProfessionalProfiles(category: string, params?: { search?: string; city?: string; state?: string; specialization?: string }) {
+    const query = new URLSearchParams({ category });
+    if (params?.search) query.set('search', params.search);
+    if (params?.city) query.set('city', params.city);
+    if (params?.state) query.set('state', params.state);
+    if (params?.specialization) query.set('specialization', params.specialization);
     return this.request<{ count: number; profiles: any[] }>(
-      `/professionals?category=${encodeURIComponent(category)}`,
+      `/professionals?${query.toString()}`,
     );
   }
 
