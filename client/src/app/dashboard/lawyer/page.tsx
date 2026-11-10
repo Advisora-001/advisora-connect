@@ -113,6 +113,13 @@ export default function LawyerDashboard() {
                       <div className="mb-3">
                         <p className="font-semibold text-[#1B2A4A]">{lead.enquiryMessage?.substring(0, 100)}{lead.enquiryMessage?.length > 100 ? "..." : ""}</p>
                         <p className="text-sm text-[#667085] mt-1">{new Date(lead.createdAt).toLocaleDateString()} • {lead.clientName}</p>
+                        {lead.leadType === "fractional" && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <span className="rounded-full bg-[#E6FFFB] px-2 py-1 text-xs font-semibold text-[#087E78]">Fractional services enquiry</span>
+                            {lead.companyName && <span className="rounded-full bg-[#EEF2F7] px-2 py-1 text-xs text-[#475569]">{lead.companyName}</span>}
+                            {lead.fractionalEngagementType && <span className="rounded-full bg-[#EEF2F7] px-2 py-1 text-xs capitalize text-[#475569]">{lead.fractionalEngagementType === "ongoing-counsel" ? "Ongoing counsel" : "Project-based support"}</span>}
+                          </div>
+                        )}
                         {lead.bookingContext && (<div className="mt-2 flex flex-wrap gap-2"><span className="bg-[#EFF6FF] text-[#1E40AF] text-xs px-2 py-1 rounded-full font-medium">{lead.bookingContext.service?.name}</span><span className="bg-[#EEF2F7] text-[#475569] text-xs px-2 py-1 rounded-full font-medium">{lead.bookingContext.date}</span><span className="bg-[#ECFDF5] text-[#166534] text-xs px-2 py-1 rounded-full font-medium">{lead.bookingContext.timeSlot}</span><span className="bg-[#EEF2F7] text-[#667085] text-xs px-2 py-1 rounded-full font-medium capitalize">{lead.bookingContext.consultationType}</span></div>)}
                       </div>
                       {lead.status === "pending" && (<div className="flex gap-3"><button onClick={() => handleRespond(lead._id, "accepted")} disabled={lead.responding} className="px-4 py-2 bg-[#5DBB63] text-white rounded-lg hover:bg-[#4CA652] disabled:opacity-50 font-semibold text-sm transition-colors">Accept</button><button onClick={() => handleRespond(lead._id, "declined")} disabled={lead.responding} className="px-4 py-2 bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626] disabled:opacity-50 font-semibold text-sm transition-colors">Decline</button></div>)}
@@ -188,6 +195,76 @@ export default function LawyerDashboard() {
                 <div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Office Address</label><input type="text" value={profileForm.officeAddress || ""} onChange={(e) => setProfileForm({ ...profileForm, officeAddress: e.target.value })} className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="Enter office address" /></div>
                 <div className="grid grid-cols-2 gap-5"><div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">City *</label><input type="text" value={profileForm.city || ""} onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })} required className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="Enter city" /></div><div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">State *</label><input type="text" value={profileForm.state || ""} onChange={(e) => setProfileForm({ ...profileForm, state: e.target.value })} required className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="Enter state" /></div></div>
                 <div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Bio</label><textarea value={profileForm.bio || ""} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} rows={4} className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm resize-none" placeholder="Tell clients about yourself and your expertise..." /></div>
+                <section className="space-y-4 rounded-lg border border-[#E5EAF0] bg-[#F5F7FA] p-5">
+                  <div>
+                    <h2 className="font-semibold text-[#1B2A4A]">Fractional legal services</h2>
+                    <p className="mt-1 text-sm text-[#667085]">Offer part-time General Counsel or project-based support to businesses. Only verified lawyer profiles appear in the directory.</p>
+                  </div>
+                  <label className="flex items-start gap-3 text-sm font-medium text-[#1B2A4A]">
+                    <input
+                      type="checkbox"
+                      checked={profileForm.fractionalServicesAvailable ?? false}
+                      onChange={(e) => setProfileForm({ ...profileForm, fractionalServicesAvailable: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 accent-[#00A6A6]"
+                    />
+                    I am accepting enquiries for fractional legal services
+                  </label>
+                  {profileForm.fractionalServicesAvailable && (
+                    <>
+                      <div className="flex flex-wrap gap-4">
+                        {[
+                          { value: "ongoing-counsel", label: "Ongoing fractional counsel" },
+                          { value: "project-based", label: "Project-based legal support" },
+                        ].map((engagement) => {
+                          const selected = profileForm.fractionalEngagementTypes || [];
+                          return (
+                            <label key={engagement.value} className="flex items-center gap-2 text-sm text-[#475569]">
+                              <input
+                                type="checkbox"
+                                checked={selected.includes(engagement.value)}
+                                onChange={(e) => setProfileForm({
+                                  ...profileForm,
+                                  fractionalEngagementTypes: e.target.checked
+                                    ? [...selected, engagement.value]
+                                    : selected.filter((type: string) => type !== engagement.value),
+                                })}
+                                className="h-4 w-4 accent-[#00A6A6]"
+                              />
+                              {engagement.label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-[#1B2A4A]">Service description</label>
+                        <textarea
+                          value={profileForm.fractionalServicesDescription || ""}
+                          onChange={(e) => setProfileForm({ ...profileForm, fractionalServicesDescription: e.target.value })}
+                          rows={4}
+                          minLength={20}
+                          maxLength={1000}
+                          required
+                          className="w-full resize-none rounded-lg border border-[#E5EAF0] bg-white px-4 py-3 text-sm focus:border-[#00A6A6] focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20"
+                          placeholder="Describe the business needs and legal work you can support, your typical involvement, and what clients can expect."
+                        />
+                        <p className="mt-1 text-right text-xs text-[#94A3B8]">{(profileForm.fractionalServicesDescription || "").length}/1000</p>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-[#1B2A4A]">Pricing approach</label>
+                        <select
+                          value={profileForm.fractionalPricingModel || "discuss-on-enquiry"}
+                          onChange={(e) => setProfileForm({ ...profileForm, fractionalPricingModel: e.target.value })}
+                          className="w-full rounded-lg border border-[#E5EAF0] bg-white px-4 py-3 text-sm focus:border-[#00A6A6] focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20"
+                        >
+                          <option value="discuss-on-enquiry">Discuss after enquiry</option>
+                          <option value="monthly-retainer">Monthly retainer</option>
+                          <option value="hourly">Hourly</option>
+                          <option value="project-based">Project-based fee</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </section>
                 <div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Languages <span className="text-[#94A3B8] font-normal">(comma separated)</span></label><input type="text" value={profileForm.languages?.join(", ") || ""} onChange={(e) => setProfileForm({ ...profileForm, languages: e.target.value.split(",").map((s: string) => s.trim()) })} className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" placeholder="e.g., English, French, Yoruba" /></div>
                 <div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Available Days</label><div className="flex flex-wrap gap-2">{["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map((day) => { const isSelected = profileForm.availableDays?.includes(day); return (<button key={day} type="button" className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected ? "bg-[#1B2A4A] text-white" : "bg-[#EEF2F7] text-[#667085] hover:bg-[#E5EAF0]"}`} onClick={() => { const days = profileForm.availableDays || []; const updated = isSelected ? days.filter((d: string) => d !== day) : [...days, day]; setProfileForm({ ...profileForm, availableDays: updated }); }}>{day.substring(0, 3)}</button>); })}</div></div>
                 <div><label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Available From</label><select value={profileForm.availableFrom || ""} onChange={(e) => setProfileForm({ ...profileForm, availableFrom: e.target.value })} className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm"><option value="">Select start time</option>{["8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM"].map(t => (<option key={t} value={t}>{t}</option>))}</select></div>

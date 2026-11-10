@@ -9,9 +9,13 @@ import { AuthRequest } from '../middleware/auth';
 // @route   GET /api/lawyers
 const getLawyers = async (req: Request, res: Response) => {
   try {
-    const { practiceArea, location, state, experience, name, isAvailable } = req.query;
+    const { practiceArea, location, state, experience, name, isAvailable, fractionalOnly } = req.query;
 
     const query: any = { verificationStatus: 'verified' };
+
+    if (fractionalOnly === 'true') {
+      query.fractionalServicesAvailable = true;
+    }
 
     if (practiceArea) {
       query.practiceAreas = { $in: [practiceArea as string] };
@@ -59,7 +63,7 @@ const getLawyerById = async (req: Request, res: Response) => {
   try {
     const lawyer = await LawyerProfile.findById(req.params.id)
       .select(
-        'userId photo barNumber stateOfCall yearOfCall practiceAreas bio officeAddress city state languages yearsOfExperience verificationStatus verificationBadge rating reviewCount consultationFee isAvailable availableDays availableHours availableFrom availableTo services subscription.plan subscription.status'
+        'userId photo barNumber stateOfCall yearOfCall practiceAreas bio officeAddress city state languages yearsOfExperience verificationStatus verificationBadge rating reviewCount consultationFee isAvailable availableDays availableHours availableFrom availableTo services fractionalServicesAvailable fractionalEngagementTypes fractionalServicesDescription fractionalPricingModel subscription.plan subscription.status'
       )
       .populate('userId', 'firstName lastName avatar');
 
@@ -88,7 +92,8 @@ const updateProfile = async (req: AuthRequest, res: Response) => {
       'barNumber', 'stateOfCall', 'yearOfCall', 'practiceAreas', 'bio',
       'officeAddress', 'city', 'state', 'languages', 'yearsOfExperience',
       'consultationFee', 'isAvailable', 'availableDays', 'availableHours', 'availableFrom', 'availableTo', 'accountName', 'accountNumber', 'bankName', 'otherNames',
-      'services', 'requireApproval', 'phone'
+      'services', 'requireApproval', 'phone', 'fractionalServicesAvailable',
+      'fractionalEngagementTypes', 'fractionalServicesDescription', 'fractionalPricingModel'
     ];
 
     allowedFields.forEach((field) => {
@@ -96,6 +101,30 @@ const updateProfile = async (req: AuthRequest, res: Response) => {
         (profile as any)[field] = req.body[field];
       }
     });
+
+    if (profile.fractionalServicesAvailable) {
+      const engagementTypes = profile.fractionalEngagementTypes;
+      const validEngagementTypes = ['ongoing-counsel', 'project-based'];
+      if (
+        !Array.isArray(engagementTypes) ||
+        engagementTypes.length === 0 ||
+        engagementTypes.some((type: unknown) => typeof type !== 'string' || !validEngagementTypes.includes(type))
+      ) {
+        return res.status(400).json({ message: 'Select at least one valid fractional engagement type.' });
+      }
+
+      const description = typeof profile.fractionalServicesDescription === 'string'
+        ? profile.fractionalServicesDescription.trim()
+        : '';
+      if (description.length < 20 || description.length > 1000) {
+        return res.status(400).json({ message: 'Fractional service description must be between 20 and 1000 characters.' });
+      }
+
+      const pricingModels = ['monthly-retainer', 'hourly', 'project-based', 'discuss-on-enquiry'];
+      if (!profile.fractionalPricingModel || !pricingModels.includes(profile.fractionalPricingModel)) {
+        return res.status(400).json({ message: 'Select a valid fractional pricing approach.' });
+      }
+    }
 
     const updatedProfile = await profile.save();
     console.log('Profile updated successfully:', updatedProfile._id);

@@ -110,7 +110,16 @@ const createBookingRequest = async (req: AuthRequest, res: Response) => {
 // @route   POST /api/leads
 const createLead = async (req: AuthRequest, res: Response) => {
   try {
-    const { lawyerId, enquiryMessage, clientName, clientEmail, clientPhone } = req.body;
+    const {
+      lawyerId,
+      enquiryMessage,
+      clientName,
+      clientEmail,
+      clientPhone,
+      leadType = 'general',
+      companyName,
+      fractionalEngagementType,
+    } = req.body;
 
     const user = req.user;
     if (!user) {
@@ -128,6 +137,12 @@ const createLead = async (req: AuthRequest, res: Response) => {
     // Enquiry length limit (500 chars)
     if (enquiryMessage && enquiryMessage.length > 500) {
       return res.status(400).json({ message: 'Enquiry cannot exceed 500 characters.' });
+    }
+    if (typeof enquiryMessage !== 'string' || !enquiryMessage.trim()) {
+      return res.status(400).json({ message: 'An enquiry message is required.' });
+    }
+    if (leadType !== 'general' && leadType !== 'fractional') {
+      return res.status(400).json({ message: 'Invalid enquiry type.' });
     }
 
     // Daily enquiry limit: 5 for unverified users (here all must be verified, so allow 10)
@@ -147,6 +162,31 @@ const createLead = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Lawyer not found' });
     }
 
+    let fractionalEnquiry: {
+      leadType: 'fractional';
+      companyName: string;
+      fractionalEngagementType: 'ongoing-counsel' | 'project-based';
+    } | undefined;
+    if (leadType === 'fractional') {
+      const trimmedCompanyName = typeof companyName === 'string' ? companyName.trim() : '';
+      const validEngagementType = fractionalEngagementType === 'ongoing-counsel'
+        || fractionalEngagementType === 'project-based';
+      if (lawyer.verificationStatus !== 'verified' || !lawyer.fractionalServicesAvailable) {
+        return res.status(400).json({ message: 'This lawyer is not currently accepting fractional service enquiries.' });
+      }
+      if (!trimmedCompanyName || trimmedCompanyName.length > 150 || !validEngagementType) {
+        return res.status(400).json({ message: 'Company name and a valid fractional engagement type are required.' });
+      }
+      if (!lawyer.fractionalEngagementTypes?.includes(fractionalEngagementType)) {
+        return res.status(400).json({ message: 'This lawyer does not offer the selected engagement type.' });
+      }
+      fractionalEnquiry = {
+        leadType: 'fractional',
+        companyName: trimmedCompanyName,
+        fractionalEngagementType,
+      };
+    }
+
     // First enquiry per matter is free; additional enquiries incur platform fee
     const existingEnquiry = await Lead.findOne({
       clientId: user._id,
@@ -160,6 +200,7 @@ const createLead = async (req: AuthRequest, res: Response) => {
     const lead = await Lead.create({
       lawyerId,
       clientId: user._id,
+      ...fractionalEnquiry,
       enquiryMessage,
       leadFee: 0, // Enquiries are free
       platformFee: isFirstEnquiry ? 0 : PLATFORM_FEE, // Platform fee for additional enquiries
@@ -178,7 +219,10 @@ const createLead = async (req: AuthRequest, res: Response) => {
       const lawyerUser = lawyerProfile.userId as { firstName?: string; lastName?: string; email?: string };
       const lawyerName = `${lawyerUser.firstName || ''} ${lawyerUser.lastName || ''}`.trim() || 'your lawyer';
       if (lawyerUser.email) {
-        await sendLeadNotificationEmail(lawyerUser.email, clientName || 'A client', lawyerName, enquiryMessage || '');
+        const notificationMessage = fractionalEnquiry
+          ? `Fractional services enquiry from ${fractionalEnquiry.companyName} (${fractionalEnquiry.fractionalEngagementType}).\n\n${enquiryMessage.trim()}`
+          : enquiryMessage;
+        await sendLeadNotificationEmail(lawyerUser.email, clientName || 'A client', lawyerName, notificationMessage);
       }
     }
 

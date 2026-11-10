@@ -278,7 +278,16 @@ class ApiClient {
   }
 
   // Leads
-  createLead(data: any) {
+  createLead(data: {
+    lawyerId: string;
+    enquiryMessage: string;
+    clientName?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    leadType?: 'general' | 'fractional';
+    companyName?: string;
+    fractionalEngagementType?: 'ongoing-counsel' | 'project-based';
+  }) {
     return this.request<any>('/leads', { method: 'POST', body: data });
   }
 

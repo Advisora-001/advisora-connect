@@ -41,6 +41,7 @@ function LawyersContent() {
     location: searchParams.get("location") || "",
     state: searchParams.get("state") || "",
     isAvailable: searchParams.get("isAvailable") || "",
+    fractionalOnly: searchParams.get("fractionalOnly") || "",
   });
 
   async function fetchLawyers() {
@@ -52,6 +53,7 @@ function LawyersContent() {
       if (filters.location) params.location = filters.location;
       if (filters.state) params.state = filters.state;
       if (filters.isAvailable) params.isAvailable = filters.isAvailable;
+      if (filters.fractionalOnly) params.fractionalOnly = filters.fractionalOnly;
       const data = await api.getLawyers(params);
       setLawyers(data.lawyers);
     } catch {
@@ -74,7 +76,7 @@ function LawyersContent() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <input type="text" placeholder="Search by name..." value={filters.name}
             onChange={(e) => setFilters({ ...filters, name: e.target.value })}
             className="px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" />
@@ -98,6 +100,12 @@ function LawyersContent() {
             className="px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm">
             <option value="">Any Availability</option>
             <option value="true">Available Now</option>
+          </select>
+          <select value={filters.fractionalOnly}
+            onChange={(e) => setFilters({ ...filters, fractionalOnly: e.target.value })}
+            className="px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm">
+            <option value="">All Service Types</option>
+            <option value="true">Fractional Counsel</option>
           </select>
         </div>
       </div>
@@ -136,6 +144,11 @@ function LawyersContent() {
                         <span className="bg-[#ECFDF5] text-[#166534] text-xs px-2 py-0.5 rounded-full flex-shrink-0 font-medium">✓ Verified</span>
                       )}
                     </div>
+                    {lawyer.fractionalServicesAvailable && (
+                      <span className="mt-1 inline-flex rounded-full bg-[#E6FFFB] px-2.5 py-1 text-xs font-semibold text-[#087E78]">
+                        Fractional legal services
+                      </span>
+                    )}
                     <p className="text-sm text-[#667085]">{lawyer.city}, {lawyer.state}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {lawyer.practiceAreas?.slice(0, 3).map((area: string) => (

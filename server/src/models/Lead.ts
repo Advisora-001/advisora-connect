@@ -3,6 +3,9 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ILead extends Document {
   lawyerId: mongoose.Types.ObjectId;
   clientId: mongoose.Types.ObjectId;
+  leadType: 'general' | 'fractional';
+  companyName?: string;
+  fractionalEngagementType?: 'ongoing-counsel' | 'project-based';
   status: 'pending' | 'accepted' | 'declined' | 'booked' | 'closed' | 'expired';
   enquiryMessage: string;
   leadFee: number;
@@ -34,6 +37,12 @@ const leadSchema = new Schema<ILead>(
   {
     lawyerId: { type: Schema.Types.ObjectId, ref: 'LawyerProfile', required: true },
     clientId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    leadType: { type: String, enum: ['general', 'fractional'], default: 'general' },
+    companyName: { type: String, trim: true, maxlength: 150 },
+    fractionalEngagementType: {
+      type: String,
+      enum: ['ongoing-counsel', 'project-based'],
+    },
     status: {
       type: String,
       enum: ['pending', 'accepted', 'declined', 'booked', 'closed', 'expired'],

@@ -48,6 +48,10 @@ export interface ILawyerProfile extends Document {
     price: number;
     type: 'video' | 'audio' | 'in-person';
   }[];
+  fractionalServicesAvailable?: boolean;
+  fractionalEngagementTypes?: ('ongoing-counsel' | 'project-based')[];
+  fractionalServicesDescription?: string;
+  fractionalPricingModel?: 'monthly-retainer' | 'hourly' | 'project-based' | 'discuss-on-enquiry';
   requireApproval?: boolean;
   declaration?: {
     informationAccurate: boolean;
@@ -123,6 +127,17 @@ const lawyerProfileSchema = new Schema<ILawyerProfile>(
       price: { type: Number },
       type: { type: String, enum: ['video', 'audio', 'in-person'], default: 'video' },
     }],
+    fractionalServicesAvailable: { type: Boolean, default: false },
+    fractionalEngagementTypes: [{
+      type: String,
+      enum: ['ongoing-counsel', 'project-based'],
+    }],
+    fractionalServicesDescription: { type: String, default: '', maxlength: 1000 },
+    fractionalPricingModel: {
+      type: String,
+      enum: ['monthly-retainer', 'hourly', 'project-based', 'discuss-on-enquiry'],
+      default: 'discuss-on-enquiry',
+    },
     requireApproval: { type: Boolean, default: true },
     declaration: {
       informationAccurate: { type: Boolean, default: false },
@@ -133,5 +148,7 @@ const lawyerProfileSchema = new Schema<ILawyerProfile>(
   },
   { timestamps: true }
 );
+
+lawyerProfileSchema.index({ verificationStatus: 1, fractionalServicesAvailable: 1 });
 
 export default mongoose.model<ILawyerProfile>('LawyerProfile', lawyerProfileSchema);

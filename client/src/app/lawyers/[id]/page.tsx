@@ -16,6 +16,9 @@ export default function LawyerDetailPage() {
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState("");
   const [enquiryStatus, setEnquiryStatus] = useState("");
+  const [enquiryType, setEnquiryType] = useState<"general" | "fractional">("general");
+  const [companyName, setCompanyName] = useState("");
+  const [fractionalEngagementType, setFractionalEngagementType] = useState<"ongoing-counsel" | "project-based" | "">("");
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const MAX_ENQUIRY_LENGTH = 500;
@@ -29,8 +32,20 @@ export default function LawyerDetailPage() {
     if (!user) { router.push("/login"); return; }
     try {
       setEnquiryStatus("sending");
-      await api.createLead({ lawyerId: id, enquiryMessage: enquiryMsg, clientName: `${user.firstName} ${user.lastName}`, clientEmail: user.email });
-      setEnquiryStatus("sent"); setEnquiryMsg("");
+      await api.createLead({
+        lawyerId: id as string,
+        enquiryMessage: enquiryMsg,
+        clientName: `${user.firstName} ${user.lastName}`,
+        clientEmail: user.email,
+        ...(enquiryType === "fractional" ? {
+          leadType: "fractional" as const,
+          companyName,
+          fractionalEngagementType: fractionalEngagementType || undefined,
+        } : {}),
+      });
+      setEnquiryStatus("sent");
+      setEnquiryMsg("");
+      setCompanyName("");
       setTimeout(() => setShowEnquiry(false), 2000);
     } catch (err: any) {
       if (err.message?.includes('VERIFICATION_REQUIRED')) setEnquiryStatus("verification_required");
@@ -65,6 +80,11 @@ export default function LawyerDetailPage() {
                 <div className="flex flex-wrap gap-2 mt-4">
                   {lawyer.practiceAreas?.map((area: string) => (<span key={area} className="bg-[#EEF2F7] text-[#1B2A4A] px-3 py-1.5 rounded-lg text-sm font-medium">{area}</span>))}
                 </div>
+                {lawyer.fractionalServicesAvailable && (
+                  <span className="mt-4 inline-flex rounded-full bg-[#E6FFFB] px-3 py-1.5 text-sm font-semibold text-[#087E78]">
+                    Fractional legal services
+                  </span>
+                )}
               </div>
             </div>
             <hr className="my-6 border-[#E5EAF0]" />
@@ -72,6 +92,27 @@ export default function LawyerDetailPage() {
               <h2 className="text-xl font-semibold text-[#1B2A4A] mb-3">About</h2>
               <p className="text-[#475569] leading-relaxed">{lawyer.bio || "No biography provided."}</p>
             </div>
+            {lawyer.fractionalServicesAvailable && (
+              <section className="mt-8 rounded-xl border border-[#00A6A6]/20 bg-[#F0FDFA] p-6">
+                <h2 className="text-xl font-semibold text-[#1B2A4A]">Fractional legal services</h2>
+                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[#475569]">{lawyer.fractionalServicesDescription}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {lawyer.fractionalEngagementTypes?.map((type: string) => (
+                    <span key={type} className="rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#1B2A4A]">
+                      {type === "ongoing-counsel" ? "Ongoing fractional counsel" : "Project-based legal support"}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-4 text-sm text-[#667085]">
+                  Pricing: {{
+                    "monthly-retainer": "Monthly retainer",
+                    hourly: "Hourly",
+                    "project-based": "Project-based fee",
+                    "discuss-on-enquiry": "Discuss after enquiry",
+                  }[lawyer.fractionalPricingModel as string] || "Discuss after enquiry"}
+                </p>
+              </section>
+            )}
             <div className="mt-8">
               <hr className="mb-6 border-[#E5EAF0]" />
               <ReviewSection lawyerId={id as string} reviews={reviews} setReviews={setReviews} loading={reviewsLoading} />
@@ -101,6 +142,25 @@ export default function LawyerDetailPage() {
               className="w-full bg-[#1B2A4A] text-white py-3 rounded-lg hover:bg-[#16213A] transition-colors font-semibold text-sm">
               Book a Consultation
             </button>
+            {lawyer.fractionalServicesAvailable && (
+              <button
+                onClick={() => {
+                  setEnquiryType("fractional");
+                  setEnquiryStatus("");
+                  setFractionalEngagementType(lawyer.fractionalEngagementTypes?.[0] || "");
+                  setShowEnquiry(true);
+                }}
+                className="mt-3 w-full rounded-lg border border-[#00A6A6] bg-white py-3 text-sm font-semibold text-[#087E78] transition-colors hover:bg-[#F0FDFA]"
+              >
+                Enquire about fractional support
+              </button>
+            )}
+            <button
+              onClick={() => { setEnquiryType("general"); setEnquiryStatus(""); setShowEnquiry(true); }}
+              className="mt-3 w-full rounded-lg border border-[#E5EAF0] bg-white py-3 text-sm font-semibold text-[#1B2A4A] transition-colors hover:bg-[#F5F7FA]"
+            >
+              Send an Enquiry
+            </button>
           </div>
           <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
             <h3 className="font-semibold text-lg text-[#1B2A4A] mb-4">Availability</h3>
@@ -119,11 +179,42 @@ export default function LawyerDetailPage() {
       {showEnquiry && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl animate-fadeIn">
-            <h3 className="text-xl font-semibold text-[#1B2A4A] mb-4">Send Enquiry</h3>
+            <h3 className="text-xl font-semibold text-[#1B2A4A] mb-4">{enquiryType === "fractional" ? "Enquire about fractional services" : "Send Enquiry"}</h3>
             {enquiryStatus === "sent" ? (
-              <div className="bg-[#ECFDF5] text-[#166534] p-4 rounded-lg text-center">✓ Enquiry sent successfully! The lawyer will be notified.</div>
+              <div className="bg-[#ECFDF5] text-[#166534] p-4 rounded-lg text-center">✓ Enquiry sent successfully! The lawyer will be notified. A fractional enquiry is an introduction only; any engagement is subject to conflict checks and agreed terms.</div>
             ) : (
               <>
+                {enquiryType === "fractional" && (
+                  <div className="mb-4 space-y-3">
+                    <label className="block text-sm font-medium text-[#475569]">
+                      Company or organization
+                      <input
+                        type="text"
+                        required
+                        maxLength={150}
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-[#E5EAF0] px-4 py-2.5 text-sm focus:border-[#00A6A6] focus:outline-none"
+                        placeholder="Business name"
+                      />
+                    </label>
+                    <label className="block text-sm font-medium text-[#475569]">
+                      Type of support
+                      <select
+                        required
+                        value={fractionalEngagementType}
+                        onChange={(e) => setFractionalEngagementType(e.target.value as "ongoing-counsel" | "project-based" | "")}
+                        className="mt-1 w-full rounded-lg border border-[#E5EAF0] bg-white px-4 py-2.5 text-sm focus:border-[#00A6A6] focus:outline-none"
+                      >
+                        <option value="" disabled>Select support type</option>
+                        {lawyer.fractionalEngagementTypes?.map((type: string) => (
+                          <option key={type} value={type}>{type === "ongoing-counsel" ? "Ongoing fractional counsel" : "Project-based support"}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <p className="text-xs leading-relaxed text-[#667085]">Sending a request does not create a lawyer-client relationship. Any engagement is subject to conflict checks and written agreement on scope and terms.</p>
+                  </div>
+                )}
                 <textarea placeholder="Describe your legal issue or what you need help with... (Max 500 characters)" value={enquiryMsg}
                   onChange={(e) => setEnquiryMsg(e.target.value.slice(0, MAX_ENQUIRY_LENGTH))} rows={5} maxLength={MAX_ENQUIRY_LENGTH}
                   className="w-full px-4 py-3 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" />
@@ -136,10 +227,10 @@ export default function LawyerDetailPage() {
                 )}
                 <p className="text-xs text-[#667085] mt-2">Your first enquiry per matter is free. Additional enquiries to the same lawyer incur a ₦{PLATFORM_FEE_AMOUNT.toLocaleString()} platform fee.</p>
                 <div className="flex gap-3 mt-4">
-                  <button onClick={() => setShowEnquiry(false)} className="flex-1 px-4 py-2.5 border border-[#E5EAF0] rounded-lg text-[#475569] hover:bg-[#F5F7FA] text-sm font-medium">Cancel</button>
-                  <button onClick={handleSubmitEnquiry} disabled={!enquiryMsg.trim() || enquiryStatus === "sending"}
+                  <button onClick={() => { setShowEnquiry(false); setEnquiryStatus(""); }} className="flex-1 px-4 py-2.5 border border-[#E5EAF0] rounded-lg text-[#475569] hover:bg-[#F5F7FA] text-sm font-medium">Cancel</button>
+                  <button onClick={handleSubmitEnquiry} disabled={!enquiryMsg.trim() || (enquiryType === "fractional" && (!companyName.trim() || !fractionalEngagementType)) || enquiryStatus === "sending"}
                     className="flex-1 bg-[#1B2A4A] text-white px-4 py-2.5 rounded-lg hover:bg-[#16213A] disabled:opacity-50 text-sm font-semibold">
-                    {enquiryStatus === "sending" ? "Sending..." : "Send Enquiry"}
+                    {enquiryStatus === "sending" ? "Sending..." : enquiryType === "fractional" ? "Send Fractional Enquiry" : "Send Enquiry"}
                   </button>
                 </div>
               </>

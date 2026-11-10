@@ -142,8 +142,9 @@ Go to: **http://localhost:3000**
 - `GET /api/auth/me` - Get current user profile
 
 ### Lawyers
-- `GET /api/lawyers` - Search/filter lawyers
+- `GET /api/lawyers` - Search/filter verified lawyers; use `fractionalOnly=true` to find lawyers offering fractional services
 - `GET /api/lawyers/:id` - Get lawyer by ID
+- `PUT /api/lawyers/profile` - Update a lawyer profile, including optional fractional service details
 
 ### Professionals
 - `GET /api/professionals?category=accounting` - Browse approved profiles by category (`legal`, `accounting`, or `tax`)
@@ -154,7 +155,7 @@ Go to: **http://localhost:3000**
 - `POST /api/professionals/mine/:id/documents` - Upload supporting credentials
 
 ### Leads (Enquiries)
-- `POST /api/leads` - Create enquiry (authenticated)
+- `POST /api/leads` - Create enquiry (authenticated); fractional enquiries may include `leadType`, `companyName`, and `fractionalEngagementType`
 
 ### Admin
 - `GET /api/admin/analytics` - Dashboard analytics (admin only)
@@ -185,6 +186,7 @@ Go to: **http://localhost:3000**
 |------|-------|-------------|
 | Landing | `/` | Homepage with hero, search, featured lawyers |
 | Search Lawyers | `/lawyers` | Browse and filter lawyers |
+| Fractional Lawyers | `/lawyers` | Filter verified lawyers offering fractional or project-based legal services |
 | Professionals | `/professionals` | Browse legal, accounting, and tax profiles |
 | Professional Profile | `/professionals/profile/[id]` | View an approved professional profile |
 | Professional Dashboard | `/dashboard/professional` | Manage category profiles and submit for review |
@@ -228,6 +230,7 @@ npx kill-port 3000 5000
 - Lawyer profile creation
 - Lawyer verification system
 - Lawyer search & filtering
+- Optional fractional legal-services listings and business enquiries
 - Client enquiries (leads)
 - Admin dashboard with analytics
 - Responsive UI design
