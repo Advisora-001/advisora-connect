@@ -140,7 +140,12 @@ export default function ProfessionalDashboard() {
           <h1 className="text-3xl font-bold text-[#1B2A4A]">Professional profiles</h1>
           <p className="mt-2 text-[#667085]">Manage each service category from one account.</p>
         </div>
-        <Link href="/professionals" className="font-semibold text-[#00A6A6] hover:underline">Browse professionals</Link>
+        <div className="flex flex-wrap gap-4 items-center">
+          <Link href="/pro-bono-initiative" className="rounded-lg bg-[#00A6A6]/10 px-4 py-2 text-sm font-semibold text-[#00A6A6] hover:bg-[#00A6A6]/20 transition-colors">
+            🤝 Pro Bono Volunteer
+          </Link>
+          <Link href="/professionals" className="font-semibold text-[#00A6A6] hover:underline">Browse professionals</Link>
+        </div>
       </div>
 
       {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}

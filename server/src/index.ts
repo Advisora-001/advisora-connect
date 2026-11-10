@@ -23,6 +23,7 @@ import legalRoutes from './routes/legalRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import blogRoutes from './routes/blogRoutes';
+import proBonoRoutes from './routes/proBonoRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -71,6 +72,7 @@ app.use('/api/legal', legalRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/pro-bono', proBonoRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

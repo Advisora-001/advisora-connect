@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Image from "next/image";
+import Link from "next/link";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import CookieConsent from "@/components/CookieConsent";
@@ -81,6 +82,7 @@ export default function RootLayout({
               </div>
               <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-4">
                 <a href="/about" className="text-white/70 hover:text-white text-sm transition-colors">About Us</a>
+                <a href="/pro-bono-initiative" className="text-white/70 hover:text-white text-sm transition-colors">Pro Bono Initiative</a>
                 <a href="/terms-of-use" className="text-white/70 hover:text-white text-sm transition-colors">Terms of Use</a>
                 <a href="/privacy-policy" className="text-white/70 hover:text-white text-sm transition-colors">Privacy Policy</a>
                 <a href="/data-protection" className="text-white/70 hover:text-white text-sm transition-colors">Data Protection</a>

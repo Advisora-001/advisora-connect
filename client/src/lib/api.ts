@@ -218,6 +218,45 @@ class ApiClient {
     });
   }
 
+  submitProBonoApplication(data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    category: string;
+    urgency: string;
+    description: string;
+    financialHardshipNote?: string;
+  }) {
+    return this.request<{ message: string; application: any }>('/pro-bono/applications', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
+  submitProBonoVolunteer(data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    profession: string;
+    barNumber?: string;
+    practiceAreas?: string;
+    contributionType: string;
+    availabilityNote?: string;
+  }) {
+    return this.request<{ message: string; volunteer: any }>('/pro-bono/volunteers', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
+  getProBonoApplications() {
+    return this.request<{ count: number; applications: any[] }>('/pro-bono/applications');
+  }
+
+  getProBonoVolunteers() {
+    return this.request<{ count: number; volunteers: any[] }>('/pro-bono/volunteers');
+  }
+
   getLawyerAvailability(id: string, date: string) {
     return this.request<any>(`/lawyers/${id}/availability?date=${encodeURIComponent(date)}`);
   }

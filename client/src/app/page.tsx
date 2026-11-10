@@ -185,6 +185,39 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Advisora Impact / Pro Bono Initiative Banner */}
+      <section className="py-16 bg-[#1B2A4A] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 bg-gradient-to-r from-[#1B2A4A] to-[#233862] p-8 md:p-12 rounded-3xl border border-white/10 shadow-xl">
+            <div className="max-w-2xl">
+              <span className="inline-block bg-[#00A6A6]/20 text-[#00A6A6] font-semibold text-xs px-3 py-1 rounded-full uppercase tracking-wider mb-3">
+                Advisora Impact
+              </span>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                Pro Bono Initiative: Legal Support When It Matters Most
+              </h2>
+              <p className="text-white/80 mt-3 text-base md:text-lg leading-relaxed">
+                We bridge the access-to-justice gap by connecting women, children, and individuals in urgent hardship with dedicated legal professionals who volunteer their expertise.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0">
+              <Link
+                href="/pro-bono-initiative"
+                className="inline-block bg-[#00A6A6] hover:bg-[#008F8F] text-white px-6 py-3.5 rounded-xl font-bold text-sm text-center shadow-lg transition-all"
+              >
+                Learn More & Apply
+              </Link>
+              <Link
+                href="/pro-bono-initiative"
+                className="inline-block bg-white hover:bg-gray-100 text-[#1B2A4A] px-6 py-3.5 rounded-xl font-bold text-sm text-center transition-all"
+              >
+                Volunteer as a Professional
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
       {GateModal}
     </div>
   );

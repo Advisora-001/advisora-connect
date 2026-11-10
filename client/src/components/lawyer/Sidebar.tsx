@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
@@ -58,6 +59,13 @@ export default function LawyerSidebar({ activeSection, onSectionChange, mobileOp
               <span>{item.label}</span>
             </button>
           ))}
+          <Link
+            href="/pro-bono-initiative"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left text-sm font-medium text-[#00A6A6] hover:bg-[#2D3E5F]"
+          >
+            <span className="text-lg">🤝</span>
+            <span>Pro Bono Initiative</span>
+          </Link>
         </nav>
 
         {/* Footer */}
