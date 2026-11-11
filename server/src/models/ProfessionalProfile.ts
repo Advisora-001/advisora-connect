@@ -24,6 +24,7 @@ export interface IProfessionalProfile extends Document {
   reviewNote: string;
   isAvailable: boolean;
   customFields: Map<string, string>;
+  publicDetails: Map<string, unknown>;
   serviceListings: Array<{ name: string; description: string; consultationOptions: string[]; isActive: boolean }>;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +59,7 @@ const professionalProfileSchema = new Schema<IProfessionalProfile>(
     reviewNote: { type: String, default: '' },
     isAvailable: { type: Boolean, default: true },
     customFields: { type: Map, of: String, default: {} },
+    publicDetails: { type: Map, of: Schema.Types.Mixed, default: {} },
     serviceListings: [{
       name: { type: String, required: true, trim: true, maxlength: 150 },
       description: { type: String, default: '', trim: true, maxlength: 1000 },

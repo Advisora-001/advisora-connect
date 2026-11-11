@@ -51,6 +51,8 @@ export default function ProfessionalProfilePage() {
   }
 
   const profileOwner = profile.userId;
+  const publicDetails = profile.publicDetails || {};
+  const legacyServices = Array.isArray(publicDetails.services) ? publicDetails.services : [];
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Link href={`/professionals?category=${profile.category}`} className="text-sm font-semibold text-[#00A6A6] hover:underline">← Back to {categoryLabels[profile.category]}s</Link>
@@ -72,7 +74,7 @@ export default function ProfessionalProfilePage() {
           ["Qualifications", profile.qualifications],
           ["Areas of expertise", profile.specializations],
           ["Services", profile.services],
-        ].map(([label, values]) => (
+        ].filter(([, values]) => Array.isArray(values) && values.length > 0).map(([label, values]) => (
           <section key={label as string} className="mt-6">
             <h2 className="text-lg font-semibold text-[#1B2A4A]">{label}</h2>
             <ul className="mt-2 list-inside list-disc space-y-1 text-[#475569]">
@@ -82,6 +84,34 @@ export default function ProfessionalProfilePage() {
         ))}
         {profile.professionalBody && <p className="mt-6 text-sm text-[#475569]"><strong>Professional body:</strong> {profile.professionalBody}</p>}
         <p className="mt-2 text-sm text-[#475569]"><strong>Experience:</strong> {profile.yearsOfExperience} years</p>
+        {(publicDetails.stateOfCall || publicDetails.yearOfCall) && (
+          <p className="mt-2 text-sm text-[#475569]"><strong>Call to the Bar:</strong> {[publicDetails.stateOfCall, publicDetails.yearOfCall].filter(Boolean).join(" · ")}</p>
+        )}
+        {publicDetails.officeAddress && <p className="mt-2 text-sm text-[#475569]"><strong>Office:</strong> {publicDetails.officeAddress}</p>}
+        {Array.isArray(publicDetails.languages) && publicDetails.languages.length > 0 && (
+          <p className="mt-2 text-sm text-[#475569]"><strong>Languages:</strong> {publicDetails.languages.join(", ")}</p>
+        )}
+        {Number(publicDetails.consultationFee) > 0 && (
+          <p className="mt-2 text-sm text-[#475569]"><strong>Consultation fee:</strong> ₦{Number(publicDetails.consultationFee).toLocaleString()}</p>
+        )}
+        {Number(publicDetails.rating) > 0 && (
+          <p className="mt-2 text-sm text-[#475569]"><strong>Rating:</strong> {Number(publicDetails.rating).toFixed(1)} ({Number(publicDetails.reviewCount) || 0} reviews)</p>
+        )}
+        {legacyServices.length > 0 && (
+          <section className="mt-6">
+            <h2 className="text-lg font-semibold text-[#1B2A4A]">Consultation options</h2>
+            <ul className="mt-2 space-y-2 text-sm text-[#475569]">
+              {legacyServices.map((service: any, index: number) => (
+                <li key={`${service.name || "service"}-${index}`}>
+                  <strong>{service.name || "Consultation"}</strong>
+                  {service.duration ? ` · ${service.duration} minutes` : ""}
+                  {service.price ? ` · ₦${Number(service.price).toLocaleString()}` : ""}
+                  {service.type ? ` · ${service.type}` : ""}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <p className={`mt-4 text-sm font-semibold ${profile.isAvailable ? "text-green-700" : "text-[#667085]"}`}>{profile.isAvailable ? "Available for new enquiries" : "Not currently available"}</p>
         {profile.isAvailable && user?.role === "client" && (
           <form onSubmit={sendEnquiry} className="mt-8 border-t border-[#E5EAF0] pt-6">
@@ -97,7 +127,13 @@ export default function ProfessionalProfilePage() {
           </form>
         )}
         {profile.isAvailable && !user && (
-          <p className="mt-8 border-t border-[#E5EAF0] pt-6 text-sm text-[#667085]">Please <Link href="/login" className="font-semibold text-[#00A6A6] hover:underline">sign in</Link> with a verified client account to send an enquiry.</p>
+          <div className="mt-8 border-t border-[#E5EAF0] pt-6">
+            <p className="text-sm text-[#667085]">Sign in with a verified client account to contact this professional.</p>
+            <Link href="/login" className="mt-3 inline-block rounded-lg bg-[#00A6A6] px-5 py-2.5 font-semibold text-white hover:bg-[#008F8F]">Sign in to send enquiry</Link>
+          </div>
+        )}
+        {profile.isAvailable && user && user.role !== "client" && (
+          <p className="mt-8 border-t border-[#E5EAF0] pt-6 text-sm text-[#667085]">A client account is required to send an enquiry.</p>
         )}
       </article>
     </main>
