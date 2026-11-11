@@ -24,9 +24,8 @@ import reviewRoutes from './routes/reviewRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import blogRoutes from './routes/blogRoutes';
 import proBonoRoutes from './routes/proBonoRoutes';
-
-// Connect to MongoDB
-connectDB();
+import membershipRoutes from './routes/membershipRoutes';
+import membershipAdminRoutes from './routes/membershipAdminRoutes';
 
 // Configure Cloudinary
 configureCloudinary();
@@ -55,7 +54,12 @@ const corsOptions: cors.CorsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(morgan('dev'));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, _res, buffer) => {
+    (req as express.Request & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -73,6 +77,8 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/pro-bono', proBonoRoutes);
+app.use('/api/membership', membershipRoutes);
+app.use('/api/admin/membership', membershipAdminRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -85,8 +91,10 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(500).json({ message: 'Internal server error', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  });
 });
 
 export default app;

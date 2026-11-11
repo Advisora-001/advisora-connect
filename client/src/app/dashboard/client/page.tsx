@@ -15,6 +15,8 @@ export default function ClientDashboard() {
   >('dashboard');
   const [expandedEnquiry, setExpandedEnquiry] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [professionalEnquiries, setProfessionalEnquiries] = useState<any[]>([]);
+  const [serviceEngagements, setServiceEngagements] = useState<any[]>([]);
   const [bookingLoading, setBookingLoading] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', phone: '' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,11 +26,36 @@ export default function ClientDashboard() {
     if (!user || user.role !== 'client') { router.push('/login'); return; }
     fetchEnquiries();
     fetchAppointments();
+    fetchProfessionalData();
     if (user) setProfileForm({ firstName: user.firstName || '', lastName: user.lastName || '', phone: user.phone || '' });
   }, [user, loading]);
 
   async function fetchEnquiries() { try { const data = await api.getMyEnquiries(); setEnquiries(data.leads); } catch {} }
   async function fetchAppointments() { try { const data = await api.getMyAppointments(); setAppointments(data.appointments || []); } catch {} }
+  async function fetchProfessionalData() {
+    try {
+      const [{ enquiries: sentEnquiries }, { engagements }] = await Promise.all([
+        api.getMySentProfessionalEnquiries(),
+        api.getMyServiceEngagements(),
+      ]);
+      setProfessionalEnquiries(sentEnquiries);
+      setServiceEngagements(engagements);
+    } catch (error) {
+      console.error('Failed to load professional enquiries and engagements:', error);
+    }
+  }
+
+  const updateEngagement = async (id: string, status: 'active' | 'cancelled') => {
+    setBookingLoading(id);
+    try {
+      await api.updateServiceEngagementStatus(id, status);
+      await fetchProfessionalData();
+    } catch (error: any) {
+      alert(error.message || 'Failed to update service engagement');
+    } finally {
+      setBookingLoading(null);
+    }
+  };
   
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +109,39 @@ export default function ClientDashboard() {
               <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Appointments</p><p className="text-3xl font-bold text-[#00A6A6] mt-2">{appointments.length}</p></div>
               <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Pending</p><p className="text-3xl font-bold text-[#F59E0B] mt-2">{pendingEnquiries.length}</p></div>
             </div>
+            <section className="mt-8 rounded-xl border border-[#E5EAF0] bg-white p-5 md:p-6">
+              <h2 className="text-xl font-bold text-[#1B2A4A]">Professional service engagements</h2>
+              <p className="mt-1 text-sm text-[#667085]">Review proposals created in response to your enquiries to accountants, tax consultants, and legal professionals.</p>
+              {serviceEngagements.length === 0 ? (
+                <p className="mt-4 text-sm text-[#667085]">No service engagement proposals yet.</p>
+              ) : (
+                <div className="mt-4 divide-y divide-[#E5EAF0]">
+                  {serviceEngagements.map((engagement: any) => (
+                    <article key={engagement._id} className="py-4 first:pt-0 last:pb-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <h3 className="font-semibold text-[#1B2A4A]">{engagement.title}</h3>
+                          <p className="mt-1 text-xs text-[#667085]">
+                            {engagement.professionalProfileId?.professionalTitle || engagement.professionalProfileId?.category}
+                            {engagement.professionalProfileId?.userId && ` · ${engagement.professionalProfileId.userId.firstName} ${engagement.professionalProfileId.userId.lastName}`}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs capitalize text-[#475569]">{engagement.status}</span>
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-[#475569]">{engagement.scope}</p>
+                      {engagement.proposedFee !== undefined && <p className="mt-2 text-sm font-medium text-[#344054]">Proposed fee: {engagement.currency} {engagement.proposedFee.toLocaleString()}</p>}
+                      {engagement.status === 'proposed' && (
+                        <div className="mt-3 flex gap-2">
+                          <button disabled={bookingLoading === engagement._id} onClick={() => void updateEngagement(engagement._id, 'active')} className="rounded-lg bg-[#00A6A6] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Accept proposal</button>
+                          <button disabled={bookingLoading === engagement._id} onClick={() => void updateEngagement(engagement._id, 'cancelled')} className="rounded-lg border border-[#D0D5DD] px-3 py-2 text-sm font-semibold text-[#344054] disabled:opacity-50">Decline</button>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+              {professionalEnquiries.length > 0 && <p className="mt-4 text-xs text-[#667085]">You have {professionalEnquiries.length} professional enquiry/enquiries on record.</p>}
+            </section>
           </div>
         )}
 

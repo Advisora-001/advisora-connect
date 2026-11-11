@@ -1,9 +1,10 @@
 "use client";
 
-import React, { Suspense, useState, useCallback } from "react";
+import React, { Suspense, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
 
 // Validation helpers
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,9 +74,8 @@ function RegisterPageContent() {
     termsAccepted: false,
     policiesAccepted: false,
   });
-  const [categories, setCategories] = useState<string[]>(
-    defaultRole === "professional" ? ["legal"] : [],
-  );
+  const [categories, setCategories] = useState<string[]>([]);
+  const [professionalCategories, setProfessionalCategories] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -86,13 +86,26 @@ function RegisterPageContent() {
 
   const passwordStrength = getPasswordStrength(formData.password);
 
+  useEffect(() => {
+    api.getProfessionalCategories()
+      .then(({ categories: loadedCategories }) => {
+        setProfessionalCategories(loadedCategories);
+        if (defaultRole === "professional" && loadedCategories.length > 0) {
+          setCategories([loadedCategories.find((category) => category.key === "legal")?.key || loadedCategories[0].key]);
+        }
+      })
+      .catch((requestError: Error) => setError(requestError.message));
+  }, [defaultRole]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "role" && value === "professional" && categories.length === 0) {
-      setCategories(["legal"]);
+      setCategories(professionalCategories.length > 0
+        ? [professionalCategories.find((category) => category.key === "legal")?.key || professionalCategories[0].key]
+        : []);
     }
 
     // Validate email in real-time
@@ -382,20 +395,16 @@ function RegisterPageContent() {
               <legend className="block text-sm font-semibold text-accent mb-2">
                 Professional categories
               </legend>
-              {[
-                { value: "legal", label: "Legal professional" },
-                { value: "accounting", label: "Accountant" },
-                { value: "tax", label: "Tax consultant" },
-              ].map((category) => (
-                <label key={category.value} className="flex items-center gap-3 text-sm text-accent">
+              {professionalCategories.map((category) => (
+                <label key={category.key} className="flex items-center gap-3 text-sm text-accent">
                   <input
                     type="checkbox"
-                    checked={categories.includes(category.value)}
+                    checked={categories.includes(category.key)}
                     onChange={(event) => {
                       setCategories((current) =>
                         event.target.checked
-                          ? [...current, category.value]
-                          : current.filter((value) => value !== category.value),
+                          ? [...current, category.key]
+                          : current.filter((value) => value !== category.key),
                       );
                     }}
                     className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
@@ -403,6 +412,9 @@ function RegisterPageContent() {
                   {category.label}
                 </label>
               ))}
+              {professionalCategories.length === 0 && (
+                <p className="text-sm text-[#667085]">Loading available professional categories...</p>
+              )}
               {categories.length === 0 && (
                 <p className="text-sm text-red-600">Select at least one professional category.</p>
               )}

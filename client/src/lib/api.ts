@@ -172,6 +172,74 @@ class ApiClient {
     );
   }
 
+  getProfessionalCategories() {
+    return this.request<{ categories: any[] }>('/membership/categories');
+  }
+
+  getMembershipPlans() {
+    return this.request<{ plans: any[] }>('/membership/plans');
+  }
+
+  getMembershipConfig() {
+    return this.request<{ categories: any[]; plans: any[]; platformFeePolicy: any }>('/admin/membership/config');
+  }
+
+  saveProfessionalCategory(key: string, data: any) {
+    return this.request<{ category: any }>(`/admin/membership/categories/${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      body: data,
+    });
+  }
+
+  createProfessionalCategory(data: any) {
+    return this.request<{ category: any }>('/admin/membership/categories', { method: 'POST', body: data });
+  }
+
+  saveMembershipPlan(key: string, data: any) {
+    return this.request<{ plan: any }>(`/admin/membership/plans/${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      body: data,
+    });
+  }
+
+  createMembershipPlan(data: any) {
+    return this.request<{ plan: any }>('/admin/membership/plans', { method: 'POST', body: data });
+  }
+
+  savePlatformFeePolicy(data: any) {
+    return this.request<{ platformFeePolicy: any }>('/admin/membership/platform-fee', {
+      method: 'PUT',
+      body: data,
+    });
+  }
+
+  getMyMembership() {
+    return this.request<any>('/membership/mine');
+  }
+
+  startMembership(data: { planKey: string; interval?: 'month' | 'year'; firmId?: string }) {
+    return this.request<any>('/membership/subscribe', { method: 'POST', body: data });
+  }
+
+  getMyFirms() {
+    return this.request<{ firms: any[] }>('/membership/firms/mine');
+  }
+
+  createFirm(data: { name: string; email: string; categories: string[] }) {
+    return this.request<{ firm: any }>('/membership/firms', { method: 'POST', body: data });
+  }
+
+  inviteFirmMember(firmId: string, email: string, category: string) {
+    return this.request<any>(`/membership/firms/${encodeURIComponent(firmId)}/invitations`, {
+      method: 'POST',
+      body: { email, category },
+    });
+  }
+
+  acceptFirmInvitation(token: string) {
+    return this.request<any>('/membership/firms/invitations/accept', { method: 'POST', body: { token } });
+  }
+
   getProfessionalProfile(id: string) {
     return this.request<{ profile: any }>(`/professionals/${encodeURIComponent(id)}`);
   }
@@ -185,6 +253,22 @@ class ApiClient {
 
   getProfessionalEnquiries() {
     return this.request<{ enquiries: any[] }>('/professionals/enquiries/mine');
+  }
+
+  getMySentProfessionalEnquiries() {
+    return this.request<{ enquiries: any[] }>('/professionals/enquiries/sent');
+  }
+
+  getMyServiceEngagements() {
+    return this.request<{ engagements: any[] }>('/professionals/engagements/mine');
+  }
+
+  createServiceEngagement(enquiryId: string, data: { title: string; scope: string; proposedFee?: number }) {
+    return this.request<{ engagement: any }>(`/professionals/enquiries/${encodeURIComponent(enquiryId)}/engagements`, { method: 'POST', body: data });
+  }
+
+  updateServiceEngagementStatus(id: string, status: 'active' | 'completed' | 'cancelled') {
+    return this.request<{ engagement: any }>(`/professionals/engagements/${encodeURIComponent(id)}/status`, { method: 'PUT', body: { status } });
   }
 
   getMyProfessionalProfiles() {

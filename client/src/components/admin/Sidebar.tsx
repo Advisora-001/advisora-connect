@@ -8,6 +8,7 @@ export type AdminSection =
   | "users"
   | "reports"
   | "configuration"
+  | "membership"
   | "payouts"
   | "revenue"
   | "guide"
@@ -26,6 +27,7 @@ const menuItems: { id: AdminSection; label: string; icon: string }[] = [
   { id: "users", label: "Users", icon: "👥" },
   { id: "reports", label: "Reports", icon: "📈" },
   { id: "configuration", label: "Configuration", icon: "⚙️" },
+  { id: "membership", label: "Membership", icon: "🧩" },
   { id: "payouts", label: "Payouts", icon: "💰" },
   { id: "revenue", label: "Revenue", icon: "📈" },
   { id: "guide", label: "Platform Guide", icon: "📖" },

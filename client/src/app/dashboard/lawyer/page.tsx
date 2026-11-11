@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import LawyerSidebar from "@/components/lawyer/Sidebar";
@@ -98,6 +99,9 @@ export default function LawyerDashboard() {
               <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Appointments</p><p className="text-3xl font-bold text-[#5DBB63] mt-2">{appointments.length}</p></div>
               <div className="bg-white rounded-xl border border-[#E5EAF0] p-6"><p className="text-sm font-medium text-[#667085] uppercase tracking-wide">Verification</p><p className={`text-xl font-bold mt-2 capitalize ${profile?.verificationStatus === "verified" ? "text-[#5DBB63]" : "text-[#F59E0B]"}`}>{profile?.verificationStatus || "pending"}</p>{profile?.verificationStatus !== "verified" && <p className="text-sm text-[#667085] mt-1">Profile pending admin review</p>}</div>
             </div>
+            <Link href="/dashboard/professional" className="mt-6 inline-flex rounded-lg bg-[#00A6A6] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#008F8F]">
+              Membership and firm workspaces
+            </Link>
           </div>
         )}
 

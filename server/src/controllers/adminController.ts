@@ -3,8 +3,10 @@ import User from '../models/User';
 import LawyerProfile from '../models/LawyerProfile';
 import Lead from '../models/Lead';
 import Subscription from '../models/Subscription';
+import SubscriptionPayment from '../models/SubscriptionPayment';
 import PaymentRecord from '../models/PaymentRecord';
 import { AuthRequest } from '../middleware/auth';
+import syncLegacyLawyerProfile from '../services/syncLegacyLawyerProfile';
 
 // @desc    Get all lawyer verifications (pending, verified, rejected) for the board
 // @route   GET /api/admin/lawyers/pending
@@ -39,6 +41,7 @@ const verifyLawyer = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Lawyer profile not found' });
     }
 
+    await syncLegacyLawyerProfile(profile);
     res.json({ message: `Lawyer ${status} successfully`, profile });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -220,7 +223,12 @@ const getRevenue = async (_req: AuthRequest, res: Response) => {
 
     // Subscription revenue
     const subscriptions = await Subscription.find().populate('userId', 'firstName lastName email').sort({ createdAt: -1 });
-    const totalSubscriptionRevenue = subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0);
+    const subscriptionPayments = await SubscriptionPayment.find({ status: 'completed' })
+      .populate('userId', 'firstName lastName email')
+      .populate('firmId', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(200);
+    const totalSubscriptionRevenue = subscriptionPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
     // Pending payout total
     const PayoutRequest = await import('../models/PayoutRequest').then(m => m.default);
@@ -230,6 +238,7 @@ const getRevenue = async (_req: AuthRequest, res: Response) => {
     res.json({
       transactions,
       subscriptions,
+      subscriptionPayments,
       summary: {
         totalRevenue: totalRevenue + totalSubscriptionRevenue,
         totalConsultationRevenue: totalRevenue,
@@ -238,6 +247,7 @@ const getRevenue = async (_req: AuthRequest, res: Response) => {
         totalSubscriptionRevenue,
         totalPendingPayouts,
         transactionCount: transactions.length,
+        subscriptionPaymentCount: subscriptionPayments.length,
       },
     });
   } catch (error) {

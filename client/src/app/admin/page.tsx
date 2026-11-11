@@ -10,6 +10,7 @@ import VerificationCard from "@/components/admin/VerificationCard";
 import UserCard from "@/components/admin/UserCard";
 import LawyerProfileModal from "@/components/admin/LawyerProfileModal";
 import BlogManager from "@/components/admin/BlogManager";
+import MembershipConfiguration from "@/components/admin/MembershipConfiguration";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -121,6 +122,7 @@ export default function AdminDashboard() {
                   {activeSection === "users" && "Users"}
                   {activeSection === "reports" && "Reports"}
                   {activeSection === "configuration" && "Configuration"}
+                  {activeSection === "membership" && "Membership & categories"}
                   {activeSection === "payouts" && "Payouts"}
                   {activeSection === "revenue" && "Revenue"}
                   {activeSection === "guide" && "Platform Guide"}
@@ -132,6 +134,7 @@ export default function AdminDashboard() {
                   {activeSection === "users" && "User management and account status"}
                   {activeSection === "reports" && "View platform reports and insights"}
                   {activeSection === "configuration" && "Configure platform settings"}
+                  {activeSection === "membership" && "Manage professional categories, plans, and transaction fees"}
                   {activeSection === "payouts" && "Review and process lawyer payout requests"}
                   {activeSection === "revenue" && "Platform revenue and transaction history"}
                   {activeSection === "guide" && "Step-by-step guide for using the platform"}
@@ -219,6 +222,7 @@ export default function AdminDashboard() {
           {activeSection === "reports" && (<div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Reports coming soon</p><p className="text-[#94A3B8] text-sm mt-2">Platform reports and insights will be available here</p></div></div>)}
 
           {/* Configuration */}
+          {activeSection === "membership" && <MembershipConfiguration />}
           {activeSection === "configuration" && (<div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Configuration coming soon</p><p className="text-[#94A3B8] text-sm mt-2">Platform settings and configuration will be available here</p></div></div>)}
 
           {/* Payouts */}

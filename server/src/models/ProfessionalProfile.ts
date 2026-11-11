@@ -1,11 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export const professionalCategories = ['legal', 'accounting', 'tax'] as const;
-export type ProfessionalCategory = (typeof professionalCategories)[number];
+export type ProfessionalCategory = string;
 export type ProfessionalVerificationStatus = 'draft' | 'pending' | 'verified' | 'rejected';
 
 export interface IProfessionalProfile extends Document {
   userId: mongoose.Types.ObjectId;
+  firmId?: mongoose.Types.ObjectId;
   category: ProfessionalCategory;
   professionalTitle: string;
   bio: string;
@@ -19,9 +19,12 @@ export interface IProfessionalProfile extends Document {
   state: string;
   country: string;
   verificationDocs: string[];
+  verificationUploads: Array<{ requirementKey: string; url: string }>;
   verificationStatus: ProfessionalVerificationStatus;
   reviewNote: string;
   isAvailable: boolean;
+  customFields: Map<string, string>;
+  serviceListings: Array<{ name: string; description: string; consultationOptions: string[]; isActive: boolean }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +32,8 @@ export interface IProfessionalProfile extends Document {
 const professionalProfileSchema = new Schema<IProfessionalProfile>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    category: { type: String, enum: professionalCategories, required: true },
+    firmId: { type: Schema.Types.ObjectId, ref: 'Firm' },
+    category: { type: String, required: true, lowercase: true, trim: true },
     professionalTitle: { type: String, default: '' },
     bio: { type: String, default: '', maxlength: 2000 },
     qualifications: [{ type: String }],
@@ -42,6 +46,10 @@ const professionalProfileSchema = new Schema<IProfessionalProfile>(
     state: { type: String, default: '' },
     country: { type: String, default: 'Nigeria' },
     verificationDocs: [{ type: String }],
+    verificationUploads: [{
+      requirementKey: { type: String, required: true, trim: true },
+      url: { type: String, required: true, trim: true },
+    }],
     verificationStatus: {
       type: String,
       enum: ['draft', 'pending', 'verified', 'rejected'],
@@ -49,6 +57,13 @@ const professionalProfileSchema = new Schema<IProfessionalProfile>(
     },
     reviewNote: { type: String, default: '' },
     isAvailable: { type: Boolean, default: true },
+    customFields: { type: Map, of: String, default: {} },
+    serviceListings: [{
+      name: { type: String, required: true, trim: true, maxlength: 150 },
+      description: { type: String, default: '', trim: true, maxlength: 1000 },
+      consultationOptions: [{ type: String, trim: true }],
+      isActive: { type: Boolean, default: true },
+    }],
   },
   { timestamps: true }
 );

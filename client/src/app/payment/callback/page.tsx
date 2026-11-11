@@ -31,6 +31,7 @@ function PaymentCallbackContent() {
         switch (type) {
           case 'consultation': setMessage('Your consultation has been booked and paid successfully! You can now view the details in your dashboard.'); break;
           case 'subscription': setMessage('Your subscription has been activated successfully! You now have access to premium features.'); break;
+          case 'membership_subscription': setMessage('Your membership payment is confirmed and the selected plan is now active.'); break;
           case 'featured': setMessage('Your featured listing has been activated! Your profile will be featured for 30 days.'); break;
           default: setMessage('Payment was successful! Thank you for your payment.');
         }

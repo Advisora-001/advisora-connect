@@ -6,6 +6,7 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { createNotification } from './notificationController';
 import { sendLeadNotificationEmail } from '../services/email';
+import calculatePlatformFee from '../services/platformFees';
 
 // @desc    Submit booking request (unified wizard) - creates lead with booking context
 // @route   POST /api/leads/book-request
@@ -56,7 +57,7 @@ const createBookingRequest = async (req: AuthRequest, res: Response) => {
       status: { $in: ['pending', 'accepted', 'booked'] },
     });
 
-    const PLATFORM_FEE = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
+    const platformFee = await calculatePlatformFee('lead');
     const isFirstEnquiry = !existingLead;
 
     // Build enquiry message from booking context
@@ -67,7 +68,7 @@ const createBookingRequest = async (req: AuthRequest, res: Response) => {
       clientId: user._id,
       enquiryMessage,
       leadFee: 0,
-      platformFee: isFirstEnquiry ? 0 : PLATFORM_FEE,
+      platformFee: isFirstEnquiry ? 0 : platformFee,
       clientName: clientName || `${user.firstName} ${user.lastName}`,
       clientEmail: clientEmail || user.email,
       clientPhone: clientPhone || user.phone || '',
@@ -194,7 +195,7 @@ const createLead = async (req: AuthRequest, res: Response) => {
       status: { $in: ['pending', 'accepted', 'booked'] },
     });
 
-    const PLATFORM_FEE = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
+    const platformFee = await calculatePlatformFee('lead');
     const isFirstEnquiry = !existingEnquiry;
 
     const lead = await Lead.create({
@@ -203,7 +204,7 @@ const createLead = async (req: AuthRequest, res: Response) => {
       ...fractionalEnquiry,
       enquiryMessage,
       leadFee: 0, // Enquiries are free
-      platformFee: isFirstEnquiry ? 0 : PLATFORM_FEE, // Platform fee for additional enquiries
+      platformFee: isFirstEnquiry ? 0 : platformFee, // Platform fee for additional enquiries
       clientName,
       clientEmail,
       clientPhone,
@@ -318,9 +319,9 @@ const bookConsultation = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Lawyer not found' });
     }
 
-    const PLATFORM_FEE = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
     const consultationFee = lawyer.consultationFee || 0;
-    const totalAmount = consultationFee + PLATFORM_FEE;
+    const platformFee = await calculatePlatformFee('consultation', consultationFee);
+    const totalAmount = consultationFee + platformFee;
 
     // Create appointment record (payment handled separately via payment route)
     const appointment = await Appointment.create({
@@ -332,7 +333,7 @@ const bookConsultation = async (req: AuthRequest, res: Response) => {
       duration: req.body.duration || 30,
       consultationType: req.body.consultationType || 'video',
       consultationFee,
-      platformFee: PLATFORM_FEE,
+      platformFee,
       totalAmount,
       paymentStatus: 'unpaid',
     });
@@ -345,7 +346,7 @@ const bookConsultation = async (req: AuthRequest, res: Response) => {
       appointment,
       paymentBreakdown: {
         consultationFee,
-        platformFee: PLATFORM_FEE,
+        platformFee,
         total: totalAmount,
       },
     });

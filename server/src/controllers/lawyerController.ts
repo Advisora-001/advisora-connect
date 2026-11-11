@@ -4,6 +4,7 @@ import User from '../models/User';
 import Appointment from '../models/Appointment';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../middleware/auth';
+import syncLegacyLawyerProfile from '../services/syncLegacyLawyerProfile';
 
 // @desc    Get all lawyers (with search & filters)
 // @route   GET /api/lawyers
@@ -142,6 +143,7 @@ const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     const updatedProfile = await profile.save();
+    await syncLegacyLawyerProfile(updatedProfile);
     console.log('Profile updated successfully:', updatedProfile._id);
     res.json(updatedProfile);
   } catch (error) {
@@ -167,6 +169,7 @@ const submitVerification = async (req: AuthRequest, res: Response) => {
       profile.verificationDocs = verificationDocs;
       profile.verificationStatus = 'pending';
       await profile.save();
+      await syncLegacyLawyerProfile(profile);
     }
 
     res.json({ message: 'Verification documents submitted', verificationStatus: profile.verificationStatus });
@@ -209,6 +212,7 @@ const uploadVerificationDocs = async (req: AuthRequest, res: Response) => {
     profile.verificationDocs = verificationDocs;
     profile.verificationStatus = 'pending';
     await profile.save();
+    await syncLegacyLawyerProfile(profile);
 
     res.status(201).json({
       message: 'Verification documents uploaded',

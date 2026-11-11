@@ -3,9 +3,11 @@ import User from '../models/User';
 import LawyerProfile from '../models/LawyerProfile';
 import ProfessionalProfile, {
   IProfessionalProfile,
-  professionalCategories,
   ProfessionalCategory,
 } from '../models/ProfessionalProfile';
+import ProfessionalCategoryModel from '../models/ProfessionalCategory';
+import MembershipPlan from '../models/MembershipPlan';
+import Subscription from '../models/Subscription';
 import LegalDocument from '../models/LegalDocument';
 import LegalAcceptance from '../models/LegalAcceptance';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
@@ -92,13 +94,23 @@ const register = async (req: Request, res: Response) => {
       if (!Array.isArray(categories) || categories.length === 0) {
         return res.status(400).json({ message: 'Select at least one professional category' });
       }
-      if (
-        categories.some((category: unknown) =>
-          typeof category !== 'string' ||
-          !professionalCategories.includes(category as ProfessionalCategory)
-        )
-      ) {
+      if (categories.some((category: unknown) => typeof category !== 'string' || !/^[a-z0-9-]+$/.test(category))) {
         return res.status(400).json({ message: 'One or more professional categories are invalid' });
+      }
+      const uniqueCategories = [...new Set(categories as string[])];
+      const [activeCategories, basicPlan] = await Promise.all([
+        ProfessionalCategoryModel.find({
+          key: { $in: uniqueCategories },
+          isActive: true,
+        }).select('key'),
+        MembershipPlan.findOne({ key: 'basic', isActive: true }),
+      ]);
+      if (activeCategories.length !== uniqueCategories.length) {
+        return res.status(400).json({ message: 'One or more selected professional categories are unavailable.' });
+      }
+      const profileLimit = Number(basicPlan?.benefits.maxProfilesPerSeat ?? 3);
+      if (profileLimit >= 0 && uniqueCategories.length > profileLimit) {
+        return res.status(400).json({ message: `Your Basic membership allows up to ${profileLimit} professional category profile(s).` });
       }
     }
 
@@ -145,6 +157,25 @@ const register = async (req: Request, res: Response) => {
           category,
         }))
       );
+    }
+
+    if (role === 'lawyer' || role === 'professional') {
+      const basicPlan = await MembershipPlan.findOne({ key: 'basic', isActive: true });
+      if (basicPlan) {
+        await Subscription.create({
+          ownerType: 'individual',
+          userId: user._id,
+          plan: 'basic',
+          planKey: basicPlan.key,
+          tier: 'basic',
+          planSnapshot: basicPlan.toObject(),
+          billingInterval: 'month',
+          status: 'active',
+          startDate: new Date(),
+          amount: 0,
+          autoRenew: false,
+        });
+      }
     }
 
     // Record legal document acceptances

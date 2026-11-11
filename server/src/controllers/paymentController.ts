@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import crypto from 'crypto';
 import { AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 import LawyerProfile from '../models/LawyerProfile';
 import Subscription from '../models/Subscription';
+import SubscriptionPayment from '../models/SubscriptionPayment';
+import PaymentWebhookEvent from '../models/PaymentWebhookEvent';
 import Lead from '../models/Lead';
 import Appointment from '../models/Appointment';
 import PaymentRecord from '../models/PaymentRecord';
@@ -14,7 +17,53 @@ import Wallet from '../models/Wallet';
 
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
-const PLATFORM_FEE_AMOUNT = Number(process.env.PLATFORM_FEE_AMOUNT) || 10000;
+
+const activateMembershipPayment = async (reference: string, data: any) => {
+  const payment = await SubscriptionPayment.findOne({ paystackRef: reference });
+  if (!payment) throw new Error('Pending membership payment record not found.');
+  if (Math.round(payment.amount * 100) !== data.amount ||
+    (typeof data.currency === 'string' && data.currency.toUpperCase() !== payment.currency.toUpperCase())) {
+    throw new Error('Payment amount or currency does not match the pending membership payment.');
+  }
+  if (payment.status === 'completed') return;
+  if (payment.status !== 'pending') throw new Error('Membership payment is not pending.');
+
+  const subscription = await Subscription.findById(payment.subscriptionId);
+  if (!subscription) throw new Error('Membership subscription record not found.');
+  if (subscription.status !== 'active') {
+    await Subscription.updateMany(
+      subscription.firmId
+        ? { firmId: subscription.firmId, status: 'active', _id: { $ne: subscription._id } }
+        : { userId: subscription.userId, status: 'active', _id: { $ne: subscription._id } },
+      { status: 'cancelled' },
+    );
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    if (subscription.billingInterval === 'year') endDate.setFullYear(endDate.getFullYear() + 1);
+    else endDate.setMonth(endDate.getMonth() + 1);
+    subscription.status = 'active';
+    subscription.startDate = startDate;
+    subscription.endDate = endDate;
+    await subscription.save();
+
+    if (subscription.userId) {
+      const profile = await LawyerProfile.findOne({ userId: subscription.userId });
+      if (profile) {
+        profile.subscription = {
+          plan: subscription.plan,
+          status: 'active',
+          startDate,
+          endDate,
+        };
+        await profile.save();
+      }
+    }
+  }
+
+  payment.status = 'completed';
+  payment.paidAt = new Date();
+  await payment.save();
+};
 
 // @desc    Initialize Paystack payment
 // @route   POST /api/payments/initialize
@@ -23,10 +72,11 @@ const initializePayment = async (req: AuthRequest, res: Response) => {
     const { amount, metadata } = req.body;
     const user = req.user;
 
-    if (!amount || !metadata) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0 || !metadata || typeof metadata !== 'object') {
       return res.status(400).json({ message: 'Amount and metadata are required' });
     }
 
+    let platformFee = 0;
     // Validate amount for consultation bookings
     if (metadata?.type === 'consultation' && metadata.appointmentId) {
       const appointment = await Appointment.findById(metadata.appointmentId);
@@ -36,9 +86,13 @@ const initializePayment = async (req: AuthRequest, res: Response) => {
       if (appointment.paymentStatus === 'paid') {
         return res.status(400).json({ message: 'Appointment already paid' });
       }
+      if (appointment.clientId.toString() !== user?._id.toString()) {
+        return res.status(403).json({ message: "You cannot pay for another client's appointment." });
+      }
       if (amount !== appointment.totalAmount) {
         return res.status(400).json({ message: `Amount mismatch: expected ${appointment.totalAmount}, got ${amount}` });
       }
+      platformFee = appointment.platformFee;
     }
 
     const response = await axios.post(
@@ -49,7 +103,7 @@ const initializePayment = async (req: AuthRequest, res: Response) => {
         metadata: {
           ...metadata,
           userId: user?._id?.toString(),
-          platformFee: PLATFORM_FEE_AMOUNT,
+          platformFee,
         },
         callback_url: `${process.env.FRONTEND_URL}/payment/callback`,
       },
@@ -98,8 +152,24 @@ const verifyPayment = async (req: Request, res: Response) => {
     const data = payload?.data;
     const meta = data?.metadata;
 
+    if (payload?.status === true && data?.status === 'success' && meta?.type === 'membership_subscription') {
+      try {
+        await activateMembershipPayment(reference, data);
+      } catch (activationError) {
+        return res.status(400).json({ message: (activationError as Error).message });
+      }
+    }
+
     // Consultation payments: mark appointment as paid
-    if (payload?.status === true && meta?.type === 'consultation' && meta?.appointmentId) {
+    if (payload?.status === true && data?.status === 'success' && meta?.type === 'consultation' && meta?.appointmentId) {
+      const appointmentRecord = await Appointment.findById(meta.appointmentId);
+      if (!appointmentRecord) {
+        return res.status(404).json({ message: 'Appointment not found.' });
+      }
+      if (data.amount !== Math.round(appointmentRecord.totalAmount * 100) ||
+        appointmentRecord.clientId.toString() !== String(meta.userId)) {
+        return res.status(400).json({ message: 'Payment does not match the appointment.' });
+      }
       const appointment = await Appointment.findByIdAndUpdate(
         meta.appointmentId,
         {
@@ -227,40 +297,53 @@ const verifyPayment = async (req: Request, res: Response) => {
 // @desc    Paystack webhook
 // @route   POST /api/payments/webhook
 const handleWebhook = async (req: Request, res: Response) => {
+  let eventId = '';
   try {
+    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const signature = req.headers['x-paystack-signature'];
+    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+    if (!secret || typeof signature !== 'string' || !rawBody) {
+      return res.status(401).json({ message: 'A valid payment provider signature is required.' });
+    }
+    const expectedSignature = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+    const provided = Buffer.from(signature, 'hex');
+    const expected = Buffer.from(expectedSignature, 'hex');
+    if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
+      return res.status(401).json({ message: 'Invalid payment provider signature.' });
+    }
+
     const event = req.body;
+    const reference = typeof event?.data?.reference === 'string' ? event.data.reference : '';
+    const providerEventId = event?.data?.id || reference;
+    if (!providerEventId || typeof event?.event !== 'string') {
+      return res.status(400).json({ message: 'Payment provider event is missing its identifier.' });
+    }
+    eventId = `${String(providerEventId)}:${event.event}`;
+    try {
+      await PaymentWebhookEvent.create({
+        eventId,
+        eventType: event.event,
+        reference: reference || eventId,
+        status: 'processing',
+      });
+    } catch (error) {
+      if ((error as { code?: number }).code !== 11000) throw error;
+      const previousEvent = await PaymentWebhookEvent.findOne({ eventId });
+      return res.sendStatus(previousEvent?.status === 'processed' ? 200 : 503);
+    }
 
     if (event.event === 'charge.success') {
-      const { reference, metadata } = event.data;
-        const { type, userId, leadId, plan } = metadata || {};
+      const { metadata } = event.data;
+      const { type, userId, leadId } = metadata || {};
 
-      if (type === 'subscription' && userId && plan) {
-        // Create subscription record
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + 1);
+      if (type === 'membership_subscription' && reference) {
+        await activateMembershipPayment(reference, event.data);
+      }
 
-        await Subscription.create({
-          userId,
-          plan,
-          status: 'active',
-          startDate,
-          endDate,
-          paystackRef: reference,
-          amount: event.data.amount / 100,
-        });
-
-        // Update lawyer profile subscription
-        const profile = await LawyerProfile.findOne({ userId });
-        if (profile) {
-          profile.subscription = {
-            plan,
-            status: 'active',
-            startDate,
-            endDate,
-          };
-          await profile.save();
-        }
+      // Older client-created subscription checkouts are intentionally ignored. New
+      // memberships must have a server-created, amount-checked payment record.
+      if (type === 'subscription') {
+        console.warn('Ignoring legacy subscription payment event without a pending membership payment record.');
       }
 
       if (type === 'lead' && leadId) {
@@ -335,9 +418,17 @@ const handleWebhook = async (req: Request, res: Response) => {
       }
     }
 
+    await PaymentWebhookEvent.updateOne({ eventId }, { $set: { status: 'processed', processedAt: new Date() } });
     res.sendStatus(200);
   } catch (error) {
     console.error('Webhook error:', error);
+    if (eventId) {
+      try {
+        await PaymentWebhookEvent.deleteOne({ eventId });
+      } catch (cleanupError) {
+        console.error('Failed to release payment webhook event for retry:', cleanupError);
+      }
+    }
     res.sendStatus(500);
   }
 };

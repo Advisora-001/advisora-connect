@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
+import migrateLegacyMembership from './migrateLegacyMembership';
+import seedMembershipDefaults from './seedMembershipDefaults';
 
 const connectDB = async (): Promise<void> => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/advisora_connect');
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    await seedMembershipDefaults();
+    await migrateLegacyMembership();
+    console.log('Membership defaults initialized');
   } catch (error) {
     console.error(`Error: ${(error as Error).message}`);
     process.exit(1);
