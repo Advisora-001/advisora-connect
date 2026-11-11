@@ -74,7 +74,18 @@ function ProfessionalsDirectory() {
           }))
         : [];
 
-      setProfiles([...professionalProfiles, ...lawyerProfiles]);
+      const professionalUserIds = new Set(
+        professionalProfiles
+          .map((profile: any) => profile.userId?._id || profile.userId)
+          .filter(Boolean)
+          .map((userId: { toString(): string }) => userId.toString()),
+      );
+      const legacyProfilesWithoutDuplicates = lawyerProfiles.filter((lawyer: any) => {
+        const userId = lawyer.userId?._id || lawyer.userId;
+        return !userId || !professionalUserIds.has(userId.toString());
+      });
+
+      setProfiles([...professionalProfiles, ...legacyProfilesWithoutDuplicates]);
 
       const failedSources = [
         professionalResult.status === "rejected" ? "new legal profiles" : "",
