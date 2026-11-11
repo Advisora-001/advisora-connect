@@ -35,7 +35,7 @@ const professionalProfileSchema = new Schema<IProfessionalProfile>(
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm' },
     category: { type: String, required: true, lowercase: true, trim: true },
     professionalTitle: { type: String, default: '' },
-    bio: { type: String, default: '', maxlength: 2000 },
+    bio: { type: String, default: '', maxlength: 5000 },
     qualifications: [{ type: String }],
     professionalBody: { type: String, default: '' },
     membershipNumber: { type: String, default: '' },
