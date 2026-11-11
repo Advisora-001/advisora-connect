@@ -82,11 +82,11 @@ export default function ProBonoInitiativePage() {
       {/* Hero Section */}
       <section className="bg-[#1B2A4A] text-white py-16 md:py-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 text-center md:text-left">
-          <div className="inline-block bg-[#00A6A6]/20 text-[#00A6A6] font-semibold text-xs md:text-sm px-4 py-1.5 rounded-full mb-4 tracking-wider uppercase">
+          {/* <div className="inline-block bg-[#00A6A6]/20 text-[#00A6A6] font-semibold text-xs md:text-sm px-4 py-1.5 rounded-full mb-4 tracking-wider uppercase">
             Advisora Impact
-          </div>
+          </div> */}
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
-            PRO BONO INITIATIVE
+            Advisora Impact
           </h1>
           <p className="text-lg md:text-2xl text-[#00A6A6] font-semibold mt-3">
             Access to Justice. Professionalism. Making a Difference.
