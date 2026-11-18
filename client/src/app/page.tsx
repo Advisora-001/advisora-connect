@@ -58,6 +58,9 @@ export default function HomePage() {
                     Register Now
                   </Link>
                 )}
+                <Link href="/pro-bono" className="inline-block border border-[#1B2A4A] text-[#1B2A4A] px-8 py-3.5 rounded-lg hover:bg-[#1B2A4A] hover:text-white transition-colors font-semibold text-base text-center">
+                  Pro Bono Initiative
+                </Link>
               </div>
             </div>
             <div className="hidden md:flex justify-center">
@@ -72,46 +75,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Pro Bono Initiative */}
-<section className="py-24 bg-[#F5F7FA]">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="text-center mb-16">
-      <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold text-[#1B2A4A] leading-tight tracking-tight">ADVISORA IMPACT</h2>
-      <p className="mt-6 text-lg md:text-xl text-[#475569] leading-relaxed">Free Legal Assistance for Those Who Need It Most</p>
-      <p className="mt-4 text-base text-[#667085] leading-relaxed">Advisora Impact is the pro bono and access-to-justice initiative of Advisora Connect Africa. It provides eligible individuals who cannot reasonably afford legal services with access to free, limited-scope legal assistance through our network of volunteer legal professionals.</p>
-    </div>
 
-    <div className="mb-16">
-      <h3 className="text-2xl md:text-3xl font-bold text-[#1B2A4A] mb-6">What Legal Assistance Do We Provide?</h3>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div className="flex items-start gap-3"><span className="w-6 h-6 rounded-[#1B2A4A] flex items-center justify-center text-white text-lg font-bold">1</span><div><h4 className="font-semibold text-[#1B2A4A]">Free Initial Legal Consultation</h4><p className="text-[#667085] text-sm">A one-off consultation to understand your legal problem, explain your rights and discuss available options and next steps.</p></div></div>
-          <div className="flex items-start gap-3"><span className="w-6 h-6 rounded-[#1B2A4A] flex items-center justify-center text-white text-lg font-bold">2</span><div><h4 className="font-semibold text-[#1B2A4A]">Legal Advice and Guidance</h4><p className="text-[#667085] text-sm">Practical legal guidance on specific issues, including your rights, obligations, remedies and available legal processes.</p></div></div>
-          <div className="flex items-start gap-3"><span className="w-6 h-6 rounded-[#1B2A4A] flex items-center justify-center text-white text-lg font-bold">3</span><div><h4 className="font-semibold text-[#1B2A4A]">Legal Document Review</h4><p className="text-[#667085] text-sm">Review of relevant legal documents and explanation of their legal implications.</p></div></div>
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-start gap-3"><span className="w-6 h-6 rounded-[#1B2A4A] flex items-center justify-center text-white text-lg font-bold">4</span><div><h4 className="font-semibold text-[#1B2A4A]">Basic Legal Document Preparation</h4><p className="text-[#667085] text-sm">Assistance with selected legal letters, complaints, responses and other agreed documents.</p></div></div>
-          <div className="flex items-start gap-3"><span className="w-6 h-6 rounded-[#1B2A4A] flex items-center justify-center text-white text-lg font-bold">5</span><div><h4 className="font-semibold text-[#1B2A4A]">Limited-Scope Representation</h4><p className="text-[#667085] text-sm">In selected cases, a volunteer lawyer may agree to assist with negotiations, mediation, meetings or court proceedings.</p></div></div>
-        </div>
-      </div>
 
-      <div className="mb-16"><h3 className="text-2xl md:text-3xl font-bold text-[#1B2A4A] mb-6">Our Priority Areas</h3><div className="grid md:grid-cols-2 gap-8"><div><h4 className="text-xl font-semibold text-[#1B2A4A] mb-4">Women and Children</h4><ul className="space-y-3 text-[#667085]"><li>Domestic violence and abuse.</li><li>Sexual abuse, harassment and exploitation.</li><li>Child abuse, neglect and safeguarding.</li><li>Child custody, maintenance and welfare matters involving genuine vulnerability or hardship.</li><li>Protection of the rights of women and children.</li></ul></div><div><h4 className="text-xl font-semibold text-[#1B2A4A] mb-4">Exceptional Hardship</h4><ul className="space-y-3 text-[#667085]"><li>Individuals facing exceptional hardship or urgent violations of their legal rights.</li></ul></div></div></div>
 
-      <div className="mb-16"><h3 className="text-2xl md:text-3xl font-bold text-[#1B2A4A] mb-6">How Much Will It Cost?</h3><p className="text-[#667085] text-lg mb-6">Approved assistance under Advisora Impact will be provided without professional fees to the eligible applicant, within the scope agreed for that assignment.</p><p className="text-[#667085] text-sm">However, any external expenses, statutory charges, filing fees, transport, expert fees or other disbursements must be disclosed and agreed in advance. Advisora Impact does not automatically undertake to fund these expenses.</p></div>
-
-      <div className="mb-16"><h3 className="text-2xl md:text-3xl font-bold text-[#1B2A4A] mb-6">How Do I Apply?</h3><p className="text-[#667085] text-lg mb-6">Complete our Pro Bono Support Application Form and provide sufficient information about your circumstances and the legal assistance you require.</p><p className="text-[#667085] text-sm">Every application will be assessed individually, taking into account financial circumstances, urgency, vulnerability, the nature and merits of the legal issue, and the availability of an appropriate volunteer lawyer.</p><p className="text-[#667085] text-sm">Approval for an initial consultation does not automatically guarantee further legal assistance or full representation.</p></div>
-    </div>
-  </div>
-</section>
-
-      {/* For Lawyers */}
-      <div>
-      </div>
-
-      <div className="mt-16 pt-16 border-t border-[#E5EAF0]">
-        <div className="flex flex-col sm:flex-row gap-4">
-        </div>
-      </div>
 
       <section className="py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
