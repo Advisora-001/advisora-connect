@@ -1,0 +1,1 @@
+const fs = require("fs"); const src = "c:/Users/Fejiro/AdvisoryConnect/server/src/utils/entitlements.ts"; const dst = "c:/Users/Fejiro/AdvisoryConnect/server/src/utils/entitlements_new.ts"; fs.copyFileSync(src, dst); console.log("Copied");

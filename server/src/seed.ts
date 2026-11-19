@@ -2,13 +2,167 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from './models/User';
 import LawyerProfile from './models/LawyerProfile';
+import ProfessionalCategory from './models/ProfessionalCategory';
+import Plan from './models/Plan';
 
 dotenv.config();
+
+const seedCategories = async () => {
+  const categories = [
+    {
+      key: 'legal',
+      label: 'Legal Services',
+      description: 'Legal professionals including lawyers, attorneys, and legal consultants.',
+      isActive: true,
+      specializations: [
+        'Corporate Law',
+        'Family Law',
+        'Property Law',
+        'Criminal Law',
+        'Employment Law',
+        'Intellectual Property',
+        'Tax Law',
+        'Immigration Law',
+      ],
+      registrationFields: [
+        { name: 'barNumber', type: 'text', required: true },
+        { name: 'stateOfCall', type: 'text', required: true },
+        { name: 'yearOfCall', type: 'number', required: true },
+        { name: 'practiceAreas', type: 'multiselect', required: true, options: ['Corporate Law', 'Family Law', 'Property Law', 'Criminal Law', 'Employment Law', 'Intellectual Property', 'Tax Law', 'Immigration Law'] },
+        { name: 'yearsOfExperience', type: 'number', required: false },
+      ],
+      verificationRequirements: {
+        requiredDocs: ['bar_certificate', 'government_id', 'professional_indemnity_insurance'],
+        criteria: ['Active bar membership', 'Good standing with bar association', 'No disciplinary actions'],
+      },
+      serviceTypes: ['consultation', 'document_review', 'document_preparation', 'representation'],
+      consultationModes: ['video', 'audio', 'in-person'],
+    },
+    {
+      key: 'accounting',
+      label: 'Accounting & Tax',
+      description: 'Accounting professionals including CPAs, tax consultants, and auditors.',
+      isActive: true,
+      specializations: [
+        'Tax Preparation',
+        'Bookkeeping',
+        'Audit & Assurance',
+        'Financial Planning',
+        'Corporate Accounting',
+      ],
+      registrationFields: [
+        { name: 'licenseNumber', type: 'text', required: true },
+        { name: 'certifyingBody', type: 'text', required: true },
+        { name: 'yearsOfExperience', type: 'number', required: false },
+      ],
+      verificationRequirements: {
+        requiredDocs: ['professional_license', 'government_id'],
+        criteria: ['Active professional license', 'Good standing with certifying body'],
+      },
+      serviceTypes: ['tax_preparation', 'bookkeeping', 'audit', 'financial_consultation'],
+      consultationModes: ['video', 'audio', 'in-person'],
+    },
+    {
+      key: 'tax',
+      label: 'Tax Consulting',
+      description: 'Tax specialists including tax advisors and enrolled agents.',
+      isActive: true,
+      specializations: [
+        'Personal Tax',
+        'Business Tax',
+        'International Tax',
+        'VAT & Indirect Tax',
+        'Tax Controversy',
+      ],
+      registrationFields: [
+        { name: 'taxIdNumber', type: 'text', required: true },
+        { name: 'certifyingBody', type: 'text', required: true },
+        { name: 'yearsOfExperience', type: 'number', required: false },
+      ],
+      verificationRequirements: {
+        requiredDocs: ['tax_certification', 'government_id'],
+        criteria: ['Valid tax certification', 'Good standing with tax authority'],
+      },
+      serviceTypes: ['tax_filing', 'tax_planning', 'tax_representation'],
+      consultationModes: ['video', 'audio'],
+    },
+  ];
+
+  for (const cat of categories) {
+    const existing = await ProfessionalCategory.findOne({ key: cat.key });
+    if (!existing) {
+      await ProfessionalCategory.create(cat);
+      console.log(`✅ Category seeded: ${cat.label} (${cat.key})`);
+    } else {
+      console.log(`⏭️  Category already exists: ${cat.label} (${cat.key})`);
+    }
+  }
+};
+
+const seedPlans = async () => {
+  const plans = [
+    {
+      key: 'basic',
+      name: 'Basic',
+      description: 'Free plan for individual professionals. Includes listing, search visibility, ordinary enquiries, and basic dashboard.',
+      isActive: true,
+      isFree: true,
+      billingInterval: 'monthly',
+      price: { amount: 0, currency: 'NGN' },
+      entitlements: {
+        listing: true,
+        searchVisibility: true,
+        enhancedPlacement: false,
+        appointmentManagement: false,
+        analytics: false,
+        enquiryManagement: true,
+      },
+      limits: { maxProfiles: 1, maxServices: 3, maxEnquiriesPerMonth: 50 },
+      firmPrice: { amount: 0, currency: 'NGN' },
+      includedSeats: 1,
+      additionalSeatPrice: { amount: 0, currency: 'NGN' },
+    },
+    {
+      key: 'premium',
+      name: 'Premium',
+      description: 'Premium plan with enhanced features. Not purchasable until configured and activated by an administrator.',
+      isActive: false,
+      isFree: false,
+      billingInterval: 'monthly',
+      price: { amount: 0, currency: 'NGN' },
+      entitlements: {
+        listing: true,
+        searchVisibility: true,
+        enhancedPlacement: true,
+        appointmentManagement: true,
+        analytics: true,
+        enquiryManagement: true,
+      },
+      limits: { maxProfiles: 1, maxServices: 10, maxEnquiriesPerMonth: 200 },
+      firmPrice: { amount: 0, currency: 'NGN' },
+      includedSeats: 3,
+      additionalSeatPrice: { amount: 0, currency: 'NGN' },
+    },
+  ];
+
+  for (const plan of plans) {
+    const existing = await Plan.findOne({ key: plan.key });
+    if (!existing) {
+      await Plan.create(plan);
+      console.log(`✅ Plan seeded: ${plan.name} (${plan.key})`);
+    } else {
+      console.log(`⏭️  Plan already exists: ${plan.name} (${plan.key})`);
+    }
+  }
+};
 
 const seed = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || '');
     console.log('MongoDB connected for seeding...');
+
+    await seedCategories();
+    await seedPlans();
 
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: 'admin@advisora.com' });

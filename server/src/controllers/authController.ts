@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import LawyerProfile from '../models/LawyerProfile';
+import ProfessionalCategory from '../models/ProfessionalCategory';
+import ProfessionalProfile from '../models/ProfessionalProfile';
 import LegalDocument from '../models/LegalDocument';
 import LegalAcceptance from '../models/LegalAcceptance';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
@@ -114,8 +116,19 @@ const register = async (req: Request, res: Response) => {
       emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
-    // If registering as lawyer, create a profile placeholder so updates work later
-    if (role === 'lawyer') {
+    // If registering with a category, create a ProfessionalProfile
+    const { category: categoryKey } = req.body;
+    if (categoryKey) {
+      const category = await ProfessionalCategory.findOne({ key: categoryKey, isActive: true });
+      if (!category) {
+        return res.status(400).json({ message: 'Invalid or inactive category key' });
+      }
+      await ProfessionalProfile.create({
+        userId: user._id,
+        category: category._id,
+      });
+    } else if (role === 'lawyer') {
+      // Backward compatibility: create LawyerProfile for legacy lawyer registrations
       await LawyerProfile.create({ userId: user._id });
     }
 

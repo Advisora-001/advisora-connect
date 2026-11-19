@@ -306,6 +306,56 @@ class ApiClient {
     return this.request<{ count: number; payouts: any[] }>('/admin/payouts');
   }
 
+  getMembershipConfig() {
+    return this.request<{ plans: any[]; feePolicies: any[] }>('/membership/admin/config');
+  }
+
+  getAdminProfessionalCategories() {
+    return this.request<{ categories: any[] }>('/categories/admin');
+  }
+
+  createProfessionalCategory(data: any) {
+    return this.request<any>('/categories', { method: 'POST', body: data });
+  }
+
+  updateProfessionalCategory(id: string, data: any) {
+    return this.request<any>(`/categories/${encodeURIComponent(id)}`, { method: 'PUT', body: data });
+  }
+
+  saveMembershipPlan(key: string, data: any) {
+    return this.request<any>(`/membership/admin/plans/${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      body: { ...data, key },
+    });
+  }
+
+  savePlatformFeePolicy(transactionType: string, data: any) {
+    return this.request<any>(`/membership/admin/fee-policies/${encodeURIComponent(transactionType)}`, {
+      method: 'PUT',
+      body: { ...data, transactionType },
+    });
+  }
+
+  getMyFirms() {
+    return this.request<{ firms: any[] }>('/firms/mine');
+  }
+
+  createFirm(data: { name: string; professionalProfileId: string }) {
+    return this.request<any>('/firms', { method: 'POST', body: data });
+  }
+
+  inviteFirmMember(firmId: string, data: { userId: string; professionalProfileId: string }) {
+    return this.request<any>(`/firms/${encodeURIComponent(firmId)}/members`, { method: 'POST', body: data });
+  }
+
+  acceptFirmInvitation(token: string) {
+    return this.request<any>('/firms/invitations/accept', { method: 'POST', body: { token } });
+  }
+
+  removeFirmMember(firmId: string, memberId: string) {
+    return this.request<any>(`/firms/${encodeURIComponent(firmId)}/members/${encodeURIComponent(memberId)}`, { method: 'DELETE' });
+  }
+
   processPayout(id: string, status: string, adminNote?: string) {
     return this.request<any>(`/admin/payouts/${id}`, { method: 'PUT', body: { status, adminNote } });
   }

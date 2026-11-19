@@ -9,6 +9,7 @@ import KanbanBoard from "@/components/admin/KanbanBoard";
 import VerificationCard from "@/components/admin/VerificationCard";
 import UserCard from "@/components/admin/UserCard";
 import LawyerProfileModal from "@/components/admin/LawyerProfileModal";
+import MembershipConfiguration from "@/components/admin/MembershipConfiguration";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -168,7 +169,7 @@ export default function AdminDashboard() {
           {activeSection === "reports" && (<div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Reports coming soon</p><p className="text-[#94A3B8] text-sm mt-2">Platform reports and insights will be available here</p></div></div>)}
 
           {/* Configuration */}
-          {activeSection === "configuration" && (<div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Configuration coming soon</p><p className="text-[#94A3B8] text-sm mt-2">Platform settings and configuration will be available here</p></div></div>)}
+          {activeSection === "configuration" && <MembershipConfiguration />}
 
           {/* Payouts */}
           {activeSection === "payouts" && (

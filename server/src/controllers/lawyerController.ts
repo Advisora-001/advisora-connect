@@ -3,6 +3,8 @@ import LawyerProfile from '../models/LawyerProfile';
 import User from '../models/User';
 import Appointment from '../models/Appointment';
 import Wallet from '../models/Wallet';
+import ProfessionalCategory from '../models/ProfessionalCategory';
+import ProfessionalProfile from '../models/ProfessionalProfile';
 import { AuthRequest } from '../middleware/auth';
 
 // @desc    Get all lawyers (with search & filters)
@@ -11,45 +13,140 @@ const getLawyers = async (req: Request, res: Response) => {
   try {
     const { practiceArea, location, state, experience, name, isAvailable } = req.query;
 
-    const query: any = { verificationStatus: 'verified' };
+    // Build LawyerProfile query
+    const lawyerQuery: any = { verificationStatus: 'verified' };
 
     if (practiceArea) {
-      query.practiceAreas = { $in: [practiceArea as string] };
+      lawyerQuery.practiceAreas = { $in: [practiceArea as string] };
     }
     if (location) {
-      query.city = { $regex: location as string, $options: 'i' };
+      lawyerQuery.city = { $regex: location as string, $options: 'i' };
     }
     if (state) {
-      query.state = state as string;
+      lawyerQuery.state = state as string;
     }
     if (isAvailable === 'true') {
-      query.isAvailable = true;
+      lawyerQuery.isAvailable = true;
     }
     if (experience) {
-      query.yearsOfExperience = { $gte: parseInt(experience as string) };
+      lawyerQuery.yearsOfExperience = { $gte: parseInt(experience as string) };
     }
 
-    // Sort: featured first, then by rating
-    let sortBy: any = { rating: -1 };
-    
-    const lawyers = await LawyerProfile.find(query)
-      .populate('userId', 'firstName lastName email avatar')
-      .sort({ 'featuredListing.isActive': -1, rating: -1 })
-      .limit(50);
+    // Build ProfessionalProfile query (category=legal, canonical listing)
+    const legalCategory = await ProfessionalCategory.findOne({ key: 'legal', isActive: true });
+    const profQuery: any = { verificationStatus: 'verified' };
+    if (legalCategory) profQuery.category = legalCategory._id;
+
+    // Apply same filters to ProfessionalProfile
+    if (location) {
+      profQuery.city = { $regex: location as string, $options: 'i' };
+    }
+    if (state) {
+      profQuery.state = state as string;
+    }
+    if (isAvailable === 'true') {
+      profQuery.isAvailable = true;
+    }
+    if (experience) {
+      profQuery.yearsOfExperience = { $gte: parseInt(experience as string) };
+    }
+
+    // Fetch both sources
+    const [lawyerProfiles, professionalProfiles] = await Promise.all([
+      LawyerProfile.find(lawyerQuery)
+        .populate('userId', 'firstName lastName email avatar')
+        .sort({ 'featuredListing.isActive': -1, rating: -1 })
+        .limit(50),
+      ProfessionalProfile.find(profQuery)
+        .populate('userId', 'firstName lastName email avatar')
+        .populate('category', 'key label')
+        .sort({ rating: -1 })
+        .limit(50),
+    ]);
+
+    // Build a set of userIds that have ProfessionalProfile (canonical)
+    const profUserIds = new Set(professionalProfiles.map((p: any) => p.userId?._id?.toString() || p.userId?.toString()));
+
+    // Filter LawyerProfiles to exclude those already represented by ProfessionalProfile
+    const uniqueLawyers = lawyerProfiles.filter((l: any) => {
+      const uid = l.userId?._id?.toString() || l.userId?.toString();
+      return !profUserIds.has(uid);
+    });
+
+    // Transform ProfessionalProfiles to lawyer directory format
+    const transformedPros = professionalProfiles.map((p: any) => {
+      const categoryData = p.categoryData || {};
+      return {
+        _id: p._id,
+        userId: p.userId,
+        photo: p.photo || '',
+        otherNames: categoryData.otherNames || '',
+        barNumber: categoryData.barNumber || '',
+        stateOfCall: categoryData.stateOfCall || '',
+        yearOfCall: categoryData.yearOfCall || 0,
+        practiceAreas: categoryData.practiceAreas || (p.specialization ? [p.specialization] : []),
+        bio: p.bio || '',
+        officeAddress: p.officeAddress || '',
+        city: p.city || '',
+        state: p.state || '',
+        languages: p.languages || [],
+        yearsOfExperience: p.yearsOfExperience || 0,
+        verificationStatus: p.verificationStatus,
+        verificationBadge: p.verificationBadge,
+        verificationDocs: p.verificationDocs || [],
+        rating: p.rating || 0,
+        reviewCount: p.reviewCount || 0,
+        consultationFee: categoryData.consultationFee || 0,
+        isAvailable: p.isAvailable,
+        availableDays: p.availableDays || [],
+        availableHours: p.availableHours || '9:00 AM - 5:00 PM',
+        availableFrom: p.availableFrom || '9:00 AM',
+        availableTo: p.availableTo || '5:00 PM',
+        onboardingAgreementAccepted: p.onboardingAgreementAccepted,
+        onboardingAgreementAcceptedAt: p.onboardingAgreementAcceptedAt,
+        accountName: p.accountName || '',
+        accountNumber: p.accountNumber || '',
+        bankName: p.bankName || '',
+        phone: p.phone || '',
+        services: p.services || [],
+        requireApproval: p.requireApproval,
+        declaration: p.declaration,
+        legacyLawyerProfileId: p.legacyLawyerProfileId,
+        categoryData: p.categoryData,
+        source: 'professional',
+        featuredListing: { isActive: false }, // ProfessionalProfile doesn't have featured listing yet
+      };
+    });
+
+    // Transform LawyerProfiles to include source flag
+    const transformedLawyers = uniqueLawyers.map((l: any) => {
+      const obj = l.toObject ? l.toObject() : l;
+      return { ...obj, source: 'legacy' };
+    });
+
+    // Merge and sort
+    let allLawyers = [...transformedPros, ...transformedLawyers];
 
     // If name search, filter by name
-    let filteredLawyers = lawyers;
     if (name) {
       const nameStr = (name as string).toLowerCase();
-      filteredLawyers = lawyers.filter((l: any) => {
-        const fullName = `${l.userId?.firstName} ${l.userId?.lastName}`.toLowerCase();
+      allLawyers = allLawyers.filter((l: any) => {
+        const fullName = `${l.userId?.firstName || ''} ${l.userId?.lastName || ''}`.toLowerCase();
         return fullName.includes(nameStr);
       });
     }
 
-    res.json({ count: filteredLawyers.length, lawyers: filteredLawyers });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+    // Sort: featured first (legacy), then by rating
+    allLawyers.sort((a: any, b: any) => {
+      const aFeatured = a.featuredListing?.isActive ? 1 : 0;
+      const bFeatured = b.featuredListing?.isActive ? 1 : 0;
+      if (bFeatured !== aFeatured) return bFeatured - aFeatured;
+      return (b.rating || 0) - (a.rating || 0);
+    });
+
+    res.json({ count: allLawyers.length, lawyers: allLawyers });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -62,6 +159,57 @@ const getLawyerById = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: 'Please log in to view lawyer profiles.', code: 'AUTH_REQUIRED' });
     }
 
+    // First try ProfessionalProfile (canonical listing)
+    let professional = await ProfessionalProfile.findById(req.params.id)
+      .populate('userId', 'firstName lastName email avatar phone')
+      .populate('category', 'key label specializations');
+
+    if (professional) {
+      const categoryData = professional.categoryData || {};
+      return res.json({
+        _id: professional._id,
+        userId: professional.userId,
+        photo: professional.photo || '',
+        otherNames: categoryData.otherNames || '',
+        barNumber: categoryData.barNumber || '',
+        stateOfCall: categoryData.stateOfCall || '',
+        yearOfCall: categoryData.yearOfCall || 0,
+        practiceAreas: categoryData.practiceAreas || (professional.specialization ? [professional.specialization] : []),
+        bio: professional.bio || '',
+        officeAddress: professional.officeAddress || '',
+        city: professional.city || '',
+        state: professional.state || '',
+        languages: professional.languages || [],
+        yearsOfExperience: professional.yearsOfExperience || 0,
+        verificationStatus: professional.verificationStatus,
+        verificationBadge: professional.verificationBadge,
+        verificationDocs: professional.verificationDocs || [],
+        rating: professional.rating || 0,
+        reviewCount: professional.reviewCount || 0,
+        consultationFee: categoryData.consultationFee || 0,
+        isAvailable: professional.isAvailable,
+        availableDays: professional.availableDays || [],
+        availableHours: professional.availableHours || '9:00 AM - 5:00 PM',
+        availableFrom: professional.availableFrom || '9:00 AM',
+        availableTo: professional.availableTo || '5:00 PM',
+        onboardingAgreementAccepted: professional.onboardingAgreementAccepted,
+        onboardingAgreementAcceptedAt: professional.onboardingAgreementAcceptedAt,
+        accountName: professional.accountName || '',
+        accountNumber: professional.accountNumber || '',
+        bankName: professional.bankName || '',
+        phone: professional.phone || '',
+        services: professional.services || [],
+        requireApproval: professional.requireApproval,
+        declaration: professional.declaration,
+        legacyLawyerProfileId: professional.legacyLawyerProfileId,
+        categoryData: professional.categoryData,
+        source: 'professional',
+        featuredListing: { isActive: false },
+        category: professional.category,
+      });
+    }
+
+    // Fall back to legacy LawyerProfile
     const lawyer = await LawyerProfile.findById(req.params.id)
       .populate('userId', 'firstName lastName email avatar phone');
 
@@ -70,7 +218,7 @@ const getLawyerById = async (req: AuthRequest, res: Response) => {
     }
 
     res.json(lawyer);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ message: 'Server error' });
   }
 };

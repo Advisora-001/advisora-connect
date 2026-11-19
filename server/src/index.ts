@@ -22,6 +22,10 @@ import legalRoutes from './routes/legalRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import blogRoutes from './routes/blogRoutes';
+import categoryRoutes from './routes/categoryRoutes';
+import professionalRoutes from './routes/professionalRoutes';
+import membershipRoutes from './routes/membershipRoutes';
+import firmRoutes from './routes/firmRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -69,6 +73,10 @@ app.use('/api/legal', legalRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/professionals', professionalRoutes);
+app.use('/api/membership', membershipRoutes);
+app.use('/api/firms', firmRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
