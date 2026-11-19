@@ -75,8 +75,8 @@ const testEmail = async (req: Request, res: Response) => {
 // @route   POST /api/auth/register
 const register = async (req: Request, res: Response) => {
   try {
-  const { email, password, firstName, lastName, phone, role: requestedRole, termsAccepted, policiesAccepted } = req.body;
-    const role = requestedRole === 'lawyer' ? 'lawyer' : 'client';
+  const { email, password, firstName, lastName, phone, role: requestedRole, termsAccepted, policiesAccepted, category } = req.body;
+    const role = requestedRole === 'lawyer' ? 'lawyer' : 'professional';
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
