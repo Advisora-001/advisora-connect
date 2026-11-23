@@ -6,7 +6,7 @@ const TOKEN_KEY = 'advisora_access_token';
 export const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
 export const clearStoredTokens = () => localStorage.removeItem(TOKEN_KEY);
 
-export const storeAuthData = (data: any) => {
+export const storeAuthData = (data: { accessToken?: string }) => {
   if (data.accessToken) {
     localStorage.setItem(TOKEN_KEY, data.accessToken);
   }
@@ -14,26 +14,18 @@ export const storeAuthData = (data: any) => {
 
 interface ApiOptions {
   method?: string;
-  body?: any;
+  body?: unknown;
   headers?: Record<string, string>;
   isFormData?: boolean;
 }
 
 class ApiClient {
-  // Track if user has explicitly logged out to prevent auto-refresh
   private _skipRefresh = false;
 
-  /**
-   * Set whether to skip auto-refresh on 401 errors.
-   * Called by AuthContext when user logs out or logs in.
-   */
   setSkipRefresh(skip: boolean): void {
     this._skipRefresh = skip;
   }
 
-  /**
-   * Check if auto-refresh should be skipped.
-   */
   private shouldSkipRefresh(): boolean {
     return this._skipRefresh;
   }
@@ -60,7 +52,7 @@ class ApiClient {
       };
       config.body = JSON.stringify(body);
     } else if (body && isFormData) {
-      config.body = body;
+      config.body = body as FormData;
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, config);
@@ -88,6 +80,10 @@ class ApiClient {
     return response.json();
   }
 
+  // ============================================
+  // Auth
+  // ============================================
+
   refresh() {
     return this.request<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
       method: 'POST',
@@ -95,19 +91,53 @@ class ApiClient {
   }
 
   getMe() {
-    return this.request<{ user: any; profile?: any }>('/auth/me');
+    return this.request<{
+      user: {
+        _id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone?: string;
+        role: 'client' | 'lawyer' | 'professional' | 'admin';
+        avatar?: string;
+        isVerified?: boolean;
+      };
+      profile?: unknown;
+    }>('/auth/me');
   }
 
-  // Auth
-  register(data: any) {
+  register(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: 'client' | 'lawyer' | 'professional';
+    termsAccepted: boolean;
+    policiesAccepted: boolean;
+  }) {
     return this.request<{ _id: string; role: string; message?: string }>('/auth/register', {
       method: 'POST',
       body: data,
     });
   }
 
-  login(data: any) {
-    return this.request<any>('/auth/login', {
+  login(data: { email: string; password: string }) {
+    return this.request<{
+      user: {
+        _id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone?: string;
+        role: 'client' | 'lawyer' | 'professional' | 'admin';
+        avatar?: string;
+        isVerified?: boolean;
+      };
+      profile?: unknown;
+      accessToken?: string;
+      refreshToken?: string;
+      message?: string;
+    }>('/auth/login', {
       method: 'POST',
       body: data,
     }).then(res => {
@@ -132,276 +162,843 @@ class ApiClient {
 
   logout() {
     clearStoredTokens();
-    // After logout, ensure we skip auto-refresh
     this.setSkipRefresh(true);
     return this.request<{ message: string }>('/auth/logout', { method: 'POST' });
   }
 
   updateUserProfile(data: { firstName?: string; lastName?: string; phone?: string; avatar?: string }) {
-    return this.request<{ message: string; user: any }>('/auth/profile', { method: 'PUT', body: data });
+    return this.request<{ message: string; user: unknown }>('/auth/profile', { method: 'PUT', body: data });
   }
 
-  // Lawyers
-  getLawyers(params?: Record<string, string>) {
+  // ============================================
+  // Professional Categories
+  // ============================================
+
+  getProfessionalCategories() {
+    return this.request<{ categories: Array<{
+      _id: string;
+      key: string;
+      label: string;
+      description?: string;
+      isActive: boolean;
+      specializations: string[];
+      registrationFields: Array<{
+        name: string;
+        type: 'text' | 'number' | 'select' | 'multiselect' | 'date' | 'file';
+        required: boolean;
+        options?: string[];
+      }>;
+      verificationRequirements: {
+        requiredDocs: string[];
+        criteria: string[];
+      };
+      serviceTypes: string[];
+      consultationModes: ('video' | 'audio' | 'in-person')[];
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/categories');
+  }
+
+  getAdminProfessionalCategories() {
+    return this.request<{ categories: Array<{
+      _id: string;
+      key: string;
+      label: string;
+      description?: string;
+      isActive: boolean;
+      specializations: string[];
+      registrationFields: Array<{
+        name: string;
+        type: 'text' | 'number' | 'select' | 'multiselect' | 'date' | 'file';
+        required: boolean;
+        options?: string[];
+      }>;
+      verificationRequirements: {
+        requiredDocs: string[];
+        criteria: string[];
+      };
+      serviceTypes: string[];
+      consultationModes: ('video' | 'audio' | 'in-person')[];
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/categories/admin');
+  }
+
+  createProfessionalCategory(data: {
+    key: string;
+    label: string;
+    description?: string;
+    specializations: string[];
+    registrationFields: Array<{
+      name: string;
+      type: 'text' | 'number' | 'select' | 'multiselect' | 'date' | 'file';
+      required: boolean;
+      options?: string[];
+    }>;
+    verificationRequirements: {
+      requiredDocs: string[];
+      criteria: string[];
+    };
+    serviceTypes: string[];
+    consultationModes: ('video' | 'audio' | 'in-person')[];
+  }) {
+    return this.request<{ category: unknown }>('/categories', { method: 'POST', body: data });
+  }
+
+  updateProfessionalCategory(id: string, data: unknown) {
+    return this.request<{ category: unknown }>(`/categories/${encodeURIComponent(id)}`, { method: 'PUT', body: data });
+  }
+
+  // ============================================
+  // Professionals (Lawyers, Accountants, Tax Consultants)
+  // ============================================
+
+  getProfessionals(params?: Record<string, string>) {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return this.request<{ count: number; lawyers: any[] }>(`/lawyers${query}`);
+    return this.request<{
+      count: number;
+      professionals: Array<{
+        _id: string;
+        userId: {
+          _id: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          avatar?: string;
+        };
+        photo?: string;
+        city: string;
+        state: string;
+        practiceAreas?: string[];
+        specializations?: string[];
+        verificationBadge: boolean;
+        verificationStatus: 'pending' | 'verified' | 'rejected';
+        rating: number;
+        reviewCount: number;
+        consultationFee: number;
+        isAvailable: boolean;
+        availableDays: string[];
+        availableHours?: string;
+        subscription?: { plan: string; status: string };
+        category?: { key: string; label: string };
+      }>;
+    }>(`/professionals${query}`);
   }
 
-  getLawyersList() {
-    return this.request<any[]>('/lawyers/list');
+  // Legacy alias for backward compatibility
+  getLawyers(params?: Record<string, string>) {
+    return this.getProfessionals(params);
   }
 
+  getProfessionalById(id: string) {
+    return this.request<{
+      _id: string;
+      userId: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        avatar?: string;
+      };
+      photo?: string;
+      specialization?: string;
+      bio?: string;
+      officeAddress?: string;
+      city: string;
+      state: string;
+      languages: string[];
+      yearsOfExperience?: number;
+      verificationStatus: 'pending' | 'verified' | 'rejected';
+      verificationBadge: boolean;
+      verificationDocs: string[];
+      rating: number;
+      reviewCount: number;
+      isAvailable: boolean;
+      availableDays: string[];
+      availableHours?: string;
+      availableFrom?: string;
+      availableTo?: string;
+      onboardingAgreementAccepted: boolean;
+      onboardingAgreementAcceptedAt?: string;
+      accountName?: string;
+      accountNumber?: string;
+      bankName?: string;
+      phone?: string;
+      services: Array<{
+        name: string;
+        duration: number;
+        price: number;
+        type: 'video' | 'audio' | 'in-person';
+      }>;
+      requireApproval: boolean;
+      declaration?: {
+        informationAccurate: boolean;
+        qualifiedToPractise: boolean;
+        noDisciplinaryAction: boolean;
+        declaredAt?: string;
+      };
+      // Legacy fields for backward compatibility
+      practiceAreas?: string[];
+      specializations?: string[];
+      consultationFee?: number;
+      subscription?: { plan: string; status: string; startDate?: string; endDate?: string };
+      category?: {
+        _id: string;
+        key: string;
+        label: string;
+        specializations?: string[];
+        registrationFields?: Array<{
+          name: string;
+          type: 'text' | 'number' | 'select' | 'multiselect' | 'date' | 'file';
+          required: boolean;
+          options?: string[];
+        }>;
+        verificationRequirements?: {
+          requiredDocs: string[];
+          criteria: string[];
+        };
+        serviceTypes?: string[];
+        consultationModes?: ('video' | 'audio' | 'in-person')[];
+      };
+      categoryData?: Record<string, unknown>;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/professionals/${id}`);
+  }
+
+  // Legacy alias
   getLawyerById(id: string) {
-    return this.request<any>(`/lawyers/${id}`);
+    return this.getProfessionalById(id);
   }
 
+  getProfessionalAvailability(id: string, date: string) {
+    return this.request<{
+      slots: string[];
+      timezone: string;
+      date: string;
+    }>(`/professionals/${id}/availability?date=${encodeURIComponent(date)}`);
+  }
+
+  // Legacy alias
   getLawyerAvailability(id: string, date: string) {
-    return this.request<any>(`/lawyers/${id}/availability?date=${encodeURIComponent(date)}`);
+    return this.getProfessionalAvailability(id, date);
   }
 
-  updateLawyerProfile(data: any) {
-    return this.request<any>('/lawyers/profile', { method: 'PUT', body: data });
+  updateProfessionalProfile(data: unknown) {
+    return this.request<{ profile: unknown }>('/professionals/profile', { method: 'PUT', body: data });
   }
 
-  submitVerification(data: any) {
-    return this.request<any>('/lawyers/verify', { method: 'POST', body: data });
+  // Legacy alias
+  updateLawyerProfile(data: unknown) {
+    return this.updateProfessionalProfile(data);
+  }
+
+  submitProfessionalVerification(data: {
+    category: string;
+    specialization?: string;
+    categoryData?: Record<string, unknown>;
+    declaration: {
+      informationAccurate: boolean;
+      qualifiedToPractise: boolean;
+      noDisciplinaryAction: boolean;
+    };
+  }) {
+    return this.request<{ profile: unknown }>('/professionals/verify', { method: 'POST', body: data });
+  }
+
+  // Legacy alias
+  submitVerification(data: unknown) {
+    return this.submitProfessionalVerification(data as Parameters<typeof this.submitProfessionalVerification>[0]);
   }
 
   uploadVerificationDocs(formData: FormData) {
-    return this.request<any>('/lawyers/verify-upload', {
+    return this.request<{ docs: string[] }>('/professionals/verify-upload', {
       method: 'POST',
       body: formData,
       isFormData: true,
     });
   }
 
-  // Leads
-  createLead(data: any) {
-    return this.request<any>('/leads', { method: 'POST', body: data });
+  // ============================================
+  // Leads / Enquiries
+  // ============================================
+
+  createLead(data: {
+    lawyerId: string;
+    enquiryMessage: string;
+    clientName: string;
+    clientEmail: string;
+    clientPhone?: string;
+  }) {
+    return this.request<{ lead: unknown }>('/leads', { method: 'POST', body: data });
   }
 
-  createBookingRequest(data: any) {
-    return this.request<any>('/leads/book-request', { method: 'POST', body: data });
+  createBookingRequest(data: {
+    lawyerId: string;
+    service: {
+      name: string;
+      duration: number;
+      price: number;
+      type: 'video' | 'audio' | 'in-person';
+    };
+    date: string;
+    timeSlot: string;
+    duration: number;
+    consultationType: 'video' | 'audio' | 'in-person';
+    caseSummary?: string;
+    clientName: string;
+    clientEmail: string;
+    clientPhone?: string;
+  }) {
+    return this.request<{ appointment: unknown; paymentBreakdown: unknown }>('/leads/book-request', { method: 'POST', body: data });
   }
 
-  respondToLead(id: string, status: string) {
-    return this.request<any>(`/leads/${id}/respond`, { method: 'PUT', body: { status } });
+  respondToLead(id: string, status: 'accepted' | 'declined') {
+    return this.request<{ lead: unknown }>(`/leads/${id}/respond`, { method: 'PUT', body: { status } });
   }
 
   getLeads() {
-    return this.request<{ count: number; leads: any[] }>('/leads');
+    return this.request<{ count: number; leads: Array<{
+      _id: string;
+      lawyerId: string;
+      clientId?: string;
+      clientName: string;
+      clientEmail: string;
+      clientPhone?: string;
+      enquiryMessage: string;
+      status: 'pending' | 'accepted' | 'declined' | 'booked';
+      paymentStatus: 'unpaid' | 'paid' | 'refunded';
+      bookingContext?: {
+        service: { name: string; duration: number; price: number; type: string };
+        date: string;
+        timeSlot: string;
+        duration: number;
+        consultationType: string;
+      };
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/leads');
   }
 
   getMyEnquiries() {
-    return this.request<{ count: number; leads: any[] }>('/leads/my-enquiries');
+    return this.request<{ count: number; leads: Array<{
+      _id: string;
+      lawyerId: string;
+      clientId?: string;
+      clientName: string;
+      clientEmail: string;
+      clientPhone?: string;
+      enquiryMessage: string;
+      status: 'pending' | 'accepted' | 'declined' | 'booked';
+      paymentStatus: 'unpaid' | 'paid' | 'refunded';
+      bookingContext?: {
+        service: { name: string; duration: number; price: number; type: string };
+        date: string;
+        timeSlot: string;
+        duration: number;
+        consultationType: string;
+      };
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/leads/my-enquiries');
   }
 
-  bookConsultation(id: string, data: any) {
-    return this.request<any>(`/leads/${id}/book`, { method: 'POST', body: data });
+  bookConsultation(id: string, data: {
+    date: string;
+    timeSlot: string;
+    duration: number;
+    consultationType: 'video' | 'audio' | 'in-person';
+  }) {
+    return this.request<{ appointment: unknown; paymentBreakdown: unknown }>(`/leads/${id}/book`, { method: 'POST', body: data });
   }
 
+  // ============================================
   // Payments
-  initializePayment(data: any) {
-    return this.request<any>('/payments/initialize', { method: 'POST', body: data });
+  // ============================================
+
+  initializePayment(data: {
+    appointmentId: string;
+    amount: number;
+    email: string;
+    metadata?: Record<string, string>;
+  }) {
+    return this.request<{
+      authorizationUrl: string;
+      accessCode: string;
+      reference: string;
+    }>('/payments/initialize', { method: 'POST', body: data });
   }
 
-  verifyPayment(data: any) {
-    return this.request<any>('/payments/verify', { method: 'POST', body: data });
+  verifyPayment(data: unknown) {
+    return this.request<unknown>('/payments/verify', { method: 'POST', body: data });
   }
 
   verifyEmailAndStore(token: string) {
-    return this.request<any>(`/auth/verify-email/${token}`).then(res => {
+    return this.request<{
+      user: unknown;
+      profile?: unknown;
+      accessToken?: string;
+      refreshToken?: string;
+    }>(`/auth/verify-email/${token}`).then(res => {
       if (res.accessToken) {
         storeAuthData(res);
-        // Email verification logs the user in, so allow auto-refresh
         this.setSkipRefresh(false);
       }
       return res;
     });
   }
 
+  // ============================================
+  // Professional Profile Extras
+  // ============================================
+
   acceptOnboardingAgreement() {
-    return this.request<any>('/lawyers/onboarding/accept', { method: 'POST' });
+    return this.request<{ message: string }>('/professionals/onboarding/accept', { method: 'POST' });
   }
 
   uploadPhoto(formData: FormData) {
-    return this.request<any>('/lawyers/upload-photo', {
+    return this.request<{ photo: string }>('/professionals/upload-photo', {
       method: 'POST',
       body: formData,
       isFormData: true,
     });
   }
 
-  submitDeclaration(data: any) {
-    return this.request<any>('/lawyers/declaration', { method: 'POST', body: data });
+  submitDeclaration(data: {
+    informationAccurate: boolean;
+    qualifiedToPractise: boolean;
+    noDisciplinaryAction: boolean;
+  }) {
+    return this.request<{ declaration: unknown }>('/professionals/declaration', { method: 'POST', body: data });
   }
 
+  // ============================================
   // Wallet
+  // ============================================
+
   getWallet() {
-    return this.request<{ wallet: any }>('/lawyers/wallet');
+    return this.request<{
+      wallet: {
+        balance: number;
+        totalEarned: number;
+        pendingBalance: number;
+        transactions: Array<{
+          _id: string;
+          type: 'credit' | 'debit';
+          amount: number;
+          description: string;
+          reference?: string;
+          createdAt: string;
+        }>;
+      };
+    }>('/professionals/wallet');
   }
 
   requestPayout(amount: number) {
-    return this.request<any>('/lawyers/wallet/payout-request', { method: 'POST', body: { amount } });
+    return this.request<{ message: string; payout: unknown }>('/professionals/wallet/payout-request', { method: 'POST', body: { amount } });
   }
 
+  // ============================================
   // Appointments
+  // ============================================
+
   getMyAppointments() {
-    return this.request<any>('/appointments/my-appointments');
+    return this.request<{ appointments: Array<{
+      _id: string;
+      lawyerId?: {
+        _id: string;
+        userId: { firstName: string; lastName: string; email: string };
+      };
+      clientId?: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+      date: string;
+      timeSlot: string;
+      duration: number;
+      consultationType: string;
+      consultationFee: number;
+      platformFee: number;
+      totalAmount: number;
+      status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+      paymentStatus: 'pending' | 'paid' | 'refunded';
+      meetingLink?: string;
+      completionSource?: string;
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/appointments/my-appointments');
   }
 
   cancelAppointment(id: string) {
-    return this.request<any>('/appointments/' + id + '/cancel', { method: 'PUT' });
+    return this.request<{ message: string }>(`/appointments/${id}/cancel`, { method: 'PUT' });
   }
 
+  getProfessionalAppointments() {
+    return this.request<{ appointments: Array<{
+      _id: string;
+      lawyerId?: {
+        _id: string;
+        userId: { firstName: string; lastName: string; email: string };
+      };
+      clientId?: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+      date: string;
+      timeSlot: string;
+      duration: number;
+      consultationType: string;
+      consultationFee: number;
+      platformFee: number;
+      totalAmount: number;
+      status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+      paymentStatus: 'pending' | 'paid' | 'refunded';
+      meetingLink?: string;
+      completionSource?: string;
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/appointments/professional-appointments');
+  }
+
+  // Legacy alias
   getLawyerAppointments() {
-    return this.request<any>('/appointments/lawyer-appointments');
+    return this.getProfessionalAppointments();
   }
 
   generateMeetingLink(appointmentId: string) {
-    return this.request<any>(`/appointments/${appointmentId}/generate-meeting`, { method: 'POST' });
+    return this.request<{ meetingLink?: string; message?: string }>(`/appointments/${appointmentId}/generate-meeting`, { method: 'POST' });
   }
 
   setMeetingLink(appointmentId: string, meetingLink: string) {
-    return this.request<any>(`/appointments/${appointmentId}/meeting-link`, { method: 'PUT', body: { meetingLink } });
+    return this.request<{ message: string }>(`/appointments/${appointmentId}/meeting-link`, { method: 'PUT', body: { meetingLink } });
   }
 
   completeAppointment(appointmentId: string) {
-    return this.request<any>(`/appointments/${appointmentId}/complete`, { method: 'PUT' });
+    return this.request<{ message: string }>(`/appointments/${appointmentId}/complete`, { method: 'PUT' });
   }
 
+  // ============================================
   // Admin
+  // ============================================
+
   getPendingVerifications() {
-    return this.request<{ count: number; lawyers: any[] }>(
-      '/admin/lawyers/pending',
-    );
+    return this.request<{ count: number; professionals: Array<{
+      _id: string;
+      userId: { _id: string; firstName: string; lastName: string; email: string };
+      verificationStatus: 'pending' | 'verified' | 'rejected';
+      category?: { key: string; label: string };
+      createdAt: string;
+    }> }>('/admin/professionals/pending');
   }
 
+  verifyProfessional(id: string, status: 'verified' | 'rejected') {
+    return this.request<{ professional: unknown }>(`/admin/professionals/${id}/verify`, { method: 'PUT', body: { status } });
+  }
+
+  // Legacy alias
   verifyLawyer(id: string, status: string) {
-    return this.request<any>(`/admin/lawyers/${id}/verify`, { method: 'PUT', body: { status } });
+    return this.verifyProfessional(id, status as 'verified' | 'rejected');
   }
 
+  getProfessionalProfile(id: string) {
+    return this.request<{ professional: unknown }>(`/admin/professionals/${id}`);
+  }
+
+  // Legacy alias
   getLawyerProfile(id: string) {
-    return this.request<any>(`/admin/lawyers/${id}`);
+    return this.getProfessionalProfile(id);
   }
 
   getAdminUsers() {
-
-    return this.request<{ count: number; users: any[] }>("/admin/users");
+    return this.request<{ count: number; users: Array<{
+      _id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: 'client' | 'lawyer' | 'professional' | 'admin';
+      isActive: boolean;
+      isVerified: boolean;
+      createdAt: string;
+      profile?: unknown;
+    }> }>('/admin/users');
   }
 
   toggleUserStatus(id: string) {
-    return this.request<any>(`/admin/users/${id}/toggle-status`, { method: 'PUT' });
+    return this.request<{ user: unknown }>(`/admin/users/${id}/toggle-status`, { method: 'PUT' });
   }
 
   getAnalytics() {
-    return this.request<any>('/admin/analytics');
+    return this.request<{
+      totalLawyers: number;
+      verifiedLawyers: number;
+      pendingLawyers: number;
+      totalClients: number;
+      totalLeads: number;
+      paidLeads: number;
+      activeSubscriptions: number;
+      featuredActive: number;
+    }>('/admin/analytics');
   }
 
   getRevenue() {
-    return this.request<{ transactions: any[]; subscriptions: any[]; summary: any }>('/admin/revenue');
+    return this.request<{
+      transactions: Array<{
+        _id: string;
+        clientId?: { firstName: string; lastName: string };
+        lawyerId?: { userId: { firstName: string; lastName: string } };
+        amount: number;
+        platformFee: number;
+        lawyerAmount: number;
+        status: string;
+        createdAt: string;
+      }>;
+      subscriptions: Array<{
+        _id: string;
+        userId?: { firstName: string; lastName: string };
+        plan: string;
+        amount: number;
+        status: string;
+        createdAt: string;
+      }>;
+      summary: {
+        totalRevenue: number;
+        totalPlatformFees: number;
+        totalLawyerPayouts: number;
+        totalSubscriptionRevenue: number;
+        totalPendingPayouts: number;
+      };
+    }>('/admin/revenue');
   }
 
   getPayouts() {
-    return this.request<{ count: number; payouts: any[] }>('/admin/payouts');
+    return this.request<{ count: number; payouts: Array<{
+      _id: string;
+      lawyerId: { _id: string; userId: { firstName: string; lastName: string; email: string } };
+      amount: number;
+      bankName: string;
+      accountNumber: string;
+      accountName: string;
+      status: 'pending' | 'approved' | 'processed' | 'rejected';
+      adminNote?: string;
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/admin/payouts');
   }
 
   getMembershipConfig() {
-    return this.request<{ plans: any[]; feePolicies: any[] }>('/membership/admin/config');
+    return this.request<{
+      plans: Array<{
+        key: string;
+        name: string;
+        description: string;
+        isActive: boolean;
+        isFree: boolean;
+        billingInterval: 'monthly' | 'yearly';
+        price: { amount: number; currency: string };
+        firmPrice: { amount: number; currency: string };
+        entitlements: {
+          listing: boolean;
+          searchVisibility: boolean;
+          enhancedPlacement: boolean;
+          appointmentManagement: boolean;
+          analytics: boolean;
+          enquiryManagement: boolean;
+          documentStorage?: boolean;
+          crm?: boolean;
+          teamManagement?: boolean;
+          prioritySupport?: boolean;
+        };
+        limits: { maxProfiles: number; maxServices: number; maxEnquiriesPerMonth: number };
+        includedSeats: number;
+        additionalSeatPrice: { amount: number; currency: string };
+      }>;
+      feePolicies: Array<{
+        transactionType: string;
+        feeType: 'fixed' | 'percentage';
+        fixedAmount: number;
+        percentage: number;
+        isActive: boolean;
+      }>;
+    }>('/membership/admin/config');
   }
 
-  getAdminProfessionalCategories() {
-    return this.request<{ categories: any[] }>('/categories/admin');
-  }
-
-  createProfessionalCategory(data: any) {
-    return this.request<any>('/categories', { method: 'POST', body: data });
-  }
-
-  updateProfessionalCategory(id: string, data: any) {
-    return this.request<any>(`/categories/${encodeURIComponent(id)}`, { method: 'PUT', body: data });
-  }
-
-  saveMembershipPlan(key: string, data: any) {
-    return this.request<any>(`/membership/admin/plans/${encodeURIComponent(key)}`, {
+  saveMembershipPlan(key: string, data: Record<string, unknown>) {
+    return this.request<{ plan: unknown }>(`/membership/admin/plans/${encodeURIComponent(key)}`, {
       method: 'PUT',
       body: { ...data, key },
     });
   }
 
-  savePlatformFeePolicy(transactionType: string, data: any) {
-    return this.request<any>(`/membership/admin/fee-policies/${encodeURIComponent(transactionType)}`, {
+  savePlatformFeePolicy(transactionType: string, data: Record<string, unknown>) {
+    return this.request<{ policy: unknown }>(`/membership/admin/fee-policies/${encodeURIComponent(transactionType)}`, {
       method: 'PUT',
       body: { ...data, transactionType },
     });
   }
 
   getMyFirms() {
-    return this.request<{ firms: any[] }>('/firms/mine');
+    return this.request<{ firms: Array<{
+      _id: string;
+      name: string;
+      ownerId: string;
+      professionalProfileId: string;
+      members: Array<{
+        userId: string;
+        professionalProfileId: string;
+        role: 'owner' | 'admin' | 'member';
+        joinedAt: string;
+      }>;
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/firms/mine');
   }
 
   createFirm(data: { name: string; professionalProfileId: string }) {
-    return this.request<any>('/firms', { method: 'POST', body: data });
+    return this.request<{ firm: unknown }>('/firms', { method: 'POST', body: data });
   }
 
   inviteFirmMember(firmId: string, data: { userId: string; professionalProfileId: string }) {
-    return this.request<any>(`/firms/${encodeURIComponent(firmId)}/members`, { method: 'POST', body: data });
+    return this.request<{ member: unknown }>(`/firms/${encodeURIComponent(firmId)}/members`, { method: 'POST', body: data });
   }
 
   acceptFirmInvitation(token: string) {
-    return this.request<any>('/firms/invitations/accept', { method: 'POST', body: { token } });
+    return this.request<{ firm: unknown }>('/firms/invitations/accept', { method: 'POST', body: { token } });
   }
 
   removeFirmMember(firmId: string, memberId: string) {
-    return this.request<any>(`/firms/${encodeURIComponent(firmId)}/members/${encodeURIComponent(memberId)}`, { method: 'DELETE' });
+    return this.request<{ message: string }>(`/firms/${encodeURIComponent(firmId)}/members/${encodeURIComponent(memberId)}`, { method: 'DELETE' });
   }
 
   processPayout(id: string, status: string, adminNote?: string) {
-    return this.request<any>(`/admin/payouts/${id}`, { method: 'PUT', body: { status, adminNote } });
+    return this.request<{ payout: unknown }>(`/admin/payouts/${id}`, { method: 'PUT', body: { status, adminNote } });
   }
 
+  // ============================================
   // Reviews
+  // ============================================
+
+  getProfessionalReviews(professionalId: string) {
+    return this.request<{
+      reviews: Array<{
+        _id: string;
+        lawyerId: string;
+        clientId: { _id: string; firstName: string; lastName: string };
+        rating: number;
+        comment?: string;
+        createdAt: string;
+      }>;
+      total: number;
+      averageRating: number;
+    }>(`/reviews/professional/${professionalId}`);
+  }
+
+  // Legacy alias
   getLawyerReviews(lawyerId: string) {
-    return this.request<{ reviews: any[]; total: number; averageRating: number }>("/reviews/lawyer/" + lawyerId);
+    return this.getProfessionalReviews(lawyerId);
   }
 
   createReview(data: { lawyerId: string; rating: number; comment?: string }) {
-    return this.request<any>("/reviews", { method: "POST", body: data });
+    return this.request<{ review: unknown }>('/reviews', { method: 'POST', body: data });
   }
 
   getMyReviews() {
-    return this.request<{ reviews: any[] }>("/reviews/mine");
+    return this.request<{ reviews: Array<{
+      _id: string;
+      lawyerId: string;
+      clientId: { _id: string; firstName: string; lastName: string };
+      rating: number;
+      comment?: string;
+      createdAt: string;
+    }> }>('/reviews/mine');
   }
 
+  // ============================================
   // Documents
+  // ============================================
+
   uploadDocument(formData: FormData) {
-    return this.request<any>('/documents', { method: 'POST', body: formData, isFormData: true });
+    return this.request<{ document: unknown }>('/documents', { method: 'POST', body: formData, isFormData: true });
   }
 
   getDocuments() {
-    return this.request<{ count: number; documents: any[] }>('/documents');
+    return this.request<{ count: number; documents: Array<{
+      _id: string;
+      userId: string;
+      fileName: string;
+      fileUrl: string;
+      fileType: string;
+      fileSize: number;
+      category?: string;
+      sharedWith: string[];
+      expiresAt?: string;
+      createdAt: string;
+    }> }>('/documents');
   }
 
   shareDocument(id: string, userId: string) {
-    return this.request<any>(`/documents/${id}/share`, { method: 'POST', body: { userId } });
+    return this.request<{ message: string }>(`/documents/${id}/share`, { method: 'POST', body: { userId } });
   }
 
+  // ============================================
   // Notifications
+  // ============================================
+
   getNotifications() {
-    return this.request<{ notifications: any[]; unreadCount: number }>('/notifications');
+    return this.request<{
+      notifications: Array<{
+        _id: string;
+        userId: string;
+        title: string;
+        message: string;
+        type: 'info' | 'success' | 'warning' | 'error';
+        read: boolean;
+        actionUrl?: string;
+        createdAt: string;
+      }>;
+      unreadCount: number;
+    }>('/notifications');
   }
 
   markNotificationsRead(ids?: string[]) {
     return this.request<{ message: string }>('/notifications/mark-read', { method: 'PUT', body: { ids } });
   }
 
+  // ============================================
   // Legal Documents
+  // ============================================
+
   getActiveLegalDocuments() {
-    return this.request<{ count: number; documents: any[] }>('/legal');
+    return this.request<{ count: number; documents: Array<{
+      _id: string;
+      slug: string;
+      title: string;
+      content: string;
+      version: string;
+      isActive: boolean;
+      category?: string;
+      requiredForRoles: string[];
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/legal');
   }
 
   getLegalDocumentBySlug(slug: string) {
-    return this.request<any>(`/legal/${slug}`);
+    return this.request<{
+      _id: string;
+      slug: string;
+      title: string;
+      content: string;
+      version: string;
+      isActive: boolean;
+      category?: string;
+      requiredForRoles: string[];
+      createdAt: string;
+      updatedAt: string;
+    }>(`/legal/${slug}`);
   }
 
   acceptLegalDocument(slug: string) {
@@ -409,31 +1006,60 @@ class ApiClient {
   }
 
   getMyLegalAcceptances() {
-    return this.request<{ count: number; acceptances: any[] }>('/legal/acceptances/mine');
+    return this.request<{ count: number; acceptances: Array<{
+      slug: string;
+      version: string;
+      acceptedAt: string;
+    }> }>('/legal/acceptances/mine');
   }
 
   getLegalAcceptanceStatus() {
-    return this.request<{ allAccepted: boolean; documents: any[] }>('/legal/acceptances/status');
+    return this.request<{ allAccepted: boolean; documents: Array<{
+      slug: string;
+      title: string;
+      version: string;
+      accepted: boolean;
+    }> }>('/legal/acceptances/status');
   }
 
   // Admin - Legal Documents
-  createLegalDocument(data: any) {
-    return this.request<any>('/legal/admin', { method: 'POST', body: data });
+  createLegalDocument(data: unknown) {
+    return this.request<{ document: unknown }>('/legal/admin', { method: 'POST', body: data });
   }
 
-  updateLegalDocument(id: string, data: any) {
-    return this.request<any>(`/legal/admin/${id}`, { method: 'PUT', body: data });
+  updateLegalDocument(id: string, data: unknown) {
+    return this.request<{ document: unknown }>(`/legal/admin/${id}`, { method: 'PUT', body: data });
   }
 
   getAllLegalDocuments() {
-    return this.request<{ count: number; documents: any[] }>('/legal/admin');
+    return this.request<{ count: number; documents: Array<{
+      _id: string;
+      slug: string;
+      title: string;
+      content: string;
+      version: string;
+      isActive: boolean;
+      category?: string;
+      requiredForRoles: string[];
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/legal/admin');
   }
 
   getLegalAcceptanceStats() {
-    return this.request<{ stats: any[] }>('/legal/admin/acceptance-stats');
+    return this.request<{ stats: Array<{
+      slug: string;
+      title: string;
+      totalUsers: number;
+      acceptedCount: number;
+      acceptanceRate: number;
+    }> }>('/legal/admin/acceptance-stats');
   }
 
+  // ============================================
   // Blog (public)
+  // ============================================
+
   getBlogPosts(params?: { category?: string; page?: number; limit?: number }) {
     let url = '/blog';
     const query: string[] = [];
@@ -441,28 +1067,74 @@ class ApiClient {
     if (params?.page) query.push(`page=${params.page}`);
     if (params?.limit) query.push(`limit=${params.limit}`);
     if (query.length > 0) url += `?${query.join('&')}`;
-    return this.request<{ count: number; total: number; page: number; limit: number; pages: number; posts: any[] }>(url);
+    return this.request<{
+      count: number;
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+      posts: Array<{
+        _id: string;
+        slug: string;
+        title: string;
+        excerpt: string;
+        content: string;
+        coverImage?: string;
+        category?: string;
+        tags: string[];
+        author?: { firstName: string; lastName: string };
+        publishedAt?: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(url);
   }
 
   getBlogPost(slug: string) {
-    return this.request<any>(`/blog/${slug}`);
+    return this.request<{
+      _id: string;
+      slug: string;
+      title: string;
+      excerpt: string;
+      content: string;
+      coverImage?: string;
+      category?: string;
+      tags: string[];
+      author?: { firstName: string; lastName: string };
+      publishedAt?: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/blog/${slug}`);
   }
 
   // Blog (admin)
   getAllBlogPosts() {
-    return this.request<{ count: number; posts: any[] }>('/blog/admin/all');
+    return this.request<{ count: number; posts: Array<{
+      _id: string;
+      slug: string;
+      title: string;
+      excerpt: string;
+      content: string;
+      coverImage?: string;
+      category?: string;
+      tags: string[];
+      author?: { firstName: string; lastName: string };
+      publishedAt?: string;
+      createdAt: string;
+      updatedAt: string;
+    }> }>('/blog/admin/all');
   }
 
   createBlogPost(formData: FormData) {
-    return this.request<any>('/blog/admin', { method: 'POST', body: formData, isFormData: true });
+    return this.request<{ post: unknown }>('/blog/admin', { method: 'POST', body: formData, isFormData: true });
   }
 
   updateBlogPost(id: string, formData: FormData) {
-    return this.request<any>(`/blog/admin/${id}`, { method: 'PUT', body: formData, isFormData: true });
+    return this.request<{ post: unknown }>(`/blog/admin/${id}`, { method: 'PUT', body: formData, isFormData: true });
   }
 
   deleteBlogPost(id: string) {
-    return this.request<any>(`/blog/admin/${id}`, { method: 'DELETE' });
+    return this.request<{ message: string }>(`/blog/admin/${id}`, { method: 'DELETE' });
   }
 }
 

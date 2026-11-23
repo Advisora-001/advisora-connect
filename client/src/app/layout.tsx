@@ -5,6 +5,9 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import CookieConsent from "@/components/CookieConsent";
 import { AuthProvider } from "@/context/AuthContext";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { Toaster } from "@/components/ui/Toaster";
+import { SkipLink } from "@/components/SkipLink";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,10 +30,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.className} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#F5F7FA]">
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <footer className="bg-[#1B2A4A] text-white py-10 mt-auto">
+        <QueryProvider>
+          <AuthProvider>
+            <SkipLink />
+            <Navbar />
+            <main id="main-content" className="flex-1">{children}</main>
+            <Toaster />
+            <footer className="bg-[#1B2A4A] text-white py-10 mt-auto">
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex flex-col items-center mb-6">
                 <Image
@@ -94,6 +100,7 @@ export default function RootLayout({
           </footer>
           <CookieConsent />
         </AuthProvider>
+      </QueryProvider>
       </body>
     </html>
   );

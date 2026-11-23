@@ -47,10 +47,10 @@ export default function AdminDashboard() {
     try {
       const [analyticsData, pendingData, usersData] = await Promise.all([api.getAnalytics(), api.getPendingVerifications(), api.getAdminUsers()]);
       setAnalytics(analyticsData);
-      const allLawyers = pendingData.lawyers || [];
-      setPendingLawyers(allLawyers.filter((l: any) => l.verificationStatus === "pending" || !l.verificationStatus));
-      setVerifiedLawyers(allLawyers.filter((l: any) => l.verificationStatus === "verified"));
-      setRejectedLawyers(allLawyers.filter((l: any) => l.verificationStatus === "rejected"));
+      const allProfessionals = pendingData.professionals || [];
+      setPendingLawyers(allProfessionals.filter((l: any) => l.verificationStatus === "pending" || !l.verificationStatus));
+      setVerifiedLawyers(allProfessionals.filter((l: any) => l.verificationStatus === "verified"));
+      setRejectedLawyers(allProfessionals.filter((l: any) => l.verificationStatus === "rejected"));
       const allUsers = usersData.users || [];
       setActiveUsers(allUsers.filter((u: any) => u.isActive));
       setSuspendedUsers(allUsers.filter((u: any) => !u.isActive));

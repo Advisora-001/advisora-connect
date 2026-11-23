@@ -35,8 +35,8 @@ export default function Navbar() {
   }, []);
 
   const dashboardPath =
-    user?.role === 'lawyer'
-      ? '/dashboard/lawyer'
+    (user?.role === 'lawyer' || user?.role === 'professional')
+      ? '/dashboard/professional'
       : user?.role === 'admin'
       ? '/admin'
       : '/dashboard/client';
@@ -60,8 +60,8 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
-            <Link href="/lawyers" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
-              Find Lawyers
+            <Link href="/professionals" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
+              Find Professionals
             </Link>
             <Link href="/about" className="px-4 py-2 text-[#475569] hover:text-[#1B2A4A] font-medium text-sm transition-colors rounded-lg hover:bg-[#EEF2F7]">
               About Us
@@ -192,8 +192,8 @@ export default function Navbar() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pb-4 space-y-1 animate-fadeIn">
-            <Link href="/lawyers" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
-              Find Lawyers
+            <Link href="/professionals" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
+              Find Professionals
             </Link>
             <Link href="/about" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
               About Us

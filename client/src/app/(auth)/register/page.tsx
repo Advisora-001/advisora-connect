@@ -358,6 +358,7 @@ function RegisterPageContent() {
             >
               <option value="client">Client looking for legal help</option>
               <option value="lawyer">Lawyer / Legal Professional</option>
+              <option value="professional">Accountant / Tax Consultant / Other Professional</option>
             </select>
           </div>
 
