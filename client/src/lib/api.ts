@@ -509,7 +509,29 @@ class ApiClient {
     duration: number;
     consultationType: 'video' | 'audio' | 'in-person';
   }) {
-    return this.request<{ appointment: unknown; paymentBreakdown: unknown }>(`/leads/${id}/book`, { method: 'POST', body: data });
+    return this.request<{
+      appointment: {
+        _id: string;
+        lawyerId: string;
+        clientId: string;
+        date: string;
+        timeSlot: string;
+        duration: number;
+        consultationType: string;
+        consultationFee: number;
+        platformFee: number;
+        totalAmount: number;
+        status: string;
+        paymentStatus: string;
+        meetingLink?: string;
+        createdAt: string;
+      };
+      paymentBreakdown: {
+        consultationFee: number;
+        platformFee: number;
+        total: number;
+      };
+    }>(`/leads/${id}/book`, { method: 'POST', body: data });
   }
 
   // ============================================
