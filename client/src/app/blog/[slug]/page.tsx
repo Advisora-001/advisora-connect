@@ -2,7 +2,6 @@ import Image from 'next/image';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import api from '@/lib/api';
-import MediaGallery from '@/components/blog/MediaGallery';
 
 interface Params {
   slug: string;
@@ -83,15 +82,6 @@ export default async function BlogPostPage({ params }: { params: Promise<Params>
               {post.author.firstName} {post.author.lastName}
             </span>
           </p>
-        )}
-
-        {/* Media gallery */}
-        {post.media && post.media.length > 0 && (
-          <MediaGallery
-            images={post.imageUrls || []}
-            videos={post.media.filter((m: { type: string }) => m.type === 'video')}
-            caption={post.coverImage ? `${post.title} cover image` : undefined}
-          />
         )}
       </div>
     </div>
