@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LawyersPage() {
+export const dynamic = 'force-dynamic';
+
+function LawyersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -15,4 +17,12 @@ export default function LawyersPage() {
   }, [router, searchParams]);
 
   return null;
+}
+
+export default function LawyersPage() {
+  return (
+    <Suspense fallback={null}>
+      <LawyersPageContent />
+    </Suspense>
+  );
 }
