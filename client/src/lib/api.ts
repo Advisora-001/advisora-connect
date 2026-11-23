@@ -557,6 +557,7 @@ class ApiClient {
       message: string;
       data: {
         status: string;
+        gateway_response?: string;
         metadata?: {
           type?: string;
           appointmentId?: string;
