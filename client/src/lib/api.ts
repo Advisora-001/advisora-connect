@@ -551,8 +551,18 @@ class ApiClient {
     }>('/payments/initialize', { method: 'POST', body: data });
   }
 
-  verifyPayment(data: unknown) {
-    return this.request<unknown>('/payments/verify', { method: 'POST', body: data });
+  verifyPayment(data: { reference: string }) {
+    return this.request<{
+      status: boolean;
+      message: string;
+      data: {
+        status: string;
+        metadata?: {
+          type?: string;
+          appointmentId?: string;
+        };
+      };
+    }>('/payments/verify', { method: 'POST', body: data });
   }
 
   verifyEmailAndStore(token: string) {
