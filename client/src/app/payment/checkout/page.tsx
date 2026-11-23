@@ -3,10 +3,12 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 function PaymentCheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,11 +21,16 @@ function PaymentCheckoutContent() {
   }, [appointmentId, amount]);
 
   const handlePayment = async () => {
-    if (!appointmentId || !amount) return;
+    if (!appointmentId || !amount || !user?.email) return;
     setLoading(true);
     try {
-      const response = await api.initializePayment({ amount: Number(amount), metadata: { type: "consultation", appointmentId } });
-      const authUrl = response?.authorization_url;
+      const response = await api.initializePayment({
+        appointmentId,
+        amount: Number(amount),
+        email: user.email,
+        metadata: { type: "consultation", appointmentId }
+      });
+      const authUrl = response?.authorizationUrl;
       if (authUrl) { window.location.href = authUrl; }
       else { setError("Failed to initialize payment - no authorization URL"); }
     } catch (err) { setError(err instanceof Error ? err.message : "Payment initialization failed"); }
