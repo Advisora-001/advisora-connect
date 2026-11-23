@@ -80,6 +80,23 @@ class ApiClient {
     return response.json();
   }
 
+  // Convenience methods
+  get(endpoint: string, options?: Omit<ApiOptions, 'method' | 'body'>) {
+    return this.request(endpoint, { ...options, method: 'GET' });
+  }
+
+  post(endpoint: string, body?: unknown, options?: Omit<ApiOptions, 'method' | 'body'>) {
+    return this.request(endpoint, { ...options, method: 'POST', body });
+  }
+
+  put(endpoint: string, body?: unknown, options?: Omit<ApiOptions, 'method' | 'body'>) {
+    return this.request(endpoint, { ...options, method: 'PUT', body });
+  }
+
+  delete(endpoint: string, options?: Omit<ApiOptions, 'method' | 'body'>) {
+    return this.request(endpoint, { ...options, method: 'DELETE' });
+  }
+
   // ============================================
   // Auth
   // ============================================
@@ -927,6 +944,206 @@ class ApiClient {
       total: number;
       averageRating: number;
     }>(`/reviews/professional/${professionalId}`);
+  }
+
+  // ============================================
+  // Subscriptions
+  // ============================================
+
+  getPlans() {
+    return this.request<{ plans: Array<{
+      key: string;
+      name: string;
+      description: string;
+      isFree: boolean;
+      billingInterval: 'monthly' | 'yearly';
+      price: { amount: number; currency: string };
+      firmPrice: { amount: number; currency: string };
+      entitlements: {
+        listing: boolean;
+        searchVisibility: boolean;
+        enhancedPlacement: boolean;
+        appointmentManagement: boolean;
+        analytics: boolean;
+        enquiryManagement: boolean;
+        documentStorage?: boolean;
+        crm?: boolean;
+        teamManagement?: boolean;
+        prioritySupport?: boolean;
+      };
+      limits: {
+        maxProfiles: number;
+        maxServices: number;
+        maxEnquiriesPerMonth: number;
+      };
+      includedSeats: number;
+      additionalSeatPrice: { amount: number; currency: string };
+    }> }>('/subscriptions/plans');
+  }
+
+  getCurrentSubscription() {
+    return this.request<{
+      subscription: {
+        _id: string;
+        userId: string;
+        planId: string;
+        plan: string;
+        status: 'pending' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
+        startDate: string;
+        endDate: string;
+        autoRenew: boolean;
+        cancelAtPeriodEnd: boolean;
+        paystackRef: string;
+        paystackSubscriptionCode?: string;
+        paystackCustomerCode?: string;
+        amount: number;
+        currency: string;
+        billingInterval: 'monthly' | 'yearly';
+        planSnapshot?: {
+          name: string;
+          key: string;
+          entitlements: {
+            listing: boolean;
+            searchVisibility: boolean;
+            enhancedPlacement: boolean;
+            appointmentManagement: boolean;
+            analytics: boolean;
+            enquiryManagement: boolean;
+            documentStorage?: boolean;
+            crm?: boolean;
+            teamManagement?: boolean;
+            prioritySupport?: boolean;
+          };
+          limits: {
+            maxProfiles: number;
+            maxServices: number;
+            maxEnquiriesPerMonth: number;
+          };
+        };
+        createdAt: string;
+        updatedAt: string;
+      } | null;
+    }>('/subscriptions/current');
+  }
+
+  createSubscriptionCheckout(data: { planKey: string; billingInterval?: 'monthly' | 'yearly' }) {
+    return this.request<{
+      authorizationUrl: string;
+      accessCode: string;
+      reference: string;
+      subscriptionId: string;
+    }>('/subscriptions/checkout', { method: 'POST', body: data });
+  }
+
+  verifySubscription(data: { reference: string }) {
+    return this.request<{
+      success: boolean;
+      subscription: {
+        _id: string;
+        userId: string;
+        planId: string;
+        plan: string;
+        status: 'pending' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
+        startDate: string;
+        endDate: string;
+        autoRenew: boolean;
+        cancelAtPeriodEnd: boolean;
+        paystackRef: string;
+        paystackSubscriptionCode?: string;
+        paystackCustomerCode?: string;
+        amount: number;
+        currency: string;
+        billingInterval: 'monthly' | 'yearly';
+        planSnapshot?: {
+          name: string;
+          key: string;
+          entitlements: {
+            listing: boolean;
+            searchVisibility: boolean;
+            enhancedPlacement: boolean;
+            appointmentManagement: boolean;
+            analytics: boolean;
+            enquiryManagement: boolean;
+            documentStorage?: boolean;
+            crm?: boolean;
+            teamManagement?: boolean;
+            prioritySupport?: boolean;
+          };
+          limits: {
+            maxProfiles: number;
+            maxServices: number;
+            maxEnquiriesPerMonth: number;
+          };
+        };
+        createdAt: string;
+        updatedAt: string;
+      };
+      message: string;
+    }>('/subscriptions/verify', { method: 'POST', body: data });
+  }
+
+  cancelSubscription() {
+    return this.request<{ message: string }>('/subscriptions/cancel', { method: 'POST' });
+  }
+
+  reactivateSubscription() {
+    return this.request<{ message: string }>('/subscriptions/reactivate', { method: 'POST' });
+  }
+
+  changePlan(data: { newPlanKey: string }) {
+    return this.request<{
+      message: string;
+      redirectTo?: string;
+    }>('/subscriptions/change-plan', { method: 'POST', body: data });
+  }
+
+  getSubscriptionUsage() {
+    return this.request<{
+      subscription: {
+        _id: string;
+        userId: string;
+        planId: string;
+        plan: string;
+        status: 'pending' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
+        startDate: string;
+        endDate: string;
+        autoRenew: boolean;
+        cancelAtPeriodEnd: boolean;
+        paystackRef: string;
+        paystackSubscriptionCode?: string;
+        paystackCustomerCode?: string;
+        amount: number;
+        currency: string;
+        billingInterval: 'monthly' | 'yearly';
+        planSnapshot?: {
+          name: string;
+          key: string;
+          entitlements: {
+            listing: boolean;
+            searchVisibility: boolean;
+            enhancedPlacement: boolean;
+            appointmentManagement: boolean;
+            analytics: boolean;
+            enquiryManagement: boolean;
+            documentStorage?: boolean;
+            crm?: boolean;
+            teamManagement?: boolean;
+            prioritySupport?: boolean;
+          };
+          limits: {
+            maxProfiles: number;
+            maxServices: number;
+            maxEnquiriesPerMonth: number;
+          };
+        };
+        usage: {
+          profiles: { current: number; limit: number };
+          services: { current: number; limit: number };
+          enquiries: { current: number; limit: number };
+          teamSeats: { current: number; limit: number };
+        };
+      } | null;
+    }>('/subscriptions/usage');
   }
 
   // Legacy alias

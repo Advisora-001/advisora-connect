@@ -112,6 +112,9 @@ const userSchema = new Schema<IUser>(
     passwordResetExpires: {
       type: Date,
     },
+    // Paystack integration
+    paystackCustomerCode: { type: String, select: false },
+    paystackSubscriptionCode: { type: String, select: false },
   },
   { timestamps: true }
 );

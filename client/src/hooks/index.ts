@@ -6,6 +6,7 @@ export * from './useWallet';
 export * from './useNotifications';
 export * from './useAdmin';
 export * from './useProfileGate';
+export * from './useSubscription';
 
 // Import leadKeys for useAppointments cross-invalidation
 import { leadKeys } from './useLeads';

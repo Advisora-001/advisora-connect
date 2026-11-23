@@ -9,6 +9,10 @@ export interface ILead extends Document {
   platformFee: number;
   paymentRef?: string;
   paymentStatus: 'unpaid' | 'paid' | 'failed';
+  // Pay-per-lead fields
+  paystackReference?: string;
+  unlockedAt?: Date;
+  unlockedBy?: mongoose.Types.ObjectId;
   clientName: string;
   clientEmail: string;
   clientPhone?: string;
@@ -52,6 +56,10 @@ const leadSchema = new Schema<ILead>(
       enum: ['unpaid', 'paid', 'failed'],
       default: 'unpaid',
     },
+    // Pay-per-lead fields
+    paystackReference: { type: String },
+    unlockedAt: { type: Date },
+    unlockedBy: { type: Schema.Types.ObjectId, ref: 'ProfessionalProfile' },
     clientName: { type: String, required: true },
     clientEmail: { type: String, required: true },
     clientPhone: { type: String },

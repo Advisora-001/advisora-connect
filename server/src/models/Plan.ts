@@ -82,6 +82,9 @@ const planSchema = new Schema<IPlan>(
       amount: { type: Number, default: 0 },
       currency: { type: String, default: 'NGN' },
     },
+    // Paystack integration
+    paystackPlanCodeMonthly: { type: String, trim: true },
+    paystackPlanCodeYearly: { type: String, trim: true },
   },
   { timestamps: true }
 );

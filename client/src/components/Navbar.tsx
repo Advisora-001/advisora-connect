@@ -152,6 +152,15 @@ export default function Navbar() {
                         </svg>
                         Dashboard
                       </Link>
+                      {(user?.role === 'lawyer' || user?.role === 'professional') && (
+                        <Link href="/subscription/manage" onClick={() => setDropdownOpen(false)}
+                          className="flex items-center px-4 py-2.5 text-[#475569] hover:bg-[#EEF2F7] hover:text-[#1B2A4A] transition-colors text-sm">
+                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          Subscription
+                        </Link>
+                      )}
                       <button onClick={() => { setDropdownOpen(false); logout(); }}
                         className="flex items-center w-full px-4 py-2.5 text-[#475569] hover:bg-[#FEF2F2] hover:text-[#EF4444] transition-colors text-sm">
                         <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -232,6 +241,11 @@ export default function Navbar() {
                 <Link href={dashboardPath} className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
                   Dashboard
                 </Link>
+                {(user?.role === 'lawyer' || user?.role === 'professional') && (
+                  <Link href="/subscription/manage" className="block px-4 py-2.5 text-[#475569] hover:text-[#1B2A4A] hover:bg-[#EEF2F7] rounded-lg text-sm font-medium" onClick={() => setIsMenuOpen(false)}>
+                    Subscription
+                  </Link>
+                )}
                 <button onClick={() => { logout(); setIsMenuOpen(false); }} className="block w-full text-left px-4 py-2.5 text-[#EF4444] hover:bg-[#FEF2F2] rounded-lg text-sm font-medium">
                   Logout
                 </button>

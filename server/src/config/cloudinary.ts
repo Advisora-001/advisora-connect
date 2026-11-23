@@ -1,6 +1,4 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import multer from 'multer';
 
 const configureCloudinary = (): void => {
   cloudinary.config({
@@ -10,33 +8,8 @@ const configureCloudinary = (): void => {
   });
 };
 
-const blogImageStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async (_req, file) => ({
-    folder: 'advisora/blog',
-    resource_type: 'image',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
-  }),
-});
+configureCloudinary();
 
-const upload = multer({
-  storage: new CloudinaryStorage({
-    cloudinary,
-    params: async (_req, file) => ({
-      folder: 'advisora',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
-      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
-    }),
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 },
-});
-
-const blogImageUpload = multer({
-  storage: blogImageStorage,
-  limits: { fileSize: 8 * 1024 * 1024 },
-});
-
+export { cloudinary };
 export default configureCloudinary;
-export { upload, blogImageUpload, cloudinary };
 

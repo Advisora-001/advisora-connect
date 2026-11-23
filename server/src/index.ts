@@ -26,6 +26,9 @@ import categoryRoutes from './routes/categoryRoutes';
 import professionalRoutes from './routes/professionalRoutes';
 import membershipRoutes from './routes/membershipRoutes';
 import firmRoutes from './routes/firmRoutes';
+import subscriptionRoutes from './routes/subscriptionRoutes';
+import webhookRoutes from './routes/webhookRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -77,6 +80,9 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/professionals', professionalRoutes);
 app.use('/api/membership', membershipRoutes);
 app.use('/api/firms', firmRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/webhooks', webhookRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
