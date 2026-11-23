@@ -17,7 +17,7 @@ interface AdminPost {
   slug: string;
   excerpt: string;
   content: string;
-  category: string;
+  category?: string;
   publishedAt?: string;
   isPublished: boolean;
   media?: MediaPayload[];
@@ -92,7 +92,7 @@ export default function BlogManager() {
       title: post.title,
       excerpt: post.excerpt,
       content: post.content,
-      category: post.category,
+      category: post.category ?? '',
       coverImage: post.coverImage || '',
       media: post.media || [],
       isPublished: post.isPublished,

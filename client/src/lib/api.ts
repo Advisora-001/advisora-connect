@@ -360,7 +360,7 @@ class ApiClient {
         serviceTypes?: string[];
         consultationModes?: ('video' | 'audio' | 'in-person')[];
       };
-      categoryData?: Record<string, unknown>;
+      categoryData?: Record<string, string>;
       createdAt: string;
       updatedAt: string;
     }>(`/professionals/${id}`);
@@ -396,7 +396,7 @@ class ApiClient {
   submitProfessionalVerification(data: {
     category: string;
     specialization?: string;
-    categoryData?: Record<string, unknown>;
+    categoryData?: Record<string, string>;
     declaration: {
       informationAccurate: boolean;
       qualifiedToPractise: boolean;
@@ -935,7 +935,16 @@ class ApiClient {
   }
 
   createReview(data: { lawyerId: string; rating: number; comment?: string }) {
-    return this.request<{ review: unknown }>('/reviews', { method: 'POST', body: data });
+    return this.request<{
+      review: {
+        _id: string;
+        lawyerId: string;
+        clientId: { _id: string; firstName: string; lastName: string; avatar?: string };
+        rating: number;
+        comment?: string;
+        createdAt: string;
+      };
+    }>('/reviews', { method: 'POST', body: data });
   }
 
   getMyReviews() {
@@ -1153,6 +1162,7 @@ class ApiClient {
       tags: string[];
       author?: { firstName: string; lastName: string };
       publishedAt?: string;
+      isPublished: boolean;
       createdAt: string;
       updatedAt: string;
     }> }>('/blog/admin/all');

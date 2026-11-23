@@ -179,7 +179,7 @@ export const ProfessionalProfileSchema = z.object({
     noDisciplinaryAction: z.boolean(),
     declaredAt: ISODateStringSchema.optional(),
   }).optional(),
-  categoryData: z.record(z.unknown()).optional(),
+  categoryData: z.record(z.string()).optional(),
   // Legacy fields for backward compatibility with lawyer-specific data
   practiceAreas: z.array(z.string()).optional(),
   specializations: z.array(z.string()).optional(),

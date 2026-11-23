@@ -45,7 +45,15 @@ export default function ReviewSection({ lawyerId, reviews, setReviews, loading }
     if (!newRating) { setError('Please select a rating'); return; }
     setSubmitting(true); setError('');
     try {
-      const review = await api.createReview({ lawyerId, rating: newRating, comment: newComment });
+      const reviewResponse = await api.createReview({ lawyerId, rating: newRating, comment: newComment });
+      const review: Review = {
+        _id: reviewResponse.review?._id ?? `temp-${Date.now()}`,
+        lawyerId,
+        clientId: { _id: user?._id ?? '', firstName: user?.firstName ?? '', lastName: user?.lastName ?? '' },
+        rating: newRating,
+        comment: newComment,
+        createdAt: new Date().toISOString(),
+      };
       setReviews([review, ...reviews]);
       setShowForm(false); setNewRating(0); setNewComment('');
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed to submit review'); }

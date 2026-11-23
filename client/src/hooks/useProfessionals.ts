@@ -85,7 +85,7 @@ export function useSubmitProfessionalVerification() {
     mutationFn: (data: {
       category: string;
       specialization?: string;
-      categoryData?: Record<string, unknown>;
+      categoryData?: Record<string, string>;
       declaration: {
         informationAccurate: boolean;
         qualifiedToPractise: boolean;
