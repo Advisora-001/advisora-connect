@@ -7,7 +7,8 @@ import api, { PLATFORM_FEE_AMOUNT } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 function BookingWizardContent() {
-  const { lawyerId } = useParams();
+  const params = useParams();
+  const lawyerId = params.lawyerId as string;
   const router = useRouter();
   const { user } = useAuth();
 
