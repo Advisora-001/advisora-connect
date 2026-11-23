@@ -131,7 +131,7 @@ function ProfessionalDetailContent() {
             <div className="grid grid-cols-2 gap-6 mt-8">
               <div>
                 <h3 className="text-sm font-semibold text-[#667085] uppercase mb-2">Registration Info</h3>
-                <p className="text-[#475569]">License: {String(professional.categoryData?.licenseNumber || professional.categoryData?.barNumber || professional.categoryData?.taxIdNumber || "N/A")}</p>
+                <p className="text-[#475569]">License: {String(professional.categoryData?.licenseNumber ?? professional.categoryData?.barNumber ?? professional.categoryData?.taxIdNumber ?? "N/A")}</p>
                 {professional.categoryData?.certifyingBody && <p className="text-[#475569]">Certifying Body: {String(professional.categoryData.certifyingBody)}</p>}
                 {professional.categoryData?.stateOfCall && <p className="text-[#475569]">State: {String(professional.categoryData.stateOfCall)}</p>}
                 <p className="text-[#475569]">Experience: {professional.yearsOfExperience} years</p>
