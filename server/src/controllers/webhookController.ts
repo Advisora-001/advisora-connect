@@ -176,9 +176,9 @@ async function handleChargeSuccess(event: PaystackWebhookEvent) {
 
 // Subscription lifecycle events
 async function handleSubscriptionCreate(event: PaystackWebhookEvent) {
-  const { reference, metadata, data } = event;
-  const { userId, planKey, billingInterval } = metadata || {};
-  const subscriptionData = data.subscription;
+  const { reference, metadata } = event.data;
+  const { userId, planKey, billingInterval } = metadata || {} as any;
+  const subscriptionData = event.data.subscription;
 
   console.log('Subscription created', { reference, userId, planKey });
 
@@ -208,13 +208,13 @@ async function handleSubscriptionCreate(event: PaystackWebhookEvent) {
       paystackCustomerCode: data.customer?.customer_code,
       startDate: new Date(data.paid_at),
       endDate: new Date(data.subscription?.next_payment_date),
-      amount: data.amount / 100,
+      amount: (data.amount ?? 0) / 100,
       currency: data.currency,
       billingInterval: billingInterval || 'monthly',
       status: 'active',
       autoRenew: true,
       planSnapshot: {
-        name: data.plan?.name || planKey,
+        name: data.plan?.plan_code || planKey,
         key: planKey,
       },
     },
@@ -237,7 +237,7 @@ async function handleSubscriptionCreate(event: PaystackWebhookEvent) {
 
   // Notify user
   await createNotification(
-    userId,
+    userId ?? '',
     'subscription_activated',
     'Subscription Activated',
     `Your subscription is now active`,
@@ -275,8 +275,8 @@ async function handleSubscriptionChargeSuccess(event: PaystackWebhookEvent) {
     {
       status: 'active',
       startDate: new Date(data.paid_at),
-      endDate: new Date(nextPaymentDate),
-      $inc: { amount: data.amount / 100 }, // Track total paid
+      endDate: new Date(nextPaymentDate ?? ''),
+      $inc: { amount: (data.amount ?? 0) / 100 }, // Track total paid
     }
   );
 
@@ -291,7 +291,7 @@ async function handleSubscriptionChargeSuccess(event: PaystackWebhookEvent) {
 
   // Notify user
   await createNotification(
-    subscription?.userId.toString() || '',
+    subscription?.userId?.toString() || '',
     'subscription_renewed',
     'Subscription Renewed',
     'Your subscription has been renewed successfully',
@@ -318,7 +318,7 @@ async function handleSubscriptionChargeFailed(event: PaystackWebhookEvent) {
 
     // Notify user
     await createNotification(
-      subscription.userId.toString(),
+      subscription.userId?.toString() || '',
       'subscription_payment_failed',
       'Payment Failed',
       'Your subscription payment failed. Please update your payment method.',
@@ -374,7 +374,7 @@ async function handleExpiringCards(event: PaystackWebhookEvent) {
   const subscription = await Subscription.findOne({ paystackSubscriptionCode: subscriptionCode });
   if (subscription) {
     await createNotification(
-      subscription.userId.toString(),
+      subscription.userId?.toString() || '',
       'card_expiring',
       'Card Expiring Soon',
       'Your payment card is expiring soon. Please update your payment method.',

@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
+import { IUser } from '../models/User';
 import User from '../models/User';
 import ProfessionalProfile from '../models/ProfessionalProfile';
 import Subscription from '../models/Subscription';
 import Plan from '../models/Plan';
+import Lead from '../models/Lead';
 import { getPaystackService } from '../services/paystack';
 import { createNotification } from './notificationController';
 
@@ -76,11 +78,13 @@ export const getCurrentSubscription = async (req: AuthRequest, res: Response) =>
 export const createSubscriptionCheckout = async (req: AuthRequest, res: Response) => {
   try {
     const { planKey, billingInterval = 'monthly' } = req.body;
-    const user = req.user;
 
-    if (!user) {
+    // Check authentication first
+    if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
+
+    const authUser = req.user;
 
     if (!planKey) {
       return res.status(400).json({ message: 'Plan key is required' });
@@ -98,7 +102,7 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
 
     // Check if user already has active subscription
     const existingSubscription = await Subscription.findOne({
-      userId: user._id,
+      userId: authUser._id,
       status: { $in: ['active', 'trialing'] }
     });
 
@@ -112,18 +116,26 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
     const paystack = getPaystackService();
 
     let customerCode: string;
-    let userDoc = await User.findById(req.user._id);
+    let userDoc = await User.findById(authUser._id);
+
+    // Ensure userDoc exists and has paystackCustomerCode
+    if (!userDoc) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Access paystackCustomerCode with type assertion
+    const iuser = userDoc as IUser;
 
     // Store paystack customer code on user if not exists
-    if (!userDoc.paystackCustomerCode) {
+    if (!iuser.paystackCustomerCode) {
       const customer = await paystack.createCustomer(userDoc.email!, {
-        userId: userDoc._id.toString(),
-        role: userDoc.role,
+        userId: iuser._id.toString(),
+        role: iuser.role,
       });
       customerCode = customer.customer_code;
       await User.findByIdAndUpdate(userDoc._id, { paystackCustomerCode: customerCode });
     } else {
-      customerCode = userDoc.paystackCustomerCode!;
+      customerCode = iuser.paystackCustomerCode!;
     }
 
     // Get Paystack plan code from our plan
@@ -138,17 +150,17 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
 
     // Initialize subscription transaction
     const amount = billingInterval === 'yearly' ? plan.price.amount * 12 * 0.9 : plan.price.amount; // 10% discount for yearly
-    const reference = `sub_${user._id}_${Date.now()}`;
+    const reference = `sub_${authUser._id}_${Date.now()}`;
 
     const initResponse = await paystack.initializeTransaction({
-      email: user.email!,
+      email: authUser.email!,
       amount: amount * 100, // Convert to kobo
       currency: 'NGN',
       reference,
       callback_url: `${process.env.FRONTEND_URL}/subscription/success?reference={reference}`,
       metadata: {
         type: 'subscription',
-        userId: user._id.toString(),
+        userId: authUser._id.toString(),
         planKey: plan.key,
         billingInterval,
       },
@@ -157,7 +169,7 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
 
     // Create pending subscription record
     const subscription = await Subscription.create({
-      userId: user._id,
+      userId: authUser._id,
       planId: plan._id,
       plan: plan.key,
       status: 'pending',
@@ -177,8 +189,8 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
     });
 
     res.json({
-      authorizationUrl: paystack.initializeTransaction.authorization_url,
-      accessCode: paystack.initializeTransaction.access_code,
+      authorizationUrl: initResponse.authorization_url,
+      accessCode: initResponse.access_code,
       reference,
       subscriptionId: subscription._id,
     });
@@ -214,7 +226,7 @@ export const verifySubscription = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid payment type' });
     }
 
-    const userId = meta.userId;
+    const userId = meta.userId as string;
     const planKey = meta.planKey;
     const billingInterval = meta.billingInterval;
 
@@ -441,19 +453,19 @@ export const getSubscriptionUsage = async (req: AuthRequest, res: Response) => {
       usage: {
         profiles: {
           current: profilesCount,
-          limit: subscription.planSnapshot?.limits?.maxProfiles || plan?.limits?.maxProfiles || 1,
+          limit: plan?.limits?.maxProfiles || 1,
         },
         services: {
           current: profile?.services?.length || 0,
-          limit: subscription.planSnapshot?.limits?.maxServices || plan?.limits?.maxServices || 3,
+          limit: plan?.limits?.maxServices || 3,
         },
         enquiries: {
           current: enquiriesThisMonth,
-          limit: subscription.planSnapshot?.limits?.maxEnquiriesPerMonth || plan?.limits?.maxEnquiriesPerMonth || 50,
+          limit: plan?.limits?.maxEnquiriesPerMonth || 50,
         },
         teamSeats: {
           current: 1, // TODO: count firm members
-          limit: subscription.planSnapshot?.includedSeats || plan?.includedSeats || 1,
+          limit: plan?.includedSeats || 1,
         },
       }
     });

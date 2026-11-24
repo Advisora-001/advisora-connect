@@ -226,7 +226,7 @@ export const submitVerification = async (req: AuthRequest, res: Response) => {
 
     // Update professional profile
     const profile = await ProfessionalProfile.findOneAndUpdate(
-      { userId: req.user._id },
+      { userId: req.user?._id },
       {
         $set: {
           category,
@@ -293,7 +293,7 @@ export const getVerificationStatus = async (req: AuthRequest, res: Response) => 
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const profile = await ProfessionalProfile.findOne({ userId: req.user._id }).select(
+    const profile = await ProfessionalProfile.findOne({ userId: req.user?._id }).select(
       'verificationStatus verificationDocs verificationBadge verificationDocs category specialization'
     );
 

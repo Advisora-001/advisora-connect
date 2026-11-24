@@ -48,6 +48,7 @@ export interface TransformationOptions {
   format?: 'auto' | 'jpg' | 'png' | 'webp' | 'pdf';
   gravity?: 'auto' | 'face' | 'center';
   flags?: string[];
+  fetch_format?: 'auto' | 'jpg' | 'png' | 'webp' | 'pdf';
 }
 
 export class CloudinaryService {

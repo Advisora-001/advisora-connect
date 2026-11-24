@@ -9,6 +9,8 @@ export interface ISubscription extends Document {
   startDate: Date;
   endDate: Date;
   autoRenew: boolean;
+  cancelAtPeriodEnd?: boolean;
+  paystackSubscriptionCode?: string;
   paystackRef?: string;
   amount: number;
   currency?: string;
