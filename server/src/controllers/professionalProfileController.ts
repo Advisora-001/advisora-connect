@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import ProfessionalCategory from '../models/ProfessionalCategory';
 import ProfessionalProfile from '../models/ProfessionalProfile';
+import LawyerProfile from '../models/LawyerProfile';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { canAddService, getEffectivePlan, getPlanEntitlements } from '../utils/entitlements';
@@ -60,11 +61,52 @@ const getProfessionalById = async (req: Request, res: Response) => {
       .populate('userId', 'firstName lastName email avatar phone')
       .populate('category', 'key label specializations registrationFields');
 
-    if (!professional) {
+    if (professional) {
+      return res.json(professional);
+    }
+
+    const lawyer = await LawyerProfile.findOne({
+      _id: req.params.id,
+      verificationStatus: 'verified',
+    }).populate('userId', 'firstName lastName email avatar');
+
+    if (!lawyer) {
       return res.status(404).json({ message: 'Professional not found' });
     }
 
-    res.json(professional);
+    const category = await ProfessionalCategory.findOne({ key: 'legal', isActive: true })
+      .select('key label');
+
+    res.json({
+      _id: lawyer._id,
+      userId: lawyer.userId,
+      photo: lawyer.photo || '',
+      specialization: lawyer.practiceAreas?.[0] || '',
+      practiceAreas: lawyer.practiceAreas || [],
+      bio: lawyer.bio || '',
+      officeAddress: lawyer.officeAddress || '',
+      city: lawyer.city || '',
+      state: lawyer.state || '',
+      languages: lawyer.languages || [],
+      yearsOfExperience: lawyer.yearsOfExperience || 0,
+      verificationStatus: lawyer.verificationStatus,
+      verificationBadge: lawyer.verificationBadge || false,
+      rating: lawyer.rating || 0,
+      reviewCount: lawyer.reviewCount || 0,
+      consultationFee: lawyer.consultationFee || 0,
+      isAvailable: lawyer.isAvailable ?? true,
+      availableDays: lawyer.availableDays || [],
+      availableHours: lawyer.availableHours || '9:00 AM - 5:00 PM',
+      availableFrom: lawyer.availableFrom || '9:00 AM',
+      availableTo: lawyer.availableTo || '5:00 PM',
+      subscription: lawyer.subscription,
+      categoryData: {
+        barNumber: lawyer.barNumber || '',
+        stateOfCall: lawyer.stateOfCall || '',
+        yearOfCall: lawyer.yearOfCall || 0,
+      },
+      category: category ? { key: category.key, label: category.label } : undefined,
+    });
   } catch (error: any) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
