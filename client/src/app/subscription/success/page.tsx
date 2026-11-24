@@ -2,13 +2,13 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVerifySubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui';
 import Link from 'next/link';
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const reference = searchParams.get('reference');
@@ -87,5 +87,23 @@ export default function SubscriptionSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[calc(100vh-200px)] py-12 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-2xl border border-[#E5EAF0] p-8 text-center shadow-sm">
+            <div className="animate-spin w-14 h-14 border-2 border-[#1B2A4A] border-t-transparent rounded-full mx-auto"></div>
+            <h1 className="text-xl font-bold text-[#1B2A4A] mt-6">Verifying Payment</h1>
+            <p className="text-[#667085] mt-3 text-sm">Please wait while we verify your subscription payment...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }

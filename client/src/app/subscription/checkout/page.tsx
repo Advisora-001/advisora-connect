@@ -2,13 +2,25 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCreateSubscriptionCheckout } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui';
 import { formatPrice } from '@/hooks/useSubscription';
 
 export default function SubscriptionCheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-2 border-[#1B2A4A] border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <SubscriptionCheckoutContent />
+    </Suspense>
+  );
+}
+
+function SubscriptionCheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const planKey = searchParams.get('planKey');
