@@ -10,6 +10,7 @@ export interface ISubscription extends Document {
   endDate: Date;
   autoRenew: boolean;
   cancelAtPeriodEnd?: boolean;
+  paystackCustomerCode?: string;
   paystackSubscriptionCode?: string;
   paystackRef?: string;
   amount: number;
@@ -39,6 +40,8 @@ const subscriptionSchema = new Schema<ISubscription>(
     endDate: { type: Date, required: true },
     autoRenew: { type: Boolean, default: true },
     paystackRef: { type: String },
+    paystackCustomerCode: { type: String },
+    paystackSubscriptionCode: { type: String },
     amount: { type: Number, required: true },
     currency: { type: String, default: 'NGN' },
     billingInterval: { type: String, enum: ['monthly', 'yearly'] },

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Subscription from '../models/Subscription';
 import ProfessionalProfile from '../models/ProfessionalProfile';
 import Lead from '../models/Lead';
-import User from '../models/User';
+import Plan from '../models/Plan';
 import { getPaystackService } from '../services/paystack';
 import { createNotification } from './notificationController';
 
@@ -25,7 +25,7 @@ interface PaystackWebhookEvent {
       plan: {
         plan_code: string;
       };
-      next_payment_date: string;
+      next_payment_date?: string;
     };
   };
 }
@@ -176,24 +176,28 @@ async function handleChargeSuccess(event: PaystackWebhookEvent) {
 
 // Subscription lifecycle events
 async function handleSubscriptionCreate(event: PaystackWebhookEvent) {
-  const { reference, metadata } = event.data;
-  const { userId, planKey, billingInterval } = metadata || {} as any;
-  const subscriptionData = event.data.subscription;
+  const { data } = event;
+  const { reference, metadata, paid_at, amount, currency, customer, subscription: subscriptionData } = data;
+  const userId = metadata?.userId;
+  const planKey = metadata?.planKey;
 
   console.log('Subscription created', { reference, userId, planKey });
 
-  if (!userId || !planKey) {
+  if (typeof userId !== 'string' || typeof planKey !== 'string') {
     console.warn('Subscription.create missing metadata');
     return;
   }
 
-  // Get plan details
-  const Plan = require('../models/Plan').default;
   const plan = await Plan.findOne({ key: planKey });
+  if (!plan) {
+    console.warn('Subscription.create references an unknown plan', { planKey });
+    return;
+  }
 
-  // Calculate dates
-  const startDate = new Date(data.paid_at);
-  const endDate = new Date(data.subscription?.next_payment_date || Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const startDate = new Date(paid_at);
+  const endDate = subscriptionData?.next_payment_date
+    ? new Date(subscriptionData.next_payment_date)
+    : new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   // Create/update subscription record
   const subscription = await Subscription.findOneAndUpdate(
@@ -201,21 +205,22 @@ async function handleSubscriptionCreate(event: PaystackWebhookEvent) {
     {
       userId,
       plan: planKey,
-      planId: (await require('../models/Plan').default.findOne({ key: planKey }))?._id,
+      planId: plan._id,
       status: 'active',
       paystackRef: reference,
-      paystackSubscriptionCode: data.subscription?.subscription_code,
-      paystackCustomerCode: data.customer?.customer_code,
-      startDate: new Date(data.paid_at),
-      endDate: new Date(data.subscription?.next_payment_date),
-      amount: (data.amount ?? 0) / 100,
-      currency: data.currency,
-      billingInterval: billingInterval || 'monthly',
-      status: 'active',
+      paystackSubscriptionCode: subscriptionData?.subscription_code,
+      paystackCustomerCode: customer.customer_code,
+      startDate,
+      endDate,
+      amount: amount / 100,
+      currency,
+      billingInterval: plan.billingInterval,
       autoRenew: true,
       planSnapshot: {
-        name: data.plan?.plan_code || planKey,
+        name: plan.name,
         key: planKey,
+        entitlements: plan.entitlements,
+        limits: plan.limits,
       },
     },
     { upsert: true, new: true }
@@ -230,7 +235,7 @@ async function handleSubscriptionCreate(event: PaystackWebhookEvent) {
         'subscription.status': 'active',
         'subscription.startDate': subscription.startDate,
         'subscription.endDate': subscription.endDate,
-        'subscription.paystackSubscriptionCode': data.subscription?.subscription_code,
+        'subscription.paystackSubscriptionCode': subscriptionData?.subscription_code,
       },
     },
   );
@@ -269,13 +274,18 @@ async function handleSubscriptionChargeSuccess(event: PaystackWebhookEvent) {
   const subscriptionCode = data.subscription?.subscription_code;
   const nextPaymentDate = data.subscription?.next_payment_date;
 
+  if (!subscriptionCode || !nextPaymentDate) {
+    console.warn('Subscription charge success missing subscription code or next payment date');
+    return;
+  }
+
   // Update subscription period
   await Subscription.findOneAndUpdate(
     { paystackSubscriptionCode: subscriptionCode },
     {
       status: 'active',
       startDate: new Date(data.paid_at),
-      endDate: new Date(nextPaymentDate ?? ''),
+      endDate: new Date(nextPaymentDate),
       $inc: { amount: (data.amount ?? 0) / 100 }, // Track total paid
     }
   );

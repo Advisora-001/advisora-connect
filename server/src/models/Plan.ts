@@ -33,6 +33,8 @@ export interface IPlan extends Document {
     amount: number;
     currency: string;
   };
+  paystackPlanCodeMonthly?: string;
+  paystackPlanCodeYearly?: string;
   createdAt: Date;
   updatedAt: Date;
 }

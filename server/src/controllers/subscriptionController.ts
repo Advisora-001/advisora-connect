@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { IUser } from '../models/User';
 import User from '../models/User';
 import ProfessionalProfile from '../models/ProfessionalProfile';
 import Subscription from '../models/Subscription';
@@ -116,26 +115,23 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
     const paystack = getPaystackService();
 
     let customerCode: string;
-    let userDoc = await User.findById(authUser._id);
+    const userDoc = await User.findById(authUser._id).select('+paystackCustomerCode');
 
     // Ensure userDoc exists and has paystackCustomerCode
     if (!userDoc) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Access paystackCustomerCode with type assertion
-    const iuser = userDoc as IUser;
-
     // Store paystack customer code on user if not exists
-    if (!iuser.paystackCustomerCode) {
+    if (!userDoc.paystackCustomerCode) {
       const customer = await paystack.createCustomer(userDoc.email!, {
-        userId: iuser._id.toString(),
-        role: iuser.role,
+        userId: userDoc._id.toString(),
+        role: userDoc.role,
       });
       customerCode = customer.customer_code;
       await User.findByIdAndUpdate(userDoc._id, { paystackCustomerCode: customerCode });
     } else {
-      customerCode = iuser.paystackCustomerCode!;
+      customerCode = userDoc.paystackCustomerCode;
     }
 
     // Get Paystack plan code from our plan
@@ -189,8 +185,8 @@ export const createSubscriptionCheckout = async (req: AuthRequest, res: Response
     });
 
     res.json({
-      authorizationUrl: initResponse.authorization_url,
-      accessCode: initResponse.access_code,
+      authorizationUrl: initResponse.data.authorization_url,
+      accessCode: initResponse.data.access_code,
       reference,
       subscriptionId: subscription._id,
     });
