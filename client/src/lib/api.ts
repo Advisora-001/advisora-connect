@@ -1,3 +1,5 @@
+import type { LawyerListItem } from '@/types/api';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Token management for cross-domain auth
@@ -271,35 +273,21 @@ class ApiClient {
   // ============================================
 
   getProfessionals(params?: Record<string, string>) {
-    const query = params ? '?' + new URLSearchParams(params).toString() : '';
+    const queryParams = new URLSearchParams();
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value && value !== 'undefined') queryParams.set(key, value);
+    });
+    const query = queryParams.toString();
+    const endpoint = params?.category === 'legal' ? '/lawyers' : '/professionals';
+
     return this.request<{
       count: number;
-      professionals: Array<{
-        _id: string;
-        userId: {
-          _id: string;
-          firstName: string;
-          lastName: string;
-          email: string;
-          avatar?: string;
-        };
-        photo?: string;
-        city: string;
-        state: string;
-        practiceAreas?: string[];
-        specializations?: string[];
-        verificationBadge: boolean;
-        verificationStatus: 'pending' | 'verified' | 'rejected';
-        rating: number;
-        reviewCount: number;
-        consultationFee: number;
-        isAvailable: boolean;
-        availableDays: string[];
-        availableHours?: string;
-        subscription?: { plan: string; status: string };
-        category?: { key: string; label: string };
-      }>;
-    }>(`/professionals${query}`);
+      professionals?: LawyerListItem[];
+      lawyers?: LawyerListItem[];
+    }>(`${endpoint}${query ? `?${query}` : ''}`).then(({ count, professionals, lawyers }) => ({
+      count,
+      professionals: professionals || lawyers || [],
+    }));
   }
 
   // Legacy alias for backward compatibility

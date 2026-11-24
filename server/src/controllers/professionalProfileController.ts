@@ -13,9 +13,23 @@ const getProfessionals = async (req: Request, res: Response) => {
 
     const query: any = { verificationStatus: 'verified' };
 
-    if (category) query.category = category;
-    if (specialization) query.specialization = specialization;
-    if (city) query.city = { $regex: city as string, $options: 'i' };
+    if (typeof category === 'string' && category.trim()) {
+      const categoryKey = category.trim().toLowerCase();
+      const categoryDoc = /^[a-f\d]{24}$/i.test(categoryKey)
+        ? await ProfessionalCategory.findById(categoryKey).select('_id')
+        : await ProfessionalCategory.findOne({ key: categoryKey, isActive: true }).select('_id');
+
+      if (!categoryDoc) {
+        return res.json({ count: 0, professionals: [] });
+      }
+
+      query.category = categoryDoc._id;
+    }
+
+    const practiceArea = req.query.practiceArea;
+    const location = req.query.location;
+    if (specialization || practiceArea) query.specialization = specialization || practiceArea;
+    if (city || location) query.city = { $regex: (city || location) as string, $options: 'i' };
     if (state) query.state = state;
     if (isAvailable === 'true') query.isAvailable = true;
 
