@@ -95,6 +95,8 @@ export default function ProBonoVolunteerPage() {
     defaultValues: {
       jurisdiction: "Nigeria",
       isCurrentlyPracticing: true,
+      practiceAreas: [],
+      preferredCategories: [],
       maxCasesPerMonth: 2,
       availabilityHoursPerWeek: 5,
       preferredConsultationModes: ["video"],
@@ -109,10 +111,27 @@ export default function ProBonoVolunteerPage() {
   const preferredConsultationModes = watch("preferredConsultationModes");
   const languagesInput = watch("languages") || [];
 
-  const toggleArrayItem = (fieldName: string, value: string) => {
-    const current = watch(fieldName) || [];
-    const updated = current.includes(value) ? current.filter((v: string) => v !== value) : [...current, value];
-    setValue(fieldName, updated, { shouldValidate: true });
+  type ArrayField = "practiceAreas" | "preferredCategories" | "preferredConsultationModes" | "languages";
+  const toggleArrayItem = (fieldName: ArrayField, value: string) => {
+    const updatedItems = (current: string[] | undefined) => {
+      const items = current ?? [];
+      return items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
+    };
+
+    switch (fieldName) {
+      case "practiceAreas":
+        setValue("practiceAreas", updatedItems(watch("practiceAreas")), { shouldValidate: true });
+        break;
+      case "preferredCategories":
+        setValue("preferredCategories", updatedItems(watch("preferredCategories")), { shouldValidate: true });
+        break;
+      case "preferredConsultationModes":
+        setValue("preferredConsultationModes", updatedItems(watch("preferredConsultationModes")), { shouldValidate: true });
+        break;
+      case "languages":
+        setValue("languages", updatedItems(watch("languages")), { shouldValidate: true });
+        break;
+    }
   };
 
   const handleLanguageAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -287,12 +306,12 @@ export default function ProBonoVolunteerPage() {
                 <div className="grid md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Max Cases Per Month *</label>
-                    <input type="number" {...register("maxCasesPerMonth", { valueAsNumber: true })} min="1" max="20" className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" error={errors.maxCasesPerMonth?.message} />
+                    <input type="number" {...register("maxCasesPerMonth", { valueAsNumber: true })} min="1" max="20" className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" />
                     {errors.maxCasesPerMonth && <p className="mt-1 text-sm text-[#EF4444]">{errors.maxCasesPerMonth.message}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Availability Hours Per Week *</label>
-                    <input type="number" {...register("availabilityHoursPerWeek", { valueAsNumber: true })} min="1" max="40" className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" error={errors.availabilityHoursPerWeek?.message} />
+                    <input type="number" {...register("availabilityHoursPerWeek", { valueAsNumber: true })} min="1" max="40" className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] text-sm" />
                     {errors.availabilityHoursPerWeek && <p className="mt-1 text-sm text-[#EF4444]">{errors.availabilityHoursPerWeek.message}</p>}
                   </div>
                 </div>
