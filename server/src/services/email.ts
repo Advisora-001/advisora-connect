@@ -269,6 +269,223 @@ export const sendProposalEmail = async (email: string, clientName: string, data:
   return sendEmail({ to: email, subject, html });
 };
 
+export const sendProposalViewedEmail = async (email: string, lawyerName: string, data: {
+  clientName: string;
+  proposalId: string;
+}): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const proposalUrl = `${frontendUrl}/fractional/proposals/${data.proposalId}`;
+
+  const subject = 'Your Proposal Was Viewed - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #1B2A4A; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Fractional GC Proposal</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Proposal Viewed</h2>
+        <p>Hi ${lawyerName},</p>
+        <p>Your proposal for fractional General Counsel services has been viewed by the client.</p>
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+          <p style="margin: 0 0 10px 0;"><strong>Client:</strong> ${data.clientName}</p>
+          <p style="margin: 0;"><strong>Status:</strong> Viewed - awaiting response</p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${proposalUrl}" style="background-color: #00A6A6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Proposal</a>
+        </div>
+        <p style="color: #666; font-size: 14px;">The client has 14 days to respond. You can withdraw the proposal at any time before acceptance.</p>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
+export const sendProposalAcceptedEmail = async (email: string, lawyerName: string, data: {
+  clientName: string;
+  monthlyRetainer: number;
+  engagementMonths: number;
+  proposalId: string;
+}): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Proposal Accepted - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #5DBB63; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Proposal Accepted ✓</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Proposal Accepted!</h2>
+        <p>Hi ${lawyerName},</p>
+        <p>Great news! <strong>${data.clientName}</strong> has accepted your fractional GC proposal.</p>
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #5DBB63;">
+          <p style="margin: 0 0 10px 0;"><strong>Monthly Retainer:</strong> ₦${data.monthlyRetainer.toLocaleString()}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Commitment:</strong> ${data.engagementMonths} months</p>
+          <p style="margin: 0;"><strong>Platform Fee:</strong> ₦10,000 (one-time, deducted from first payment)</p>
+        </div>
+        <p>The client will now complete payment via Paystack to activate the subscription. You'll be notified once the engagement is active.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/dashboard/professional?section=fractional" style="background-color: #5DBB63; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Engagement</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
+export const sendProposalRejectedEmail = async (email: string, lawyerName: string, data: {
+  clientName: string;
+  rejectionReason?: string;
+  proposalId: string;
+}): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Proposal Not Accepted - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #EF4444; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Proposal Update</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Proposal Not Accepted</h2>
+        <p>Hi ${lawyerName},</p>
+        <p><strong>${data.clientName}</strong> has decided not to proceed with your fractional GC proposal.</p>
+        ${data.rejectionReason ? `
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #EF4444;">
+          <p style="margin: 0 0 10px 0;"><strong>Client's Reason:</strong></p>
+          <p style="margin: 0; white-space: pre-wrap;">${data.rejectionReason}</p>
+        </div>
+        ` : ''}
+        <p>You can continue to send proposals to other clients on the platform.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${frontendUrl}/dashboard/professional?section=fractional" style="background-color: #00A6A6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Other Requests</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
+export const sendProposalExpiredEmail = async (email: string, lawyerName: string, data: {
+  clientName: string;
+  proposalId: string;
+}): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Proposal Expired - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #F59E0B; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Proposal Expired</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Proposal Expired</h2>
+        <p>Hi ${lawyerName},</p>
+        <p>Your proposal for <strong>${data.clientName}</strong> has expired without a response.</p>
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+          <p style="margin: 0;"><strong>Status:</strong> Expired after 14 days</p>
+        </div>
+        <p>You can send a new proposal if the client is still interested, or explore other fractional GC requests on the platform.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/dashboard/professional?section=fractional" style="background-color: #00A6A6; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Other Requests</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
+export const sendEngagementActivatedEmail = async (email: string, userName: string, data: {
+  lawyerName: string;
+  clientName: string;
+  monthlyRetainer: number;
+  engagementMonths: number;
+  engagementId: string;
+}): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Fractional GC Engagement Active - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #5DBB63; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Engagement Activated</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Engagement Now Active</h2>
+        <p>Hi ${userName},</p>
+        <p>Your fractional General Counsel engagement with <strong>${data.lawyerName}</strong> is now active.</p>
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #5DBB63;">
+          <p style="margin: 0 0 10px 0;"><strong>Lawyer:</strong> ${data.lawyerName}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Monthly Retainer:</strong> ₦${data.monthlyRetainer.toLocaleString()}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Commitment:</strong> ${data.engagementMonths} months</p>
+          <p style="margin: 0;"><strong>Platform Fee:</strong> ₦10,000 (one-time, already paid)</p>
+        </div>
+        <p>The engagement has started. You can now schedule meetings and collaborate through the platform.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/fractional/engagements/${data.engagementId}" style="background-color: #5DBB63; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Engagement</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
+export const sendEngagementExpiredEmail = async (email: string, userName: string, data: {
+  lawyerName: string;
+  clientName?: string;
+  engagementId: string;
+}): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Fractional GC Engagement Expired - Advisora Connect';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #EF4444; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Connect</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Engagement Expired</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Engagement Expired</h2>
+        <p>Hi ${userName},</p>
+        <p>Your fractional General Counsel engagement has expired.</p>
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #EF4444;">
+          <p style="margin: 0 0 10px 0;"><strong>Engagement ID:</strong> ${data.engagementId}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Lawyer:</strong> ${data.lawyerName}</p>
+          ${data.clientName ? `<p style="margin: 0;"><strong>Client:</strong> ${data.clientName}</p>` : ''}
+        </div>
+        <p>The engagement has reached its end date. If you wish to continue the engagement, you can renew it through the platform.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/engagements/${data.engagementId}" style="background-color: #EF4444; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View Engagement</a>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
 export const testEmailConnection = async (testEmail: string): Promise<{ success: boolean; message: string }> => {
   if (!resendReady || !resend) {
     return {

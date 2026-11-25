@@ -12,6 +12,8 @@ import LawyerProfileModal from "@/components/admin/LawyerProfileModal";
 import MembershipConfiguration from "@/components/admin/MembershipConfiguration";
 import ProBonoApplicationCard from "@/components/admin/ProBonoApplicationCard";
 import VolunteerLawyerCard from "@/components/admin/VolunteerLawyerCard";
+import FractionalRequestCard from "@/components/admin/FractionalRequestCard";
+import FractionalProposalCard from "@/components/admin/FractionalProposalCard";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -125,11 +127,17 @@ export default function AdminDashboard() {
 
   async function fetchFractionalRequests() {
     try {
-      const data = await api.getAdminProBonoApplications({ limit: 100, category: 'fractional' });
-      // Actually we need a separate endpoint for fractional requests
-      // For now, we'll use the leads endpoint with fractional type
-      // This would need a proper backend endpoint
-      console.log("Fractional requests endpoint needed");
+      // Fetch fractional leads (requests)
+      const data = await api.getAdminProBonoApplications({ limit: 100 });
+      // Filter for fractional type leads
+      const apps = data.applications || [];
+      const fractionalLeads = apps.filter((a: any) => a.leadType === 'fractional');
+      setFractionalRequests({
+        pending: fractionalLeads.filter((a: any) => a.status === "pending"),
+        proposal_sent: fractionalLeads.filter((a: any) => a.status === "proposal_sent"),
+        active: fractionalLeads.filter((a: any) => a.status === "active"),
+        rejected: fractionalLeads.filter((a: any) => a.status === "rejected"),
+      });
     } catch (error) {
       console.error("Failed to fetch fractional requests:", error);
     }
@@ -137,7 +145,14 @@ export default function AdminDashboard() {
 
   async function fetchFractionalProposals() {
     try {
-      console.log("Fractional proposals endpoint needed");
+      const data = await api.getAdminFractionalProposals({ limit: 100 });
+      const props = data.proposals || [];
+      setFractionalProposals({
+        draft: props.filter((p: any) => p.status === "draft"),
+        sent: props.filter((p: any) => ["sent", "viewed"].includes(p.status)),
+        accepted: props.filter((p: any) => ["accepted", "active"].includes(p.status)),
+        rejected: props.filter((p: any) => ["rejected", "expired", "withdrawn"].includes(p.status)),
+      });
     } catch (error) {
       console.error("Failed to fetch fractional proposals:", error);
     }
@@ -642,15 +657,60 @@ export default function AdminDashboard() {
                 <div><p className="text-[#667085] text-sm">Manage fractional GC client requests</p></div>
                 <div className="text-xs text-[#94A3B8]">Total: {fractionalRequests.pending.length + fractionalRequests.proposal_sent.length + fractionalRequests.active.length + fractionalRequests.rejected.length}</div>
               </div>
-              <div className="bg-white rounded-xl border border-[#E5EAF0] p-8">
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-[#00A6A6]/10 text-[#00A6A6] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    ⚖️
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#1B2A4A] mb-2">Fractional GC Requests</h3>
-                  <p className="text-[#667085] mb-6">Kanban board for managing fractional GC client requests coming soon.</p>
-                </div>
-              </div>
+              <KanbanBoard
+                columns={[
+                  { id: "pending", title: "Pending", color: "bg-[#00A6A6]", badge: fractionalRequests.pending.length },
+                  { id: "proposal_sent", title: "Proposal Sent", color: "bg-[#F59E0B]", badge: fractionalRequests.proposal_sent.length },
+                  { id: "active", title: "Active", color: "bg-[#5DBB63]", badge: fractionalRequests.active.length },
+                  { id: "rejected", title: "Rejected", color: "bg-[#EF4444]", badge: fractionalRequests.rejected.length },
+                ]}
+                columnContent={{
+                  pending: fractionalRequests.pending.map((req: any) => (
+                    <div key={req._id} className="mb-3">
+                      <FractionalRequestCard
+                        columnId="pending"
+                        request={req}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === req._id}
+                      />
+                    </div>
+                  )),
+                  proposal_sent: fractionalRequests.proposal_sent.map((req: any) => (
+                    <div key={req._id} className="mb-3">
+                      <FractionalRequestCard
+                        columnId="proposal_sent"
+                        request={req}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === req._id}
+                      />
+                    </div>
+                  )),
+                  active: fractionalRequests.active.map((req: any) => (
+                    <div key={req._id} className="mb-3">
+                      <FractionalRequestCard
+                        columnId="active"
+                        request={req}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === req._id}
+                      />
+                    </div>
+                  )),
+                  rejected: fractionalRequests.rejected.map((req: any) => (
+                    <div key={req._id} className="mb-3">
+                      <FractionalRequestCard
+                        columnId="rejected"
+                        request={req}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === req._id}
+                      />
+                    </div>
+                  )),
+                }}
+              />
             </div>
           )}
 
@@ -661,15 +721,60 @@ export default function AdminDashboard() {
                 <div><p className="text-[#667085] text-sm">Manage fractional GC lawyer proposals</p></div>
                 <div className="text-xs text-[#94A3B8]">Total: {fractionalProposals.draft.length + fractionalProposals.sent.length + fractionalProposals.accepted.length + fractionalProposals.rejected.length}</div>
               </div>
-              <div className="bg-white rounded-xl border border-[#E5EAF0] p-8">
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-[#00A6A6]/10 text-[#00A6A6] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    ⚖️
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#1B2A4A] mb-2">Fractional GC Proposals</h3>
-                  <p className="text-[#667085] mb-6">Kanban board for managing fractional GC proposals coming soon.</p>
-                </div>
-              </div>
+              <KanbanBoard
+                columns={[
+                  { id: "draft", title: "Draft", color: "bg-[#667085]", badge: fractionalProposals.draft.length },
+                  { id: "sent", title: "Sent", color: "bg-[#00A6A6]", badge: fractionalProposals.sent.length },
+                  { id: "accepted", title: "Accepted", color: "bg-[#5DBB63]", badge: fractionalProposals.accepted.length },
+                  { id: "rejected", title: "Rejected", color: "bg-[#EF4444]", badge: fractionalProposals.rejected.length },
+                ]}
+                columnContent={{
+                  draft: fractionalProposals.draft.map((prop: any) => (
+                    <div key={prop._id} className="mb-3">
+                      <FractionalProposalCard
+                        columnId="draft"
+                        proposal={prop}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === prop._id}
+                      />
+                    </div>
+                  )),
+                  sent: fractionalProposals.sent.map((prop: any) => (
+                    <div key={prop._id} className="mb-3">
+                      <FractionalProposalCard
+                        columnId="sent"
+                        proposal={prop}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === prop._id}
+                      />
+                    </div>
+                  )),
+                  accepted: fractionalProposals.accepted.map((prop: any) => (
+                    <div key={prop._id} className="mb-3">
+                      <FractionalProposalCard
+                        columnId="accepted"
+                        proposal={prop}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === prop._id}
+                      />
+                    </div>
+                  )),
+                  rejected: fractionalProposals.rejected.map((prop: any) => (
+                    <div key={prop._id} className="mb-3">
+                      <FractionalProposalCard
+                        columnId="rejected"
+                        proposal={prop}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === prop._id}
+                      />
+                    </div>
+                  )),
+                }}
+              />
             </div>
           )}
 

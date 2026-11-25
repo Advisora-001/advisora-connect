@@ -31,6 +31,9 @@ import webhookRoutes from './routes/webhookRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import proBonoRoutes from './routes/proBonoRoutes';
 import fractionalRoutes from './routes/fractionalRoutes';
+import engagementRoutes from './routes/engagementRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
+import { startCronJobs } from './jobs/expiryJobs';
 
 // Connect to MongoDB
 connectDB();
@@ -87,6 +90,8 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/pro-bono', proBonoRoutes);
 app.use('/api/fractional', fractionalRoutes);
+app.use('/api/engagements', engagementRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -99,8 +104,10 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(500).json({ message: 'Internal server error', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  // Start cron jobs
+  await startCronJobs();
 });
 
 export default app;

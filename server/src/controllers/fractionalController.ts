@@ -8,7 +8,7 @@ import Subscription from '../models/Subscription';
 import Plan from '../models/Plan';
 import { getPaystackService } from '../services/paystack';
 import { createNotification } from './notificationController';
-import { sendFractionalRequestEmail, sendProposalEmail } from '../services/email';
+import { sendFractionalRequestEmail, sendProposalEmail, sendProposalViewedEmail, sendProposalAcceptedEmail, sendProposalRejectedEmail, sendProposalExpiredEmail, sendEngagementActivatedEmail } from '../services/email';
 
 // ============================================
 // Client: Request Fractional GC
@@ -302,6 +302,19 @@ export const getFractionalProposal = async (req: AuthRequest, res: Response) => 
       proposal.status = 'viewed';
       proposal.viewedAt = new Date();
       await proposal.save();
+
+      // Send viewed email to lawyer
+      try {
+        const lawyerUser = await User.findById((proposal.lawyerId as any).userId || proposal.lawyerId);
+        if (lawyerUser) {
+          await sendProposalViewedEmail(lawyerUser.email!, `${lawyerUser.firstName} ${lawyerUser.lastName}`, {
+            clientName: `${req.user?.firstName} ${req.user?.lastName}`,
+            proposalId: proposal._id.toString(),
+          });
+        }
+      } catch (emailError) {
+        console.error('Failed to send proposal viewed email:', emailError);
+      }
     }
 
     res.json({ proposal });
@@ -411,6 +424,111 @@ export const acceptFractionalProposal = async (req: AuthRequest, res: Response) 
   }
 };
 
+// @desc    Accept fractional proposal and send email
+// @route   POST /api/fractional/proposals/:id/accept-with-email
+export const acceptFractionalProposalWithEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const proposal = await FractionalProposal.findById(req.params.id)
+      .populate('leadId');
+
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposal not found' });
+    }
+
+    if (proposal.clientId.toString() !== req.user?._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    if (proposal.status !== 'sent' && proposal.status !== 'viewed') {
+      return res.status(400).json({ message: 'Proposal cannot be accepted' });
+    }
+
+    if (new Date() > proposal.expiresAt) {
+      proposal.status = 'expired';
+      await proposal.save();
+      return res.status(400).json({ message: 'Proposal has expired' });
+    }
+
+    // Create Paystack subscription for the retainer
+    const paystack = getPaystackService();
+    const client = await User.findById(proposal.clientId);
+
+    // Get or create Paystack customer
+    let customerCode: string;
+    if (!client?.paystackCustomerCode) {
+      const customer = await paystack.createCustomer(client!.email!, {
+        userId: client!._id.toString(),
+        role: client!.role,
+      });
+      customerCode = customer.customer_code;
+      await User.findByIdAndUpdate(client!._id, { paystackCustomerCode: customerCode });
+    } else {
+      customerCode = client!.paystackCustomerCode;
+    }
+
+    // Create subscription plan in Paystack if not exists
+    // For simplicity, we'll use inline subscription with amount
+    const reference = `frac_${proposal._id}_${Date.now()}`;
+    const initResponse = await paystack.initializeTransaction({
+      email: client!.email!,
+      amount: proposal.monthlyRetainer * 100, // Convert to kobo
+      currency: 'NGN',
+      reference,
+      callback_url: `${process.env.FRONTEND_URL}/fractional/proposals/${proposal._id}?payment=success`,
+      metadata: {
+        type: 'fractional_subscription',
+        proposalId: proposal._id.toString(),
+        clientId: client!._id.toString(),
+        monthlyRetainer: proposal.monthlyRetainer,
+      },
+    });
+
+    // Update proposal with payment reference
+    proposal.status = 'accepted';
+    proposal.acceptedAt = new Date();
+    proposal.respondedAt = new Date();
+    proposal.paystackRef = reference;
+    await proposal.save();
+
+    // Update lead
+    if (proposal.leadId) {
+      await Lead.findByIdAndUpdate(proposal.leadId, { status: 'accepted' });
+    }
+
+    // Notify lawyer with email
+    try {
+      const lawyerUser = await User.findById((proposal.lawyerId as any).userId || proposal.lawyerId);
+      if (lawyerUser) {
+        await sendProposalAcceptedEmail(lawyerUser.email!, `${lawyerUser.firstName} ${lawyerUser.lastName}`, {
+          clientName: `${client!.firstName} ${client!.lastName}`,
+          monthlyRetainer: proposal.monthlyRetainer,
+          engagementMonths: proposal.engagementMonths,
+          proposalId: proposal._id.toString(),
+        });
+
+        await createNotification(
+          lawyerUser._id.toString(),
+          'fractional_accepted',
+          'Fractional Proposal Accepted',
+          `Your proposal was accepted. Awaiting payment confirmation.`,
+          `/dashboard/professional?section=fractional`
+        );
+      }
+    } catch (emailError) {
+      console.error('Failed to send accepted email:', emailError);
+    }
+
+    res.json({
+      message: 'Proposal accepted. Please complete payment to activate the engagement.',
+      authorizationUrl: initResponse.data.authorization_url,
+      reference,
+    });
+  } catch (error: any) {
+    console.error('Accept fractional proposal error:', error);
+    res.status(500).json({ message: 'Failed to accept proposal', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+  }
+};
+
 // @desc    Reject fractional proposal
 // @route   POST /api/fractional/proposals/:id/reject
 export const rejectFractionalProposal = async (req: AuthRequest, res: Response) => {
@@ -454,6 +572,65 @@ export const rejectFractionalProposal = async (req: AuthRequest, res: Response) 
         );
       }
     } catch {}
+
+    res.json({ message: 'Proposal rejected' });
+  } catch (error: any) {
+    console.error('Reject fractional proposal error:', error);
+    res.status(500).json({ message: 'Failed to reject proposal' });
+  }
+};
+
+// @desc    Reject fractional proposal and send email
+// @route   POST /api/fractional/proposals/:id/reject-with-email
+export const rejectFractionalProposalWithEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const { clientNotes } = req.body;
+
+    const proposal = await FractionalProposal.findById(req.params.id);
+
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposal not found' });
+    }
+
+    if (proposal.clientId.toString() !== req.user?._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    if (proposal.status !== 'sent' && proposal.status !== 'viewed') {
+      return res.status(400).json({ message: 'Proposal cannot be rejected' });
+    }
+
+    proposal.status = 'rejected';
+    proposal.respondedAt = new Date();
+    proposal.clientNotes = clientNotes;
+    await proposal.save();
+
+    // Update lead
+    if (proposal.leadId) {
+      await Lead.findByIdAndUpdate(proposal.leadId, { status: 'rejected' });
+    }
+
+    // Notify lawyer with email
+    try {
+      const lawyerUser = await User.findById((proposal.lawyerId as any).userId || proposal.lawyerId);
+      if (lawyerUser) {
+        await sendProposalRejectedEmail(lawyerUser.email!, `${lawyerUser.firstName} ${lawyerUser.lastName}`, {
+          clientName: `${req.user?.firstName} ${req.user?.lastName}`,
+          rejectionReason: clientNotes,
+          proposalId: proposal._id.toString(),
+        });
+
+        await createNotification(
+          lawyerUser._id.toString(),
+          'fractional_rejected',
+          'Fractional Proposal Rejected',
+          `Your proposal was rejected by the client.`,
+          `/dashboard/professional?section=fractional`
+        );
+      }
+    } catch (emailError) {
+      console.error('Failed to send rejected email:', emailError);
+    }
 
     res.json({ message: 'Proposal rejected' });
   } catch (error: any) {
@@ -559,6 +736,15 @@ export const handleFractionalSubscriptionPayment = async (reference: string) => 
           `Your fractional GC engagement is now active.`,
           `/fractional/engagements/${proposal._id}`
         );
+
+        // Send engagement activated email to client
+        await sendEngagementActivatedEmail(client.email!, `${client.firstName} ${client.lastName}`, {
+          lawyerName: `${(lawyerProfile as any).userId?.firstName} ${(lawyerProfile as any).userId?.lastName}`,
+          clientName: `${client.firstName} ${client.lastName}`,
+          monthlyRetainer: proposal.monthlyRetainer,
+          engagementMonths: proposal.engagementMonths,
+          engagementId: proposal._id.toString(),
+        });
       }
 
       if (lawyerProfile && (lawyerProfile as any).userId) {
@@ -569,6 +755,18 @@ export const handleFractionalSubscriptionPayment = async (reference: string) => 
           `New fractional GC engagement started.`,
           `/dashboard/professional?section=fractional`
         );
+
+        // Send engagement activated email to lawyer
+        const lawyerUser = await User.findById((lawyerProfile as any).userId?._id);
+        if (lawyerUser) {
+          await sendEngagementActivatedEmail(lawyerUser.email!, `${lawyerUser.firstName} ${lawyerUser.lastName}`, {
+            lawyerName: `${(lawyerProfile as any).userId?.firstName} ${(lawyerProfile as any).userId?.lastName}`,
+            clientName: `${(proposal.clientId as any).firstName} ${(proposal.clientId as any).lastName}`,
+            monthlyRetainer: proposal.monthlyRetainer,
+            engagementMonths: proposal.engagementMonths,
+            engagementId: proposal._id.toString(),
+          });
+        }
       }
     } catch (notifError) {
       console.error('Failed to send activation notifications:', notifError);
@@ -577,5 +775,93 @@ export const handleFractionalSubscriptionPayment = async (reference: string) => 
     console.log('Fractional subscription activated:', proposal._id);
   } catch (error: any) {
     console.error('Handle fractional subscription payment error:', error);
+  }
+};
+
+// ============================================
+// Admin: Get Fractional Proposals
+// ============================================
+
+// @desc    Get all fractional proposals (admin)
+// @route   GET /api/admin/fractional/proposals
+export const getAdminFractionalProposals = async (req: AuthRequest, res: Response) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const filter: any = {};
+    if (status) filter.status = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [proposals, total] = await Promise.all([
+      FractionalProposal.find(filter)
+        .populate('lawyerId', 'firstName lastName email photo city state fractionalGC')
+        .populate('clientId', 'firstName lastName email')
+        .populate('leadId')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      FractionalProposal.countDocuments(filter),
+    ]);
+
+    res.json({
+      proposals,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit)),
+      },
+    });
+  } catch (error: any) {
+    console.error('Get admin fractional proposals error:', error);
+    res.status(500).json({ message: 'Failed to fetch proposals' });
+  }
+};
+
+// @desc    Get single fractional proposal (admin)
+// @route   GET /api/admin/fractional/proposals/:id
+export const getAdminFractionalProposal = async (req: AuthRequest, res: Response) => {
+  try {
+    const proposal = await FractionalProposal.findById(req.params.id)
+      .populate('lawyerId', 'firstName lastName email photo city state fractionalGC bio yearsOfExperience')
+      .populate('clientId', 'firstName lastName email')
+      .populate('leadId');
+
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposal not found' });
+    }
+
+    res.json({ proposal });
+  } catch (error: any) {
+    console.error('Get admin fractional proposal error:', error);
+    res.status(500).json({ message: 'Failed to fetch proposal' });
+  }
+};
+
+// @desc    Update fractional proposal (admin)
+// @route   PUT /api/admin/fractional/proposals/:id
+export const updateAdminFractionalProposal = async (req: AuthRequest, res: Response) => {
+  try {
+    const { status, reviewNotes } = req.body;
+
+    const proposal = await FractionalProposal.findById(req.params.id);
+    if (!proposal) {
+      return res.status(404).json({ message: 'Proposal not found' });
+    }
+
+    if (status) proposal.status = status;
+    if (reviewNotes) proposal.reviewNotes = reviewNotes;
+
+    if (status) {
+      proposal.respondedAt = new Date();
+      proposal.reviewedBy = req.user?._id;
+    }
+
+    await proposal.save();
+
+    res.json({ message: 'Proposal updated successfully', proposal });
+  } catch (error: any) {
+    console.error('Update admin fractional proposal error:', error);
+    res.status(500).json({ message: 'Failed to update proposal' });
   }
 };

@@ -4,9 +4,11 @@ import ProfessionalProfile from '../models/ProfessionalProfile';
 import Lead from '../models/Lead';
 import Plan from '../models/Plan';
 import FractionalProposal from '../models/FractionalProposal';
+import Engagement from '../models/Engagement';
 import { getPaystackService } from '../services/paystack';
 import { createNotification } from './notificationController';
 import { handleFractionalSubscriptionPayment } from './fractionalController';
+import { createEngagementFromProposal } from './engagementController';
 
 interface PaystackWebhookEvent {
   event: string;

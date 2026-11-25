@@ -1508,6 +1508,255 @@ class ApiClient {
   }
 
   // ============================================
+  // Engagements
+  // ============================================
+
+  // Lawyer: Get my engagements
+  getLawyerEngagements(params?: { status?: string; page?: number; limit?: number }) {
+    let url = '/engagements/my-engagements';
+    const query: string[] = [];
+    if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ engagements: Array<unknown>; pagination: { page: number; limit: number; total: number; pages: number } }>(url);
+  }
+
+  // Client: Get my engagements
+  getClientEngagements(params?: { status?: string; page?: number; limit?: number }) {
+    let url = '/engagements/client-engagements';
+    const query: string[] = [];
+    if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ engagements: Array<unknown>; pagination: { page: number; limit: number; total: number; pages: number } }>(url);
+  }
+
+  // Get single engagement
+  getEngagement(id: string) {
+    return this.request<{ engagement: unknown }>(`/engagements/${id}`);
+  }
+
+  // Engagement stats
+  getEngagementStats() {
+    return this.request<{
+      engagements: { total: number; active: number; paused: number; completed: number; terminated: number };
+      hours: { totalLogged: number; utilizationRate: number };
+      billing: { totalBilled: number; upcomingBillings: number };
+    }>('/engagements/stats');
+  }
+
+  // Add hour entry
+  addHourEntry(id: string, data: { date: string; hours: number; description: string; category: string }) {
+    return this.request<{ message: string; engagement: unknown }>(`/engagements/${id}/hours`, { method: 'POST', body: data });
+  }
+
+  // Add meeting
+  addMeeting(id: string, data: { date: string; duration: number; type: string; notes?: string; attendedBy?: string[] }) {
+    return this.request<{ message: string; engagement: unknown }>(`/engagements/${id}/meetings`, { method: 'POST', body: data });
+  }
+
+  // Update engagement status
+  updateEngagementStatus(id: string, data: { status: string; reason?: string }) {
+    return this.request<{ message: string; engagement: unknown }>(`/engagements/${id}/status`, { method: 'PUT', body: data });
+  }
+
+  // Renew engagement
+  renewEngagement(id: string, data: { additionalMonths: number }) {
+    return this.request<{ message: string; engagement: unknown }>(`/engagements/${id}/renew`, { method: 'POST', body: data });
+  }
+
+  // Admin: Get all engagements
+  getAdminEngagements(params?: { status?: string; lawyerId?: string; clientId?: string; page?: number; limit?: number }) {
+    let url = '/engagements/admin';
+    const query: string[] = [];
+    if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.lawyerId) query.push(`lawyerId=${encodeURIComponent(params.lawyerId)}`);
+    if (params?.clientId) query.push(`clientId=${encodeURIComponent(params.clientId)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ engagements: Array<unknown>; pagination: { page: number; limit: number; total: number; pages: number } }>(url);
+  }
+
+  // Admin: Get single engagement
+  getAdminEngagement(id: string) {
+    return this.request<{ engagement: unknown }>(`/engagements/admin/${id}`);
+  }
+
+  // Admin: Update engagement
+  updateAdminEngagement(id: string, data: { status?: string; notes?: string; autoRenew?: boolean; terminationNoticeDays?: number }) {
+    return this.request<{ message: string; engagement: unknown }>(`/engagements/admin/${id}`, { method: 'PUT', body: data });
+  }
+
+  // Check engagement expiry
+  checkEngagementExpiry() {
+    return this.request<{ message: string; count: number }>('/engagements/check-expiry', { method: 'POST' });
+  }
+
+  // ============================================
+  // Engagement Renewal
+  // ============================================
+
+  // Lawyer: Request renewal confirmation
+  requestRenewalConfirmation(id: string) {
+    return this.request<{ message: string }>(`/engagements/${id}/request-renewal`, { method: 'POST' });
+  }
+
+  // Client: Confirm/decline renewal
+  confirmRenewal(id: string, action: 'confirm' | 'decline') {
+    return this.request<{ message: string }>(`/engagements/${id}/confirm-renewal`, { method: 'POST', body: { action } });
+  }
+
+  // Update auto-renewal setting
+  updateAutoRenew(id: string, autoRenew: boolean) {
+    return this.request<{ message: string; engagement: unknown }>(`/engagements/${id}/auto-renew`, { method: 'PUT', body: { autoRenew } });
+  }
+
+  // Get renewal status
+  getRenewalStatus(id: string) {
+    return this.request<{
+      autoRenew: boolean;
+      endDate: string;
+      daysUntilEnd: number;
+      canRenew: boolean;
+      lastRenewalStatus: unknown;
+    }>(`/engagements/${id}/renewal-status`);
+  }
+
+  // ============================================
+  // Analytics
+  // ============================================
+
+  // Lawyer Analytics
+  getLawyerAnalytics() {
+    return this.request<{
+      revenue: {
+        total: number;
+        monthlyRecurring: number;
+        thisMonth: number;
+        lastMonth: number;
+        growth: number;
+        byMonth: Array<{ month: string; revenue: number }>;
+      };
+      engagements: {
+        total: number;
+        active: number;
+        completed: number;
+        terminated: number;
+        newThisMonth: number;
+        totalClients: number;
+        activeClients: number;
+        retentionRate: number;
+      };
+      hours: {
+        totalLogged: number;
+        thisMonth: number;
+        capacity: number;
+        utilization: number;
+        byCategory: Record<string, number>;
+      };
+      proposals: {
+        sent: number;
+        accepted: number;
+        rejected: number;
+        pending: number;
+        conversionRate: number;
+      };
+      topClients: Array<{ id: string; name: string; revenue: number; hours: number }>;
+      recentActivity: Array<{ id: string; client: string; status: string; monthlyRetainer: number; lastActivity: string }>;
+    }>('/analytics/lawyer');
+
+  // Client Analytics
+  getClientAnalytics() {
+    return this.request<{
+      engagements: {
+        total: number;
+        active: number;
+        completed: number;
+      };
+      spending: {
+        total: number;
+        monthly: number;
+      };
+      hours: {
+        total: number;
+        byLawyer: Array<{ lawyer: string; hours: number; retainer: number }>;
+      };
+      engagements: Array<{
+        id: string;
+        lawyer: string;
+        status: string;
+        monthlyRetainer: number;
+        hoursUsed: number;
+        startDate: string;
+        endDate: string;
+      }>;
+    }>('/analytics/client');
+
+  // Admin Analytics
+  getAdminAnalytics() {
+    return this.request<{
+      overview: {
+        totalLawyers: number;
+        verifiedLawyers: number;
+        totalClients: number;
+        totalEngagements: number;
+        activeEngagements: number;
+        totalProposals: number;
+        acceptedProposals: number;
+        totalRevenue: number;
+        thisMonthRevenue: number;
+      };
+      charts: {
+        revenueByMonth: Array<{ month: string; revenue: number }>;
+        lawyersByStatus: Array<{ _id: string; count: number }>;
+        proposalsByStatus: Array<{ _id: string; count: number }>;
+        engagementsByStatus: Array<{ _id: string; count: number }>;
+      };
+      topLawyers: Array<{
+        lawyerName: string;
+        email: string;
+        totalRevenue: number;
+        engagementCount: number;
+      }>;
+      charts: {
+        revenueByMonth: Array<{ month: string; revenue: number }>;
+      };
+      growth: {
+        lawyersGrowth: number;
+        clientsGrowth: number;
+        revenueGrowth: number;
+      };
+    }>('/analytics/admin');
+
+  // ============================================
+  // Admin: Fractional Proposals
+  // ============================================
+
+  // Admin: Get fractional proposals
+  getAdminFractionalProposals(params?: { status?: string; page?: number; limit?: number }) {
+    let url = '/fractional/admin/proposals';
+    const query: string[] = [];
+    if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ proposals: Array<unknown>; pagination: { page: number; limit: number; total: number; pages: number } }>(url);
+  }
+
+  // Admin: Get single fractional proposal
+  getAdminFractionalProposal(id: string) {
+    return this.request<{ proposal: unknown }>(`/fractional/admin/proposals/${id}`);
+  }
+
+  // Admin: Update fractional proposal
+  updateAdminFractionalProposal(id: string, data: { status?: string; reviewNotes?: string }) {
+    return this.request<{ message: string; proposal: unknown }>(`/fractional/admin/proposals/${id}`, { method: 'PUT', body: data });
+  }
+
+  // ============================================
   // Blog (public)
   // ============================================
 
