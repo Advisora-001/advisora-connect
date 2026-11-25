@@ -3,8 +3,10 @@ import Subscription from '../models/Subscription';
 import ProfessionalProfile from '../models/ProfessionalProfile';
 import Lead from '../models/Lead';
 import Plan from '../models/Plan';
+import FractionalProposal from '../models/FractionalProposal';
 import { getPaystackService } from '../services/paystack';
 import { createNotification } from './notificationController';
+import { handleFractionalSubscriptionPayment } from './fractionalController';
 
 interface PaystackWebhookEvent {
   event: string;
@@ -170,6 +172,12 @@ async function handleChargeSuccess(event: PaystackWebhookEvent) {
   // Subscription payment (fallback - subscription.create should handle)
   if (type === 'subscription' && metadata?.userId) {
     console.log('Charge success for subscription (handled by subscription.create)');
+    return;
+  }
+
+  // Fractional GC subscription payment
+  if (type === 'fractional_subscription' && metadata?.proposalId) {
+    await handleFractionalSubscriptionPayment(reference);
     return;
   }
 }

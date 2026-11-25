@@ -133,6 +133,7 @@ class ApiClient {
     role: 'client' | 'lawyer' | 'professional';
     termsAccepted: boolean;
     policiesAccepted: boolean;
+    fractionalGCOffered?: boolean;
   }) {
     return this.request<{ _id: string; role: string; message?: string }>('/auth/register', {
       method: 'POST',
@@ -1421,6 +1422,76 @@ class ApiClient {
       categories: Array<{ _id: string; count: number }>;
       urgency: Array<{ _id: string; count: number }>;
     }>('/pro-bono/admin/stats');
+  }
+
+  // ============================================
+  // Fractional GC (Public)
+  // ============================================
+
+  // Client: Request fractional GC
+  requestFractionalGC(data: {
+    lawyerId: string;
+    companyName: string;
+    companyStage?: string;
+    industry?: string;
+    legalNeeds: string;
+    budgetRange?: string;
+    preferredStartDate?: string;
+    message?: string;
+  }) {
+    return this.request<{ message: string; leadId: string }>('/fractional/request', { method: 'POST', body: data });
+  }
+
+  // Lawyer: Get fractional requests
+  getFractionalRequests() {
+    return this.request<{ count: number; leads: Array<unknown> }>('/fractional/requests');
+  }
+
+  // Lawyer: Create proposal
+  createFractionalProposal(data: {
+    leadId: string;
+    monthlyRetainer: number;
+    hoursPerMonth: number;
+    engagementMonths: number;
+    startDate: string;
+    autoRenew: boolean;
+    industries: string[];
+    companyStages: string[];
+    engagementType: string;
+    scopeOfWork: string[];
+    customScope?: string;
+    paymentTerms: string;
+    terminationNoticeDays: number;
+    includesOutOfScopeRate: boolean;
+    outOfScopeHourlyRate?: number;
+    notes?: string;
+  }) {
+    return this.request<{ message: string; proposal: unknown }>('/fractional/proposals', { method: 'POST', body: data });
+  }
+
+  // Client: Get proposals
+  getClientFractionalProposals() {
+    return this.request<{ count: number; proposals: Array<unknown> }>('/fractional/proposals');
+  }
+
+  // Get single proposal
+  getFractionalProposal(id: string) {
+    return this.request<{ proposal: unknown }>(`/fractional/proposals/${id}`);
+  }
+
+  // Client: Accept proposal
+  acceptFractionalProposal(id: string) {
+    return this.request<{ message: string; authorizationUrl: string; reference: string }>(`/fractional/proposals/${id}/accept`, { method: 'POST' });
+  }
+
+  // Client: Reject proposal
+  rejectFractionalProposal(id: string, clientNotes?: string) {
+    return this.request<{ message: string }>(`/fractional/proposals/${id}/reject`, { method: 'POST', body: { clientNotes } });
+  }
+
+  // Lawyer: Get my proposals
+  getLawyerFractionalProposals() {
+    return this.request<{ count: number; proposals: Array<unknown> }>('/fractional/my-proposals');
   }
 
   // ============================================

@@ -195,7 +195,7 @@ export const sidebarConfigs = {
     },
   }),
 
-  professional: (activeSection: string, onSectionChange: (section: "dashboard" | "enquiries" | "appointments" | "profile" | "wallet" | "payout") => void, user: { name: string; email: string }) => ({
+  professional: (activeSection: string, onSectionChange: (section: "dashboard" | "enquiries" | "appointments" | "profile" | "wallet" | "payout" | "fractional") => void, user: { name: string; email: string }) => ({
     activeSection,
     onSectionChange: onSectionChange as (section: string) => void,
     config: {
@@ -203,6 +203,12 @@ export const sidebarConfigs = {
         { id: 'dashboard', label: 'Dashboard', icon: defaultIcons.dashboard },
         { id: 'enquiries', label: 'Enquiries', icon: defaultIcons.enquiries },
         { id: 'appointments', label: 'Appointments', icon: defaultIcons.appointments },
+        { id: 'fractional', label: 'Fractional GC', icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2v-14a2 2 0 01-2-2h-2a2 2 0 01-2 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V4a2 2 0 012-2h2a2 2 0 012 2v15" />
+          </svg>
+        ) },
         { id: 'profile', label: 'Profile', icon: defaultIcons.profile },
         { id: 'wallet', label: 'Wallet', icon: defaultIcons.wallet },
         { id: 'payout', label: 'Payout', icon: defaultIcons.payout },

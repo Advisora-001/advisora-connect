@@ -164,6 +164,30 @@ function ProfessionalDetailContent() {
             >
               Book a Consultation
             </button>
+            {professional.fractionalGC?.isAvailable && professional.category?.key === 'legal' && (
+              <div className="mt-4 pt-4 border-t border-[#E5EAF0]">
+                <p className="text-sm text-[#667085] mb-2">Need ongoing legal support?</p>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      router.push("/login?redirect=" + encodeURIComponent(`/fractional/request/${id}`));
+                      return;
+                    }
+                    router.push(`/fractional/request/${id}`);
+                  }}
+                  className="w-full border-2 border-[#00A6A6] text-[#00A6A6] py-3 rounded-lg hover:bg-[#00A6A6] hover:text-white transition-colors font-semibold text-sm flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2v-14a2 2 0 01-2-2h-2a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V4a2 2 0 012-2h2a2 2 0 012 2v15" />
+                  </svg>
+                  Request Fractional GC
+                </button>
+                <p className="text-xs text-[#94A3B8] mt-2 text-center">
+                  Monthly retainer: ₦{professional.fractionalGC?.monthlyRetainerMin?.toLocaleString() || 0} - ₦{professional.fractionalGC?.monthlyRetainerMax?.toLocaleString() || 0}
+                </p>
+              </div>
+            )}
           </div>
           <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
             <h3 className="font-semibold text-lg text-[#1B2A4A] mb-4">Availability</h3>

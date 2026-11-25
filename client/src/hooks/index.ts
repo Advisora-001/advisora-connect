@@ -8,6 +8,7 @@ export * from './useAdmin';
 export * from './useProfileGate';
 export * from './useSubscription';
 export * from './useProBono';
+export * from './useFractional';
 
 // Import leadKeys for useAppointments cross-invalidation
 import { leadKeys } from './useLeads';

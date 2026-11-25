@@ -42,6 +42,20 @@ export interface IProfessionalProfile extends Document {
   };
   legacyLawyerProfileId?: mongoose.Types.ObjectId;
   categoryData?: Record<string, any>;
+
+  // Fractional GC fields
+  fractionalGC?: {
+    isAvailable: boolean;
+    monthlyRetainerMin: number;
+    monthlyRetainerMax: number;
+    hoursPerMonth: number;
+    industries: string[];
+    companyStages: string[];
+    engagementTypes: string[];
+    scopeOfWork: string[];
+    minimumEngagementMonths: number;
+    autoRenew: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -105,6 +119,20 @@ const professionalProfileSchema = new Schema<IProfessionalProfile>(
     },
     legacyLawyerProfileId: { type: Schema.Types.ObjectId, ref: 'LawyerProfile' },
     categoryData: { type: Schema.Types.Mixed, default: {} },
+
+    // Fractional GC fields
+    fractionalGC: {
+      isAvailable: { type: Boolean, default: false },
+      monthlyRetainerMin: { type: Number, default: 0 },
+      monthlyRetainerMax: { type: Number, default: 0 },
+      hoursPerMonth: { type: Number, default: 0 },
+      industries: [{ type: String }],
+      companyStages: [{ type: String }],
+      engagementTypes: [{ type: String }],
+      scopeOfWork: [{ type: String }],
+      minimumEngagementMonths: { type: Number, default: 3 },
+      autoRenew: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );

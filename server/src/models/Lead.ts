@@ -3,12 +3,14 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ILead extends Document {
   lawyerId: mongoose.Types.ObjectId;
   clientId: mongoose.Types.ObjectId;
-  status: 'pending' | 'accepted' | 'declined' | 'booked' | 'closed' | 'expired';
+  status: 'pending' | 'accepted' | 'declined' | 'booked' | 'closed' | 'expired' | 'proposal_sent' | 'active';
   enquiryMessage: string;
   leadFee: number;
   platformFee: number;
   paymentRef?: string;
   paymentStatus: 'unpaid' | 'paid' | 'failed';
+  // Lead type
+  leadType: 'consultation' | 'fractional';
   // Pay-per-lead fields
   paystackReference?: string;
   unlockedAt?: Date;
@@ -32,6 +34,15 @@ export interface ILead extends Document {
     duration: number;
     consultationType: string;
   };
+  // Fractional GC details
+  fractionalDetails?: {
+    companyName: string;
+    companyStage?: string;
+    industry?: string;
+    legalNeeds: string;
+    budgetRange?: string;
+    preferredStartDate?: Date;
+  };
 }
 
 const leadSchema = new Schema<ILead>(
@@ -40,7 +51,7 @@ const leadSchema = new Schema<ILead>(
     clientId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'declined', 'booked', 'closed', 'expired'],
+      enum: ['pending', 'accepted', 'declined', 'booked', 'closed', 'expired', 'proposal_sent', 'active'],
       default: 'pending',
     },
     enquiryMessage: {
@@ -55,6 +66,13 @@ const leadSchema = new Schema<ILead>(
       type: String,
       enum: ['unpaid', 'paid', 'failed'],
       default: 'unpaid',
+    },
+    // Lead type
+    leadType: {
+      type: String,
+      enum: ['consultation', 'fractional'],
+      default: 'consultation',
+      index: true,
     },
     // Pay-per-lead fields
     paystackReference: { type: String },
@@ -80,6 +98,15 @@ const leadSchema = new Schema<ILead>(
       timeSlot: { type: String },
       duration: { type: Number },
       consultationType: { type: String },
+    },
+    // Fractional GC details
+    fractionalDetails: {
+      companyName: { type: String },
+      companyStage: { type: String },
+      industry: { type: String },
+      legalNeeds: { type: String },
+      budgetRange: { type: String },
+      preferredStartDate: { type: Date },
     },
   },
   { timestamps: true }

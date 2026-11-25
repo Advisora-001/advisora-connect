@@ -14,7 +14,10 @@ interface SidebarProps {
       | "guide"
       | "pro-bono-applications"
       | "pro-bono-volunteers"
-      | "pro-bono-stats";
+      | "pro-bono-stats"
+      | "fractional-requests"
+      | "fractional-proposals"
+      | "fractional-stats";
   onSectionChange: (
     section:
       | "dashboard"
@@ -27,7 +30,10 @@ interface SidebarProps {
       | "guide"
       | "pro-bono-applications"
       | "pro-bono-volunteers"
-      | "pro-bono-stats",
+      | "pro-bono-stats"
+      | "fractional-requests"
+      | "fractional-proposals"
+      | "fractional-stats",
   ) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -44,6 +50,9 @@ const menuItems = [
   { id: "pro-bono-applications", label: "Pro Bono Apps", icon: "📋" },
   { id: "pro-bono-volunteers", label: "Pro Bono Volunteers", icon: "🤝" },
   { id: "pro-bono-stats", label: "Pro Bono Stats", icon: "📊" },
+  { id: "fractional-requests", label: "Fractional Requests", icon: "⚖️" },
+  { id: "fractional-proposals", label: "Fractional Proposals", icon: "📄" },
+  { id: "fractional-stats", label: "Fractional Stats", icon: "📊" },
   { id: "guide", label: "Platform Guide", icon: "📖" },
 ];
 

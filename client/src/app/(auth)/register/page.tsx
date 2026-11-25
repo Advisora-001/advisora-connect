@@ -71,6 +71,7 @@ function RegisterPageContent() {
     role: defaultRole,
     termsAccepted: false,
     policiesAccepted: false,
+    fractionalGCOffered: false,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -363,6 +364,73 @@ function RegisterPageContent() {
               <option value="professional">Accountant / Tax Consultant / Other Professional</option>
             </select>
           </div>
+
+          <div className="space-y-3 p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                name="termsAccepted"
+                checked={formData.termsAccepted}
+                onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
+                className="mt-1 w-5 h-5 text-primary border-primary rounded focus:ring-2 focus:ring-primary-dark"
+              />
+              <label className="text-sm text-accent">
+                I have read and agree to the{' '}
+                <a href="/terms-of-use" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
+                  Terms of Use
+                </a>,{' '}
+                <a href="/privacy-policy" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
+                  Privacy Policy
+                </a>, and{' '}
+                <a href="/data-protection" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
+                  Data Protection Policy
+                </a>, and{" "}
+                <a href="/professional-onboarding-agreement" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
+                  Professional Onboarding Agreement
+                </a>.
+              </label>
+            </div>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                name="policiesAccepted"
+                checked={formData.policiesAccepted}
+                onChange={(e) => setFormData({ ...formData, policiesAccepted: e.target.checked })}
+                className="mt-1 w-5 h-5 text-primary border-primary rounded focus:ring-2 focus:ring-primary-dark"
+              />
+              <label className="text-sm text-accent">
+                I have read and agree to the{' '}
+                <a href="/code-of-conduct" target="_blank" className="font-bold text-accent underline hover:text-accent/80">
+                  Code of Conduct
+                </a>{' '}
+                and all other applicable platform policies.
+              </label>
+            </div>
+          </div>
+
+          {/* Fractional GC checkbox for lawyers */}
+          {formData.role === "lawyer" && (
+            <div className="space-y-3 p-4 bg-teal-50 rounded-lg border-2 border-teal-200">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  name="fractionalGCOffered"
+                  checked={formData.fractionalGCOffered || false}
+                  onChange={(e) => setFormData({ ...formData, fractionalGCOffered: e.target.checked })}
+                  className="mt-1 w-5 h-5 text-teal-600 border-teal-400 rounded focus:ring-2 focus:ring-teal-500"
+                />
+                <div>
+                  <label className="text-sm font-semibold text-teal-800">
+                    I offer Fractional General Counsel services
+                  </label>
+                  <p className="text-xs text-teal-600 mt-1">
+                    Offer part-time, ongoing legal leadership to businesses on a monthly retainer basis.
+                    You'll be able to set your retainer range, hours/month, industries, and scope of work.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3 p-4 bg-primary/5 rounded-lg border-2 border-primary/20">
             <div className="flex items-start gap-3">

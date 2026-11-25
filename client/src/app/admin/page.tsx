@@ -17,7 +17,7 @@ export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<
-    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue" | "guide" | "pro-bono-applications" | "pro-bono-volunteers" | "pro-bono-stats"
+    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue" | "guide" | "pro-bono-applications" | "pro-bono-volunteers" | "pro-bono-stats" | "fractional-requests" | "fractional-proposals" | "fractional-stats"
   >("dashboard");
   const [analytics, setAnalytics] = useState<any>(null);
   const [pendingLawyers, setPendingLawyers] = useState<any[]>([]);
@@ -49,6 +49,22 @@ export default function AdminDashboard() {
   const [proBonoStats, setProBonoStats] = useState<any>(null);
   const [proBonoLoading, setProBonoLoading] = useState(false);
 
+  // Fractional GC state
+  const [fractionalRequests, setFractionalRequests] = useState<{
+    pending: any[];
+    proposal_sent: any[];
+    active: any[];
+    rejected: any[];
+  }>({ pending: [], proposal_sent: [], active: [], rejected: [] });
+  const [fractionalProposals, setFractionalProposals] = useState<{
+    draft: any[];
+    sent: any[];
+    accepted: any[];
+    rejected: any[];
+  }>({ draft: [], sent: [], accepted: [], rejected: [] });
+  const [fractionalStats, setFractionalStats] = useState<any>(null);
+  const [fractionalLoading, setFractionalLoading] = useState(false);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.role !== "admin") { router.push("/login"); return; }
@@ -58,6 +74,9 @@ export default function AdminDashboard() {
     fetchProBonoApplications();
     fetchProBonoVolunteers();
     fetchProBonoStats();
+    fetchFractionalRequests();
+    fetchFractionalProposals();
+    fetchFractionalStats();
   }, [user, authLoading]);
 
   async function fetchPayouts() { try { const data = await api.getPayouts(); setPayouts(data.payouts); } catch {} }
@@ -101,6 +120,34 @@ export default function AdminDashboard() {
       setProBonoStats(data);
     } catch (error) {
       console.error("Failed to fetch pro bono stats:", error);
+    }
+  }
+
+  async function fetchFractionalRequests() {
+    try {
+      const data = await api.getAdminProBonoApplications({ limit: 100, category: 'fractional' });
+      // Actually we need a separate endpoint for fractional requests
+      // For now, we'll use the leads endpoint with fractional type
+      // This would need a proper backend endpoint
+      console.log("Fractional requests endpoint needed");
+    } catch (error) {
+      console.error("Failed to fetch fractional requests:", error);
+    }
+  }
+
+  async function fetchFractionalProposals() {
+    try {
+      console.log("Fractional proposals endpoint needed");
+    } catch (error) {
+      console.error("Failed to fetch fractional proposals:", error);
+    }
+  }
+
+  async function fetchFractionalStats() {
+    try {
+      console.log("Fractional stats endpoint needed");
+    } catch (error) {
+      console.error("Failed to fetch fractional stats:", error);
     }
   }
 
@@ -199,6 +246,9 @@ export default function AdminDashboard() {
                   {activeSection === "pro-bono-applications" && "Pro Bono Applications"}
                   {activeSection === "pro-bono-volunteers" && "Pro Bono Volunteers"}
                   {activeSection === "pro-bono-stats" && "Pro Bono Statistics"}
+                  {activeSection === "fractional-requests" && "Fractional GC Requests"}
+                  {activeSection === "fractional-proposals" && "Fractional GC Proposals"}
+                  {activeSection === "fractional-stats" && "Fractional GC Statistics"}
                   {activeSection === "guide" && "Platform Guide"}
                 </h1>
                 <p className="text-[#667085] text-xs md:text-sm mt-1">
@@ -212,6 +262,9 @@ export default function AdminDashboard() {
                   {activeSection === "pro-bono-applications" && "Review and manage pro bono support applications"}
                   {activeSection === "pro-bono-volunteers" && "Manage volunteer lawyer registrations"}
                   {activeSection === "pro-bono-stats" && "Pro bono initiative statistics and analytics"}
+                  {activeSection === "fractional-requests" && "Manage fractional GC client requests"}
+                  {activeSection === "fractional-proposals" && "Manage fractional GC lawyer proposals"}
+                  {activeSection === "fractional-stats" && "Fractional GC initiative statistics and analytics"}
                   {activeSection === "guide" && "Step-by-step guide for using the platform"}
                 </p>
               </div>
@@ -578,6 +631,67 @@ export default function AdminDashboard() {
 
               {!proBonoStats && !proBonoLoading && (
                 <div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Loading statistics...</p></div></div>
+              )}
+            </div>
+          )}
+
+          {/* Fractional GC Requests */}
+          {activeSection === "fractional-requests" && (
+            <div>
+              <div className="mb-6 flex items-center justify-between">
+                <div><p className="text-[#667085] text-sm">Manage fractional GC client requests</p></div>
+                <div className="text-xs text-[#94A3B8]">Total: {fractionalRequests.pending.length + fractionalRequests.proposal_sent.length + fractionalRequests.active.length + fractionalRequests.rejected.length}</div>
+              </div>
+              <div className="bg-white rounded-xl border border-[#E5EAF0] p-8">
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-[#00A6A6]/10 text-[#00A6A6] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                    ⚖️
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#1B2A4A] mb-2">Fractional GC Requests</h3>
+                  <p className="text-[#667085] mb-6">Kanban board for managing fractional GC client requests coming soon.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fractional GC Proposals */}
+          {activeSection === "fractional-proposals" && (
+            <div>
+              <div className="mb-6 flex items-center justify-between">
+                <div><p className="text-[#667085] text-sm">Manage fractional GC lawyer proposals</p></div>
+                <div className="text-xs text-[#94A3B8]">Total: {fractionalProposals.draft.length + fractionalProposals.sent.length + fractionalProposals.accepted.length + fractionalProposals.rejected.length}</div>
+              </div>
+              <div className="bg-white rounded-xl border border-[#E5EAF0] p-8">
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-[#00A6A6]/10 text-[#00A6A6] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                    ⚖️
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#1B2A4A] mb-2">Fractional GC Proposals</h3>
+                  <p className="text-[#667085] mb-6">Kanban board for managing fractional GC proposals coming soon.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fractional GC Statistics */}
+          {activeSection === "fractional-stats" && (
+            <div>
+              <div className="mb-6"><p className="text-[#667085] text-sm">Fractional GC initiative statistics and analytics</p></div>
+
+              {fractionalStats && (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mb-6">
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Total Requests</p><p className="text-xl md:text-2xl font-bold text-[#1B2A4A] mt-2">{fractionalStats.requests?.total || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Pending</p><p className="text-xl md:text-2xl font-bold text-[#F59E0B] mt-2">{fractionalStats.requests?.pending || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Active Engagements</p><p className="text-xl md:text-2xl font-bold text-[#5DBB63] mt-2">{fractionalStats.engagements?.active || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Revenue</p><p className="text-xl md:text-2xl font-bold text-[#EF4444] mt-2">₦{fractionalStats.revenue?.total || 0}</p></div>
+                  </div>
+                </>
+              )}
+
+              {!fractionalStats && !fractionalLoading && (
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Fractional GC statistics coming soon...</p></div></div>
               )}
             </div>
           )}

@@ -17,7 +17,7 @@ export default function ProfessionalDashboard() {
   const { user, profile, loading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<
-    "dashboard" | "enquiries" | "appointments" | "profile" | "payout" | "wallet"
+    "dashboard" | "enquiries" | "appointments" | "profile" | "payout" | "wallet" | "fractional"
   >("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -562,6 +562,93 @@ export default function ProfessionalDashboard() {
                   <label htmlFor="isAvailable" className="text-sm font-semibold text-[#1B2A4A] cursor-pointer">Available for new clients</label>
                 </div>
 
+                {/* Fractional GC Configuration */}
+                {professional?.category?.key === 'legal' && (
+                  <div className="p-4 bg-[#F0FDFA] border border-[#00A6A6]/20 rounded-lg">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-[#00A6A6]/10 text-[#00A6A6] rounded-lg flex items-center justify-center text-xl font-bold">
+                        ⚖️
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-[#1B2A4A]">Fractional General Counsel Services</h4>
+                        <p className="text-sm text-[#667085]">Offer part-time ongoing legal leadership to businesses on a monthly retainer</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <input type="checkbox" id="fractionalGCOffered" checked={profileForm.fractionalGC?.isAvailable ?? false} onChange={(e) => setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, isAvailable: e.target.checked } })} className="w-5 h-5 text-[#00A6A6] border-[#E5EAF0] rounded focus:ring-2 focus:ring-[#00A6A6]/20" />
+                      <label htmlFor="fractionalGCOffered" className="text-sm font-semibold text-[#1B2A4A] cursor-pointer">I offer Fractional GC services</label>
+                    </div>
+                    {profileForm.fractionalGC?.isAvailable && (
+                      <div className="space-y-5">
+                        <div className="grid md:grid-cols-2 gap-5">
+                          <Input label="Monthly Retainer Min (₦)" type="number" value={profileForm.fractionalGC?.monthlyRetainerMin || ""} onChange={(e) => setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, monthlyRetainerMin: parseInt(e.target.value) || 0 } })} placeholder="e.g., 500000" step="50000" min="0" />
+                          <Input label="Monthly Retainer Max (₦)" type="number" value={profileForm.fractionalGC?.monthlyRetainerMax || ""} onChange={(e) => setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, monthlyRetainerMax: parseInt(e.target.value) || 0 } })} placeholder="e.g., 1500000" step="50000" min="0" />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-5">
+                          <Input label="Hours per Month" type="number" value={profileForm.fractionalGC?.hoursPerMonth || ""} onChange={(e) => setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, hoursPerMonth: parseInt(e.target.value) || 0 } })} placeholder="e.g., 20" step="5" min="1" max="160" />
+                          <Input label="Min Engagement (months)" type="number" value={profileForm.fractionalGC?.minimumEngagementMonths || ""} onChange={(e) => setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, minimumEngagementMonths: parseInt(e.target.value) || 3 } })} placeholder="e.g., 3" step="1" min="1" max="24" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Industries</label>
+                          <div className="flex flex-wrap gap-2">
+                            {['SaaS', 'FinTech', 'Healthcare', 'E-commerce', 'Manufacturing', 'Real Estate', 'Education', 'Non-profit', 'Other'].map((industry) => {
+                              const isSelected = profileForm.fractionalGC?.industries?.includes(industry);
+                              return (
+                                <button key={industry} type="button" className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected ? "bg-[#00A6A6] text-white" : "bg-[#EEF2F7] text-[#667085] hover:bg-[#E5EAF0]"}`} onClick={() => { const industries = profileForm.fractionalGC?.industries || []; const updated = isSelected ? industries.filter((i: string) => i !== industry) : [...industries, industry]; setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, industries: updated } }); }}>
+                                  {industry}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Company Stages</label>
+                          <div className="flex flex-wrap gap-2">
+                            {['Pre-seed/Seed', 'Series A', 'Series B+', 'Growth', 'Enterprise', 'Mature'].map((stage) => {
+                              const isSelected = profileForm.fractionalGC?.companyStages?.includes(stage);
+                              return (
+                                <button key={stage} type="button" className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected ? "bg-[#00A6A6] text-white" : "bg-[#EEF2F7] text-[#667085] hover:bg-[#E5EAF0]"}`} onClick={() => { const stages = profileForm.fractionalGC?.companyStages || []; const updated = isSelected ? stages.filter((s: string) => s !== stage) : [...stages, stage]; setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, companyStages: updated } }); }}>
+                                  {stage}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Engagement Types</label>
+                          <div className="flex flex-wrap gap-2">
+                            {['Monthly Retainer', 'Project-based', 'Interim GC', 'Board Advisor'].map((type) => {
+                              const isSelected = profileForm.fractionalGC?.engagementTypes?.includes(type);
+                              return (
+                                <button key={type} type="button" className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected ? "bg-[#00A6A6] text-white" : "bg-[#EEF2F7] text-[#667085] hover:bg-[#E5EAF0]"}`} onClick={() => { const types = profileForm.fractionalGC?.engagementTypes || []; const updated = isSelected ? types.filter((t: string) => t !== type) : [...types, type]; setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, engagementTypes: updated } }); }}>
+                                  {type}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Scope of Work</label>
+                          <div className="flex flex-wrap gap-2">
+                            {['Contract Review & Negotiation', 'Compliance & Regulatory', 'Corporate Governance', 'Employment Law', 'IP Protection', 'Fundraising Support', 'M&A Support', 'Risk Management', 'Policy Development', 'Board Meeting Prep'].map((scope) => {
+                              const isSelected = profileForm.fractionalGC?.scopeOfWork?.includes(scope);
+                              return (
+                                <button key={scope} type="button" className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected ? "bg-[#00A6A6] text-white" : "bg-[#EEF2F7] text-[#667085] hover:bg-[#E5EAF0]"}`} onClick={() => { const scopes = profileForm.fractionalGC?.scopeOfWork || []; const updated = isSelected ? scopes.filter((s: string) => s !== scope) : [...scopes, scope]; setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, scopeOfWork: updated } }); }}>
+                                  {scope}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" id="autoRenew" checked={profileForm.fractionalGC?.autoRenew ?? true} onChange={(e) => setProfileForm({ ...profileForm, fractionalGC: { ...profileForm.fractionalGC, autoRenew: e.target.checked } })} className="w-5 h-5 text-[#00A6A6] border-[#E5EAF0] rounded focus:ring-2 focus:ring-[#00A6A6]/20" />
+                          <label htmlFor="autoRenew" className="text-sm font-semibold text-[#1B2A4A] cursor-pointer">Auto-renew engagement</label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Verification Actions */}
                 {professional?.verificationStatus === "pending" && (
                   <div className="p-4 bg-[#FFFBEB] border border-[#F59E0B]/20 rounded-lg">
@@ -692,6 +779,34 @@ export default function ProfessionalDashboard() {
             </Card>
           </div>
         )}
+
+        {/* Fractional GC */}
+        {activeSection === "fractional" && (
+          <div>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-[#1B2A4A] tracking-tight">Fractional GC Management</h1>
+              <p className="text-[#667085] mt-1">Manage your fractional General Counsel engagements and proposals</p>
+            </div>
+            <div className="bg-white rounded-xl border border-[#E5EAF0] p-8">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-[#00A6A6]/10 text-[#00A6A6] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                  ⚖️
+                </div>
+                <h3 className="text-lg font-semibold text-[#1B2A4A] mb-2">Fractional GC Dashboard</h3>
+                <p className="text-[#667085] mb-6">View and manage your fractional GC requests, proposals, and active engagements.</p>
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <a href="/dashboard/professional?section=enquiries" className="bg-[#00A6A6] text-white px-6 py-3 rounded-lg hover:bg-[#008F8F] transition-colors font-semibold">
+                    View Requests
+                  </a>
+                  <a href="/fractional/my-proposals" className="border-2 border-[#00A6A6] text-[#00A6A6] px-6 py-3 rounded-lg hover:bg-[#00A6A6] hover:text-white transition-colors font-semibold">
+                    My Proposals
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

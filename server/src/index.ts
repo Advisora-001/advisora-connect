@@ -30,6 +30,7 @@ import subscriptionRoutes from './routes/subscriptionRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import proBonoRoutes from './routes/proBonoRoutes';
+import fractionalRoutes from './routes/fractionalRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -85,6 +86,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/pro-bono', proBonoRoutes);
+app.use('/api/fractional', fractionalRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
