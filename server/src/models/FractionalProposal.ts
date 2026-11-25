@@ -27,7 +27,7 @@ export interface IFractionalProposal extends Document {
   outOfScopeHourlyRate?: number;
 
   // Status workflow
-  status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired' | 'withdrawn';
+  status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'active' | 'rejected' | 'expired' | 'withdrawn';
   sentAt?: Date;
   viewedAt?: Date;
   respondedAt?: Date;
@@ -36,6 +36,7 @@ export interface IFractionalProposal extends Document {
 
   // Subscription link (created after acceptance)
   subscriptionId?: mongoose.Types.ObjectId;
+  paystackRef?: string;
 
   // Metadata
   notes?: string;                              // Lawyer's notes to client
@@ -96,7 +97,7 @@ const fractionalProposalSchema = new Schema<IFractionalProposal>(
     // Status workflow
     status: {
       type: String,
-      enum: ['draft', 'sent', 'viewed', 'accepted', 'rejected', 'expired', 'withdrawn'],
+      enum: ['draft', 'sent', 'viewed', 'accepted', 'active', 'rejected', 'expired', 'withdrawn'],
       default: 'draft',
       index: true,
     },
@@ -108,6 +109,7 @@ const fractionalProposalSchema = new Schema<IFractionalProposal>(
 
     // Subscription link
     subscriptionId: { type: Schema.Types.ObjectId, ref: 'Subscription' },
+    paystackRef: { type: String },
 
     // Metadata
     notes: { type: String, maxlength: 2000 },
