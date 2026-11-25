@@ -29,6 +29,7 @@ import firmRoutes from './routes/firmRoutes';
 import subscriptionRoutes from './routes/subscriptionRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import proBonoRoutes from './routes/proBonoRoutes';
 
 // Connect to MongoDB
 connectDB();
@@ -83,6 +84,7 @@ app.use('/api/firms', firmRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/pro-bono', proBonoRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -127,6 +127,64 @@ export const sendPasswordResetEmail = async (email: string, token: string, first
   return sendEmail({ to: email, subject, html });
 };
 
+export const sendProBonoApplicationEmail = async (email: string, firstName: string, applicationId: string): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Pro Bono Application Received - Advisora Impact';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #1B2A4A; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Impact</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Pro Bono & Access to Justice Initiative</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Application Received</h2>
+        <p>Hi ${firstName},</p>
+        <p>Thank you for submitting your application for pro bono legal assistance through Advisora Impact.</p>
+        <div style="background-color: #fff; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #00A6A6;">
+          <p style="margin: 0;"><strong>Application Reference:</strong> ${applicationId}</p>
+          <p style="margin: 8px 0 0 0;"><strong>Status:</strong> Submitted - Under Review</p>
+        </div>
+        <p>Our team will review your application and contact you within <strong>5 business days</strong>. We assess each application individually based on financial circumstances, urgency, vulnerability, and the availability of a suitable volunteer lawyer.</p>
+        <p style="color: #666; font-size: 14px;">Please note: Approval for an initial consultation does not automatically guarantee further legal assistance or full representation.</p>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
+export const sendVolunteerRegistrationEmail = async (email: string, firstName: string, volunteerId: string): Promise<boolean> => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  const subject = 'Volunteer Lawyer Registration Received - Advisora Impact';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #1B2A4A; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Advisora Impact</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Pro Bono & Access to Justice Initiative</p>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 40px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
+        <h2 style="color: #1B2A4A; margin-top: 0;">Volunteer Registration Received</h2>
+        <p>Hi ${firstName},</p>
+        <p>Thank you for registering as a volunteer lawyer with Advisora Impact. Your commitment to providing access to justice is deeply appreciated.</p>
+        <div style="background-color: #fff; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #00A6A6;">
+          <p style="margin: 0;"><strong>Registration Reference:</strong> ${volunteerId}</p>
+          <p style="margin: 8px 0 0 0;"><strong>Status:</strong> Submitted - Under Review</p>
+        </div>
+        <p>Our team will review your registration and contact you within <strong>5 business days</strong>. Once approved, you'll be added to our volunteer network and may receive referrals for pro bono cases matching your practice areas and availability.</p>
+        <p style="color: #666; font-size: 14px;">You retain the right to assess each referral and decide whether to accept it. All assignments are subject to your professional obligations, availability, and conflict checks.</p>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+        <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Advisora Connect. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: email, subject, html });
+};
+
 export const testEmailConnection = async (testEmail: string): Promise<{ success: boolean; message: string }> => {
   if (!resendReady || !resend) {
     return {

@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useProfileGate } from '@/hooks/useProfileGate';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { ProfessionalCardSkeleton } from '@/components/ui/Skeleton';
+import AdvisoraImpactHomepageSection from '@/components/AdvisoraImpactHomepageSection';
 
 const HERO_IMAGE = '/Hero-section.jpg';
 
@@ -54,11 +55,6 @@ export default function HomePage() {
                     Register Now
                   </Link>
                 )}
-                <div className="group relative flex-1 flex items-center justify-center">
-                  <Link href="/pro-bono" className="inline-block absolute left-0 right-0 top-0 bottom-0 opacity-0 group-hover:opacity-100 border border-[#1B2A4A] text-[#1B2A4A] rounded-lg hover:bg-[#1B2A4A] hover:text-white transition-colors font-semibold text-base text-center">
-                    Pro Bono Initiative
-                  </Link>
-                </div>
               </div>
             </div>
             <div className="hidden md:flex justify-center">
@@ -94,6 +90,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <AdvisoraImpactHomepageSection />
 
       {/* How It Works */}
       <section className="py-20 md:py-28 bg-[#F5F7FA]">

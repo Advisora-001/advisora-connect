@@ -10,12 +10,14 @@ import VerificationCard from "@/components/admin/VerificationCard";
 import UserCard from "@/components/admin/UserCard";
 import LawyerProfileModal from "@/components/admin/LawyerProfileModal";
 import MembershipConfiguration from "@/components/admin/MembershipConfiguration";
+import ProBonoApplicationCard from "@/components/admin/ProBonoApplicationCard";
+import VolunteerLawyerCard from "@/components/admin/VolunteerLawyerCard";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<
-    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue" | "guide"
+    "dashboard" | "verifications" | "users" | "reports" | "configuration" | "payouts" | "revenue" | "guide" | "pro-bono-applications" | "pro-bono-volunteers" | "pro-bono-stats"
   >("dashboard");
   const [analytics, setAnalytics] = useState<any>(null);
   const [pendingLawyers, setPendingLawyers] = useState<any[]>([]);
@@ -30,17 +32,77 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [revenueData, setRevenueData] = useState<any>(null);
 
+  // Pro Bono state
+  const [proBonoApplications, setProBonoApplications] = useState<{
+    submitted: any[];
+    under_review: any[];
+    more_info_needed: any[];
+    approved: any[];
+    rejected: any[];
+  }>({ submitted: [], under_review: [], more_info_needed: [], approved: [], rejected: [] });
+  const [proBonoVolunteers, setProBonoVolunteers] = useState<{
+    pending: any[];
+    approved: any[];
+    rejected: any[];
+    suspended: any[];
+  }>({ pending: [], approved: [], rejected: [], suspended: [] });
+  const [proBonoStats, setProBonoStats] = useState<any>(null);
+  const [proBonoLoading, setProBonoLoading] = useState(false);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user || user.role !== "admin") { router.push("/login"); return; }
     fetchData();
     fetchPayouts();
     fetchRevenue();
+    fetchProBonoApplications();
+    fetchProBonoVolunteers();
+    fetchProBonoStats();
   }, [user, authLoading]);
 
   async function fetchPayouts() { try { const data = await api.getPayouts(); setPayouts(data.payouts); } catch {} }
 
   async function fetchRevenue() { try { const data = await api.getRevenue(); setRevenueData(data); } catch {} }
+
+  async function fetchProBonoApplications() {
+    try {
+      const data = await api.getAdminProBonoApplications({ limit: 100 });
+      const apps = data.applications || [];
+      setProBonoApplications({
+        submitted: apps.filter((a: any) => a.status === "submitted"),
+        under_review: apps.filter((a: any) => a.status === "under_review"),
+        more_info_needed: apps.filter((a: any) => a.status === "more_info_needed"),
+        approved: apps.filter((a: any) => ["approved_consultation", "approved_limited", "approved_representation"].includes(a.status)),
+        rejected: apps.filter((a: any) => a.status === "rejected"),
+      });
+    } catch (error) {
+      console.error("Failed to fetch pro bono applications:", error);
+    }
+  }
+
+  async function fetchProBonoVolunteers() {
+    try {
+      const data = await api.getAdminVolunteerLawyers({ limit: 100 });
+      const vols = data.volunteers || [];
+      setProBonoVolunteers({
+        pending: vols.filter((v: any) => v.status === "pending"),
+        approved: vols.filter((v: any) => v.status === "approved"),
+        rejected: vols.filter((v: any) => v.status === "rejected"),
+        suspended: vols.filter((v: any) => v.status === "suspended"),
+      });
+    } catch (error) {
+      console.error("Failed to fetch pro bono volunteers:", error);
+    }
+  }
+
+  async function fetchProBonoStats() {
+    try {
+      const data = await api.getProBonoStats();
+      setProBonoStats(data);
+    } catch (error) {
+      console.error("Failed to fetch pro bono stats:", error);
+    }
+  }
 
   async function fetchData() {
     setLoading(true);
@@ -84,6 +146,34 @@ export default function AdminDashboard() {
     finally { setActionLoading(null); }
   };
 
+  const handleProBonoAppUpdate = async (id: string, status: string) => {
+    setActionLoading(id);
+    try {
+      await api.updateProBonoApplication(id, { status });
+      await fetchProBonoApplications();
+    } catch (error) { alert(error instanceof Error ? error.message : "Failed to update application"); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleProBonoVolunteerUpdate = async (id: string, status: string) => {
+    setActionLoading(id);
+    try {
+      await api.updateVolunteerLawyer(id, { status });
+      await fetchProBonoVolunteers();
+    } catch (error) { alert(error instanceof Error ? error.message : "Failed to update volunteer"); }
+    finally { setActionLoading(null); }
+  };
+
+  const fetchProBonoApplicationDetails = async (id: string) => {
+    try { const profile = await api.getAdminProBonoApplication(id); setManageLawyer(profile); }
+    catch (error) { alert(error instanceof Error ? error.message : "Failed to fetch application details"); }
+  };
+
+  const fetchProBonoVolunteerDetails = async (id: string) => {
+    try { const profile = await api.getAdminVolunteerLawyer(id); setManageLawyer(profile); }
+    catch (error) { alert(error instanceof Error ? error.message : "Failed to fetch volunteer details"); }
+  };
+
   if (!user) return null;
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 border-[#1B2A4A] border-t-transparent rounded-full"></div></div>;
 
@@ -106,6 +196,9 @@ export default function AdminDashboard() {
                   {activeSection === "configuration" && "Configuration"}
                   {activeSection === "payouts" && "Payouts"}
                   {activeSection === "revenue" && "Revenue"}
+                  {activeSection === "pro-bono-applications" && "Pro Bono Applications"}
+                  {activeSection === "pro-bono-volunteers" && "Pro Bono Volunteers"}
+                  {activeSection === "pro-bono-stats" && "Pro Bono Statistics"}
                   {activeSection === "guide" && "Platform Guide"}
                 </h1>
                 <p className="text-[#667085] text-xs md:text-sm mt-1">
@@ -116,6 +209,9 @@ export default function AdminDashboard() {
                   {activeSection === "configuration" && "Configure platform settings"}
                   {activeSection === "payouts" && "Review and process lawyer payout requests"}
                   {activeSection === "revenue" && "Platform revenue and transaction history"}
+                  {activeSection === "pro-bono-applications" && "Review and manage pro bono support applications"}
+                  {activeSection === "pro-bono-volunteers" && "Manage volunteer lawyer registrations"}
+                  {activeSection === "pro-bono-stats" && "Pro bono initiative statistics and analytics"}
                   {activeSection === "guide" && "Step-by-step guide for using the platform"}
                 </p>
               </div>
@@ -277,6 +373,211 @@ export default function AdminDashboard() {
                     </table>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Pro Bono Applications */}
+          {activeSection === "pro-bono-applications" && (
+            <div>
+              <div className="mb-6 flex items-center justify-between">
+                <div><p className="text-[#667085] text-sm">Review and manage pro bono support applications</p></div>
+                <div className="text-xs text-[#94A3B8]">Total: {proBonoApplications.submitted.length + proBonoApplications.under_review.length + proBonoApplications.more_info_needed.length + proBonoApplications.approved.length + proBonoApplications.rejected.length}</div>
+              </div>
+              <KanbanBoard
+                columns={[
+                  { id: "submitted", title: "Submitted", color: "bg-[#00A6A6]", badge: proBonoApplications.submitted.length },
+                  { id: "under_review", title: "Under Review", color: "bg-[#F59E0B]", badge: proBonoApplications.under_review.length },
+                  { id: "more_info_needed", title: "More Info Needed", color: "bg-[#F59E0B]", badge: proBonoApplications.more_info_needed.length },
+                  { id: "approved", title: "Approved", color: "bg-[#5DBB63]", badge: proBonoApplications.approved.length },
+                  { id: "rejected", title: "Rejected", color: "bg-[#EF4444]", badge: proBonoApplications.rejected.length },
+                ]}
+                columnContent={{
+                  submitted: proBonoApplications.submitted.map((app: any) => (
+                    <div key={app._id} className="mb-3">
+                      <ProBonoApplicationCard
+                        columnId="submitted"
+                        application={app}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === app._id}
+                      />
+                    </div>
+                  )),
+                  under_review: proBonoApplications.under_review.map((app: any) => (
+                    <div key={app._id} className="mb-3">
+                      <ProBonoApplicationCard
+                        columnId="under_review"
+                        application={app}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === app._id}
+                      />
+                    </div>
+                  )),
+                  more_info_needed: proBonoApplications.more_info_needed.map((app: any) => (
+                    <div key={app._id} className="mb-3">
+                      <ProBonoApplicationCard
+                        columnId="more_info_needed"
+                        application={app}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === app._id}
+                      />
+                    </div>
+                  )),
+                  approved: proBonoApplications.approved.map((app: any) => (
+                    <div key={app._id} className="mb-3">
+                      <ProBonoApplicationCard
+                        columnId="approved"
+                        application={app}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === app._id}
+                      />
+                    </div>
+                  )),
+                  rejected: proBonoApplications.rejected.map((app: any) => (
+                    <div key={app._id} className="mb-3">
+                      <ProBonoApplicationCard
+                        columnId="rejected"
+                        application={app}
+                        onViewDetails={fetchProBonoApplicationDetails}
+                        onUpdateStatus={handleProBonoAppUpdate}
+                        isLoading={actionLoading === app._id}
+                      />
+                    </div>
+                  )),
+                }}
+              />
+            </div>
+          )}
+
+          {/* Pro Bono Volunteers */}
+          {activeSection === "pro-bono-volunteers" && (
+            <div>
+              <div className="mb-6 flex items-center justify-between">
+                <div><p className="text-[#667085] text-sm">Manage volunteer lawyer registrations</p></div>
+                <div className="text-xs text-[#94A3B8]">Total: {proBonoVolunteers.pending.length + proBonoVolunteers.approved.length + proBonoVolunteers.rejected.length + proBonoVolunteers.suspended.length}</div>
+              </div>
+              <KanbanBoard
+                columns={[
+                  { id: "pending", title: "Pending", color: "bg-[#F59E0B]", badge: proBonoVolunteers.pending.length },
+                  { id: "approved", title: "Approved", color: "bg-[#5DBB63]", badge: proBonoVolunteers.approved.length },
+                  { id: "rejected", title: "Rejected", color: "bg-[#EF4444]", badge: proBonoVolunteers.rejected.length },
+                  { id: "suspended", title: "Suspended", color: "bg-[#94A3B8]", badge: proBonoVolunteers.suspended.length },
+                ]}
+                columnContent={{
+                  pending: proBonoVolunteers.pending.map((vol: any) => (
+                    <div key={vol._id} className="mb-3">
+                      <VolunteerLawyerCard
+                        columnId="pending"
+                        volunteer={vol}
+                        onViewDetails={fetchProBonoVolunteerDetails}
+                        onUpdateStatus={handleProBonoVolunteerUpdate}
+                        isLoading={actionLoading === vol._id}
+                      />
+                    </div>
+                  )),
+                  approved: proBonoVolunteers.approved.map((vol: any) => (
+                    <div key={vol._id} className="mb-3">
+                      <VolunteerLawyerCard
+                        columnId="approved"
+                        volunteer={vol}
+                        onViewDetails={fetchProBonoVolunteerDetails}
+                        onUpdateStatus={handleProBonoVolunteerUpdate}
+                        isLoading={actionLoading === vol._id}
+                      />
+                    </div>
+                  )),
+                  rejected: proBonoVolunteers.rejected.map((vol: any) => (
+                    <div key={vol._id} className="mb-3">
+                      <VolunteerLawyerCard
+                        columnId="rejected"
+                        volunteer={vol}
+                        onViewDetails={fetchProBonoVolunteerDetails}
+                        onUpdateStatus={handleProBonoVolunteerUpdate}
+                        isLoading={actionLoading === vol._id}
+                      />
+                    </div>
+                  )),
+                  suspended: proBonoVolunteers.suspended.map((vol: any) => (
+                    <div key={vol._id} className="mb-3">
+                      <VolunteerLawyerCard
+                        columnId="suspended"
+                        volunteer={vol}
+                        onViewDetails={fetchProBonoVolunteerDetails}
+                        onUpdateStatus={handleProBonoVolunteerUpdate}
+                        isLoading={actionLoading === vol._id}
+                      />
+                    </div>
+                  )),
+                }}
+              />
+            </div>
+          )}
+
+          {/* Pro Bono Statistics */}
+          {activeSection === "pro-bono-stats" && (
+            <div>
+              <div className="mb-6"><p className="text-[#667085] text-sm">Pro bono initiative statistics and analytics</p></div>
+
+              {proBonoStats && (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mb-6">
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Total Applications</p><p className="text-xl md:text-2xl font-bold text-[#1B2A4A] mt-2">{proBonoStats.applications?.total || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Pending Review</p><p className="text-xl md:text-2xl font-bold text-[#F59E0B] mt-2">{proBonoStats.applications?.pending || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Approved</p><p className="text-xl md:text-2xl font-bold text-[#5DBB63] mt-2">{proBonoStats.applications?.approved || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Rejected</p><p className="text-xl md:text-2xl font-bold text-[#EF4444] mt-2">{proBonoStats.applications?.rejected || 0}</p></div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mb-6">
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Total Volunteers</p><p className="text-xl md:text-2xl font-bold text-[#1B2A4A] mt-2">{proBonoStats.volunteers?.total || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Approved</p><p className="text-xl md:text-2xl font-bold text-[#5DBB63] mt-2">{proBonoStats.volunteers?.approved || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Pending</p><p className="text-xl md:text-2xl font-bold text-[#F59E0B] mt-2">{proBonoStats.volunteers?.pending || 0}</p></div>
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-4 md:p-6"><p className="text-xs md:text-sm font-medium text-[#667085] uppercase tracking-wide">Active Cases</p><p className="text-xl md:text-2xl font-bold text-[#00A6A6] mt-2">{proBonoStats.volunteers?.approved || 0}</p></div>
+                  </div>
+
+                  {/* Category Breakdown */}
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
+                      <h3 className="text-lg font-bold text-[#1B2A4A] mb-4">Applications by Category</h3>
+                      {proBonoStats.categories?.length > 0 ? (
+                        <div className="space-y-3">
+                          {proBonoStats.categories.map((cat: any) => (
+                            <div key={cat._id} className="flex justify-between items-center p-3 bg-[#F5F7FA] rounded-lg">
+                              <span className="text-sm font-medium text-[#1B2A4A]">{cat._id.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</span>
+                              <span className="text-lg font-bold text-[#00A6A6]">{cat.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-[#667085] py-8">No category data available</p>
+                      )}
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-[#E5EAF0] p-6">
+                      <h3 className="text-lg font-bold text-[#1B2A4A] mb-4">Applications by Urgency</h3>
+                      {proBonoStats.urgency?.length > 0 ? (
+                        <div className="space-y-3">
+                          {proBonoStats.urgency.map((urg: any) => (
+                            <div key={urg._id} className="flex justify-between items-center p-3 bg-[#F5F7FA] rounded-lg">
+                              <span className="text-sm font-medium text-[#1B2A4A] capitalize">{urg._id}</span>
+                              <span className="text-lg font-bold text-[#F59E0B]">{urg.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-[#667085] py-8">No urgency data available</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!proBonoStats && !proBonoLoading && (
+                <div className="bg-white rounded-xl border border-[#E5EAF0] p-8"><div className="text-center py-12"><p className="text-[#667085] text-lg font-medium">Loading statistics...</p></div></div>
               )}
             </div>
           )}

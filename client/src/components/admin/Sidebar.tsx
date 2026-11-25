@@ -11,7 +11,10 @@ interface SidebarProps {
       | "configuration"
       | "payouts"
       | "revenue"
-      | "guide";
+      | "guide"
+      | "pro-bono-applications"
+      | "pro-bono-volunteers"
+      | "pro-bono-stats";
   onSectionChange: (
     section:
       | "dashboard"
@@ -21,7 +24,10 @@ interface SidebarProps {
       | "configuration"
       | "payouts"
       | "revenue"
-      | "guide",
+      | "guide"
+      | "pro-bono-applications"
+      | "pro-bono-volunteers"
+      | "pro-bono-stats",
   ) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -35,6 +41,9 @@ const menuItems = [
   { id: "configuration", label: "Configuration", icon: "⚙️" },
   { id: "payouts", label: "Payouts", icon: "💰" },
   { id: "revenue", label: "Revenue", icon: "📈" },
+  { id: "pro-bono-applications", label: "Pro Bono Apps", icon: "📋" },
+  { id: "pro-bono-volunteers", label: "Pro Bono Volunteers", icon: "🤝" },
+  { id: "pro-bono-stats", label: "Pro Bono Stats", icon: "📊" },
   { id: "guide", label: "Platform Guide", icon: "📖" },
 ];
 

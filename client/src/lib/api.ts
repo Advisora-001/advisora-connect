@@ -1304,6 +1304,126 @@ class ApiClient {
   }
 
   // ============================================
+  // Pro Bono (Public)
+  // ============================================
+
+  submitProBonoApplication(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dateOfBirth?: string;
+    gender?: string;
+    address: string;
+    city: string;
+    state: string;
+    country?: string;
+    employmentStatus: string;
+    monthlyIncome?: number;
+    dependantsCount: number;
+    financialHardshipDetails: string;
+    legalIssueCategory: string;
+    legalIssueDescription: string;
+    urgencyLevel: string;
+    hasExistingLegalProceedings: boolean;
+    existingProceedingsDetails?: string;
+    supportingDocuments: Array<{
+      fileName: string;
+      fileUrl: string;
+      fileType: string;
+      fileSize: number;
+    }>;
+    consentToShareInfo: boolean;
+    consentToContact: boolean;
+    declarationOfTruth: boolean;
+  }) {
+    return this.request<{ message: string; applicationId: string }>('/pro-bono/apply', { method: 'POST', body: data });
+  }
+
+  registerVolunteerLawyer(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    licenseType: string;
+    licenseNumber: string;
+    licensingBody: string;
+    yearOfCall: number;
+    jurisdiction: string;
+    isCurrentlyPracticing: boolean;
+    practiceAreas: string[];
+    preferredCategories: string[];
+    maxCasesPerMonth: number;
+    availabilityHoursPerWeek: number;
+    preferredConsultationModes: string[];
+    languages: string[];
+    commitmentLevel: string;
+    willingToMentor: boolean;
+    noDisciplinaryActions: boolean;
+    noConflictsOfInterest: boolean;
+    understandsProBonoObligations: boolean;
+    professionalIndemnityInsurance: boolean;
+  }) {
+    return this.request<{ message: string; volunteerId: string }>('/pro-bono/volunteer', { method: 'POST', body: data });
+  }
+
+  getProBonoApplication(id: string) {
+    return this.request<{ application: unknown }>(`/pro-bono/application/${id}`);
+  }
+
+  // ============================================
+  // Pro Bono (Admin)
+  // ============================================
+
+  getAdminProBonoApplications(params?: { status?: string; category?: string; urgency?: string; page?: number; limit?: number }) {
+    let url = '/pro-bono/admin/applications';
+    const query: string[] = [];
+    if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.category) query.push(`category=${encodeURIComponent(params.category)}`);
+    if (params?.urgency) query.push(`urgency=${encodeURIComponent(params.urgency)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ applications: Array<unknown>; pagination: { page: number; limit: number; total: number; pages: number } }>(url);
+  }
+
+  getAdminProBonoApplication(id: string) {
+    return this.request<{ application: unknown }>(`/pro-bono/admin/applications/${id}`);
+  }
+
+  updateProBonoApplication(id: string, data: { status?: string; reviewNotes?: string; assignedVolunteerLawyer?: string; approvedScope?: unknown; rejectionReason?: string }) {
+    return this.request<{ message: string; application: unknown }>(`/pro-bono/admin/applications/${id}`, { method: 'PUT', body: data });
+  }
+
+  getAdminVolunteerLawyers(params?: { status?: string; category?: string; page?: number; limit?: number }) {
+    let url = '/pro-bono/admin/volunteers';
+    const query: string[] = [];
+    if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.category) query.push(`category=${encodeURIComponent(params.category)}`);
+    if (params?.page) query.push(`page=${params.page}`);
+    if (params?.limit) query.push(`limit=${params.limit}`);
+    if (query.length > 0) url += `?${query.join('&')}`;
+    return this.request<{ volunteers: Array<unknown>; pagination: { page: number; limit: number; total: number; pages: number } }>(url);
+  }
+
+  getAdminVolunteerLawyer(id: string) {
+    return this.request<{ volunteer: unknown }>(`/pro-bono/admin/volunteers/${id}`);
+  }
+
+  updateVolunteerLawyer(id: string, data: { status?: string; reviewNotes?: string }) {
+    return this.request<{ message: string; volunteer: unknown }>(`/pro-bono/admin/volunteers/${id}`, { method: 'PUT', body: data });
+  }
+
+  getProBonoStats() {
+    return this.request<{
+      applications: { total: number; pending: number; approved: number; rejected: number };
+      volunteers: { total: number; approved: number; pending: number };
+      categories: Array<{ _id: string; count: number }>;
+      urgency: Array<{ _id: string; count: number }>;
+    }>('/pro-bono/admin/stats');
+  }
+
+  // ============================================
   // Blog (public)
   // ============================================
 
