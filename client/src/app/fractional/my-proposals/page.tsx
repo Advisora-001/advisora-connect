@@ -101,16 +101,25 @@ export default function LawyerMyProposalsPage() {
   const handleCreateProposal = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createMutation.mutateAsync({
-        ...formData,
-        monthlyRetainer: parseInt(formData.monthlyRetainer),
-        hoursPerMonth: parseInt(formData.hoursPerMonth),
-        engagementMonths: parseInt(formData.engagementMonths),
+      const proposalData = {
+        leadId: formData.leadId,
+        monthlyRetainer: Number(formData.monthlyRetainer),
+        hoursPerMonth: Number(formData.hoursPerMonth),
+        engagementMonths: Number(formData.engagementMonths),
+        startDate: formData.startDate,
         autoRenew: formData.autoRenew,
-        terminationNoticeDays: parseInt(formData.terminationNoticeDays),
+        industries: formData.industries,
+        companyStages: formData.companyStages,
+        engagementType: formData.engagementType,
+        scopeOfWork: formData.scopeOfWork,
+        customScope: formData.customScope,
+        paymentTerms: formData.paymentTerms,
+        terminationNoticeDays: Number(formData.terminationNoticeDays),
         includesOutOfScopeRate: formData.includesOutOfScopeRate,
-        outOfScopeHourlyRate: formData.outOfScopeHourlyRate ? parseInt(formData.outOfScopeHourlyRate) : undefined,
-      });
+        outOfScopeHourlyRate: formData.outOfScopeHourlyRate ? Number(formData.outOfScopeHourlyRate) : undefined,
+        notes: formData.notes,
+      };
+      await createMutation.mutateAsync(proposalData);
       setShowCreateModal(false);
       setFormData({
         leadId: "",

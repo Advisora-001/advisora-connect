@@ -180,6 +180,19 @@ export const ProfessionalProfileSchema = z.object({
     declaredAt: ISODateStringSchema.optional(),
   }).optional(),
   categoryData: z.record(z.string()).optional(),
+  // Fractional GC fields
+  fractionalGC: z.object({
+    isAvailable: z.boolean(),
+    monthlyRetainerMin: z.number().nonnegative(),
+    monthlyRetainerMax: z.number().nonnegative(),
+    hoursPerMonth: z.number().int().nonnegative(),
+    industries: z.array(z.string()),
+    companyStages: z.array(z.string()),
+    engagementTypes: z.array(z.string()),
+    scopeOfWork: z.array(z.string()),
+    minimumEngagementMonths: z.number().int().positive(),
+    autoRenew: z.boolean(),
+  }).optional(),
   // Legacy fields for backward compatibility with lawyer-specific data
   practiceAreas: z.array(z.string()).optional(),
   specializations: z.array(z.string()).optional(),

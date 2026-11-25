@@ -343,6 +343,19 @@ class ApiClient {
         noDisciplinaryAction: boolean;
         declaredAt?: string;
       };
+      // Fractional GC fields
+      fractionalGC?: {
+        isAvailable: boolean;
+        monthlyRetainerMin: number;
+        monthlyRetainerMax: number;
+        hoursPerMonth: number;
+        industries: string[];
+        companyStages: string[];
+        engagementTypes: string[];
+        scopeOfWork: string[];
+        minimumEngagementMonths: number;
+        autoRenew: boolean;
+      };
       // Legacy fields for backward compatibility
       practiceAreas?: string[];
       specializations?: string[];

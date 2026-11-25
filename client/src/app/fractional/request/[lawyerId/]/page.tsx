@@ -175,7 +175,7 @@ export default function FractionalRequestPage() {
                 <div className="grid md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Company Stage *</label>
-                    <select {...register("companyStage")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.companyStage?.message}>
+                    <select {...register("companyStage")} className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm ${errors.companyStage ? 'border-[#EF4444]' : 'border-[#E5EAF0]'}`}>
                       <option value="">Select stage</option>
                       {companyStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
                     </select>
@@ -183,7 +183,7 @@ export default function FractionalRequestPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Industry *</label>
-                    <select {...register("industry")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.industry?.message}>
+                    <select {...register("industry")} className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm ${errors.industry ? 'border-[#EF4444]' : 'border-[#E5EAF0]'}`}>
                       <option value="">Select industry</option>
                       {industries.map((ind) => <option key={ind} value={ind}>{ind}</option>)}
                     </select>

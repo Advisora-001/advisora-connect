@@ -1,6 +1,6 @@
 "use client";
 
-import { SelectHTMLAttributes, forwardRef } from 'react';
+import { forwardRef } from 'react';
 
 export interface SelectOption {
   value: string;
@@ -8,18 +8,45 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps {
   label?: string;
   error?: string;
   helperText?: string;
   fullWidth?: boolean;
   options: SelectOption[];
   placeholder?: string;
+  // Native select props we want to allow
+  disabled?: boolean;
+  required?: boolean;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  onBlur?: React.FocusEventHandler<HTMLSelectElement>;
+  value?: string;
+  defaultValue?: string;
+  name?: string;
+  id?: string;
+  className?: string;
+  'aria-invalid'?: boolean;
+  'aria-describedby'?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, helperText, fullWidth = true, options, placeholder, className = '', id, ...props }, ref) => {
     const selectId = id || label?.toLowerCase().replace(/\s+/g, '-');
+
+    // Explicitly define native select props to avoid spreading custom props
+    const nativeProps: React.SelectHTMLAttributes<HTMLSelectElement> = {
+      disabled: props.disabled,
+      required: props.required,
+      onChange: props.onChange,
+      onBlur: props.onBlur,
+      value: props.value,
+      defaultValue: props.defaultValue,
+      name: props.name,
+      id: selectId,
+      className: className,
+      'aria-invalid': error ? 'true' : 'false',
+      'aria-describedby': error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined,
+    };
 
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
@@ -30,7 +57,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         )}
         <select
           ref={ref}
-          id={selectId}
+          {...nativeProps}
           className={`
             w-full px-4 py-3 rounded-lg border appearance-none bg-white transition-colors
             focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6]
@@ -38,9 +65,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ${error ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-[#E5EAF0]'}
             ${className}
           `}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
-          {...props}
         >
           {placeholder && (
             <option value="" disabled>
