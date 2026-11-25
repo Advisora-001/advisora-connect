@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useSubmitProBonoApplication } from "@/hooks/useProBono";
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@/components/ui";
+import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Select } from "@/components/ui";
 import { showToast } from "@/components/ui/Toaster";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -250,19 +250,19 @@ export default function ProBonoApplyPage() {
                 </div>
                 <div className="grid md:grid-cols-3 gap-5">
                   <Input label="Date of Birth" type="date" {...register("dateOfBirth")} />
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Gender</label>
-                    <select {...register("gender")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm">
-                      <option value="">Select (optional)</option>
-                      {genders.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-                    </select>
-                  </div>
-                  <Input label="State *" {...register("state")} error={errors.state?.message}>
-                    <select className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" {...register("state")}>
-                      <option value="">Select State</option>
-                      {statesList.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </Input>
+                  <Select
+                    label="Gender"
+                    {...register("gender")}
+                    options={genders}
+                    placeholder="Select (optional)"
+                  />
+                  <Select
+                    label="State *"
+                    {...register("state")}
+                    error={errors.state?.message}
+                    options={statesList.map(s => ({ value: s, label: s }))}
+                    placeholder="Select State"
+                  />
                 </div>
                 <div className="grid md:grid-cols-2 gap-5">
                   <Input label="City *" {...register("city")} error={errors.city?.message} placeholder="e.g., Lagos" />
@@ -284,12 +284,13 @@ export default function ProBonoApplyPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Employment Status *</label>
-                  <select {...register("employmentStatus")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.employmentStatus?.message}>
-                    <option value="">Select employment status</option>
-                    {employmentStatuses.map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
-                  </select>
-                  {errors.employmentStatus && <p className="mt-1 text-sm text-[#EF4444]">{errors.employmentStatus.message}</p>}
+                  <Select
+                    label="Employment Status *"
+                    {...register("employmentStatus")}
+                    error={errors.employmentStatus?.message}
+                    options={employmentStatuses}
+                    placeholder="Select employment status"
+                  />
                 </div>
                 <div className="grid md:grid-cols-3 gap-5">
                   <Input label="Monthly Income (₦)" type="number" {...register("monthlyIncome", { valueAsNumber: true })} placeholder="e.g., 50000" min="0" step="1000" />
@@ -322,19 +323,22 @@ export default function ProBonoApplyPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Legal Issue Category *</label>
-                  <select {...register("legalIssueCategory")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.legalIssueCategory?.message}>
-                    <option value="">Select the category that best matches your issue</option>
-                    {legalIssueCategories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
-                  {errors.legalIssueCategory && <p className="mt-1 text-sm text-[#EF4444]">{errors.legalIssueCategory.message}</p>}
+                  <Select
+                    label="Legal Issue Category *"
+                    {...register("legalIssueCategory")}
+                    error={errors.legalIssueCategory?.message}
+                    options={legalIssueCategories}
+                    placeholder="Select the category that best matches your issue"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Urgency Level *</label>
-                  <select {...register("urgencyLevel")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.urgencyLevel?.message}>
-                    {urgencyLevels.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
-                  </select>
-                  {errors.urgencyLevel && <p className="mt-1 text-sm text-[#EF4444]">{errors.urgencyLevel.message}</p>}
+                  <Select
+                    label="Urgency Level *"
+                    {...register("urgencyLevel")}
+                    error={errors.urgencyLevel?.message}
+                    options={urgencyLevels}
+                    placeholder="Select urgency level"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Legal Issue Description *</label>

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useRegisterVolunteerLawyer } from "@/hooks/useProBono";
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui";
+import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Select } from "@/components/ui";
 import { showToast } from "@/components/ui/Toaster";
 
 const legalCategories = [
@@ -209,27 +209,25 @@ export default function ProBonoVolunteerPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">License Type *</label>
-                    <select {...register("licenseType")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.licenseType?.message}>
-                      <option value="">Select license type</option>
-                      {licenseTypes.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-                    </select>
-                    {errors.licenseType && <p className="mt-1 text-sm text-[#EF4444]">{errors.licenseType.message}</p>}
-                  </div>
+                  <Select
+                    label="License Type *"
+                    {...register("licenseType")}
+                    error={errors.licenseType?.message}
+                    options={licenseTypes}
+                    placeholder="Select license type"
+                  />
                   <Input label="License Number *" {...register("licenseNumber")} error={errors.licenseNumber?.message} placeholder="e.g., SCN/12345" />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-5">
                   <Input label="Licensing Body *" {...register("licensingBody")} error={errors.licensingBody?.message} placeholder="e.g., Nigerian Bar Association" />
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1B2A4A] mb-2">Year of Call *</label>
-                    <select {...register("yearOfCall")} className="w-full px-4 py-2.5 border border-[#E5EAF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A6A6]/20 focus:border-[#00A6A6] bg-white text-sm" error={errors.yearOfCall?.message}>
-                      <option value="">Select year</option>
-                      {years.map((y) => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                    {errors.yearOfCall && <p className="mt-1 text-sm text-[#EF4444]">{errors.yearOfCall.message}</p>}
-                  </div>
+                  <Select
+                    label="Year of Call *"
+                    {...register("yearOfCall")}
+                    error={errors.yearOfCall?.message}
+                    options={years.map(y => ({ value: y, label: y }))}
+                    placeholder="Select year"
+                  />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-5">
